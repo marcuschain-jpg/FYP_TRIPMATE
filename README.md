@@ -45,3 +45,8 @@ Consist of frontend components(sub-html pages) of all functions
 Backend:
 
 
+====================== Errors and fix  ================= 
+1. Filename casing error
+    Looks like: Error TS1149: File name 'C:/Project/frontend/scripts/State.ts' differs from already included file name '../frontend/scripts/State.ts' only in casing.
+    - Fix: Ctrl/cmd + shift + p > Typescript: Restart > Restart VSCode
+
