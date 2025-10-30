@@ -27,6 +27,8 @@ Run Application
     - cd backend
     - node index.js
 
+3. Make new file "keys.env", copy and paste api keys from telegram into said file
+
 3. Open landing page in browser
     - http://localhost:3000
 
@@ -35,18 +37,31 @@ Run Application
 Frontend:
 
 Consist of frontend components(sub-html pages) of all functions
-- /components/.js files --- individual functions
-- /main/ --- all components are connected here for routing
-- /css/ --- all css files
+- 
+- /src/pages/.js files --- individual pages
+- /src/Routes.js --- all components are connected here for routing
+- /styles/.css --- all css files
 
 1. To add new pages, add new .js files in components. 
-2. Route new .js files from components to index.js in main
-
+2. Route new .js files components/pages to Routes.js in main
+s
 Backend:
 
 
 ====================== Errors and fix  ================= 
-1. Filename casing error
+
+=== FrontEnd
+1. Filename casing error 
     Looks like: Error TS1149: File name 'C:/Project/frontend/scripts/State.ts' differs from already included file name '../frontend/scripts/State.ts' only in casing.
     - Fix: Ctrl/cmd + shift + p > Typescript: Restart > Restart VSCode
+
+2. Error 404
+    Caused due to wrong linking from frontend to backend
+    - Fix: Insert correct backend path into axios correctly
+
+
+        
+=== Backend
+
+=== General
 

@@ -3,7 +3,7 @@ import '../styles/App.css'; // link from css page
 
 function Landing() {
   const apiCallbtn = () => {
-    axios.get('http://localhost:8080').then((data) => {
+    axios.get('http://localhost:8080/Landing/printConsole').then((data) => {
       console.log(data);
     })
   }

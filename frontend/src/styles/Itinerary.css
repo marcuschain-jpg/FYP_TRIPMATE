@@ -1,0 +1,28 @@
+/* Style for the container wrapping both sections */
+.container {
+    display: flex;             /* enable flex layout */
+    justify-content: space-between; /* space between the two sections */
+    align-items: flex-start;   /* align items to the top */
+    gap: 20px;                 /* optional spacing between sections */
+    padding: 20px;
+}
+
+/* Left section: add-itinerary-section */
+.add-itinerary-section {
+    flex: 1;                   /* take up proportional space */
+    max-width: 400px;          /* optional max width */
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* Right section: maps section */
+.maps-section {
+    flex: 2;                   /* take more space than left section */
+    background-color: #e9e9e9;
+    padding: 20px;
+    border-radius: 8px;
+    min-height: 400px;         /* ensure it has some height */
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
