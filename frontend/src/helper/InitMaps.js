@@ -1,7 +1,7 @@
 import React from "react";
 import { GoogleMap, useLoadScript, Marker } from "@react-google-maps/api";
 
-export default function InitMaps({ mapData }) {
+function InitMaps({ mapData }) {
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: mapData.apiKey, // always valid
   });
@@ -20,3 +20,5 @@ export default function InitMaps({ mapData }) {
     </GoogleMap>
   );
 }
+
+export default InitMaps;

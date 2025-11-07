@@ -1,10 +1,27 @@
 const express = require("express");
 const router = express.Router();
 const dotenv = require("dotenv");
-const axios = require("axios")
+const axios = require("axios");
+// --- geo tag lib ---
+const {exiftool} = require("exiftool-vendored"); //photo geotag
+const path = require("path") //photo path
+const multer = require("multer")
+// --- end geo tag lib ---
 
 // Load custom env file
 dotenv.config({ path: "keys.env" });
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, "../uploads")); // make sure uploads exists
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname); // get extension
+    const name = `${Date.now()}${ext}`; // e.g., 1699045600000.jpg
+    cb(null, name);
+  },
+});
+const upload = multer({storage});
 
 router.get("/maps", (req, res) => {
  res.json({
@@ -49,5 +66,23 @@ router.get("/autocomplete", async (req, res) => {
   }
 });
 
+router.post("/upload", upload.single("photo"), async (req, res) => {
+    const filePath = req.file.path;
+
+    try{
+        await exiftool.write(filePath,{
+            GPSLatitude: 1.3521,
+            GPSLongitude: 103.8198,
+            GPSLatitudeRef: "N",
+            GPSLongitudeRef: "E"
+        });
+
+        res.json({message: filePath});
+    }
+    catch(err) {
+        console.error(err);
+        res.status(500).json({error: "Failed to geotag photo"})
+    }
+});
 
 module.exports = router;

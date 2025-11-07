@@ -26,3 +26,7 @@
     min-height: 400px;         /* ensure it has some height */
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
+
+.upload-photo {
+    background-color: black;
+}
