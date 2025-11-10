@@ -1,3 +1,5 @@
+Last update: 10/11/2025
+
 # FYP_TRIPMATE
 FYP Group: FYP-25-S4-27
 
@@ -34,15 +36,14 @@ Run Application
     - cd frontend
     - npm start
 
-2. Make new file "keys.env" in /backend, copy and paste api keys from telegram into said file
 
-3. Start Backend
+2. Start Backend
     - cd backend
     - node index.js
 
 
 
-4. Open landing page in browser (if already not opened)
+3. Open landing page in browser (if already not opened)
     - http://localhost:3000
 
 ====================== How it works  ================= WORK IN PROGRESS
