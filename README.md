@@ -50,7 +50,7 @@ Consist of frontend components(sub-html pages) of all functions
 - node_modules --- downloaded libraries that can be used in code, ignored files
 - src --- where we create our individual 'pages', or helper componenets
     - /src/pages/.js files --- individual pages (itinerary page, feed page..)
-    - /src/helper/.js files --- special div components (map, special text box..), functions here are reusable like lego blocks can put here put there
+    - /src/components/.js files --- special div components (map, special text box..), functions here are reusable like lego blocks can put here put there
     - /src/Routes.js --- only pages are connected here for routing, nav bar
     - /src/styles/.css --- all css files
     - /src/assets --- places to put images, videos..

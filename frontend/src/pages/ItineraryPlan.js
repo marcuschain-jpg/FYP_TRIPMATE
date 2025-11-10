@@ -1,6 +1,6 @@
-import InitMaps from "../helper/InitMaps";
-import AddNewActivity from "../helper/AddNewActivity";
-import UploadPhoto from "../helper/UploadPhoto";
+import InitMaps from "../components/InitMaps";
+import AddNewActivity from "../components/AddNewActivity";
+import UploadPhoto from "../components/UploadPhoto";
 import useMapData from "../hooks/FetchMapData";
 import '../styles/Itinerary.css'
 

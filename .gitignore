@@ -1,17 +1,21 @@
+# heavy npm files (large >500mb)
 frontend/node_modules/
 backend/node_modules/
+
+#some file mac always creates
 .DS_Store
 
+# default stuff im not sure
 frontend/.pnp
 frontend/.pnp.js
 
-# testing
+# testing (default)
 frontend/coverage
 
-# production
+# production (default)
 frontend/build
 
-# misc
+# misc (default)
 frontend/env.local
 frontend/env.development.local
 frontend/env.test.local
@@ -22,5 +26,7 @@ frontend/yarn-debug.log*
 frontend/yarn-error.log*
 
 #backend
+# keys.env - api keys all store here
+# uploads - i use it to store images here temporarily for geocoding images
 backend/keys.env
 backend/uploads
