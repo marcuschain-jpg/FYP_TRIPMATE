@@ -22,7 +22,7 @@ your own node_modules
 
 Install all node_modules:
 - cd frontend
-- rm -rf node_modules
+- rm node_modules
 - npm install
 - cd ..
 - cd backend
@@ -32,16 +32,14 @@ Install all node_modules:
 Download/update keys.env folder from telegram and put in /backend so that API keys can be accessed
 
 Run Application
-1. Start Frontend
-    - cd frontend
-    - npm start
 
-
-2. Start Backend
+1. Start Backend
     - cd backend
     - node index.js
 
-
+2. Start Frontend
+    - cd frontend
+    - npm start
 
 3. Open landing page in browser (if already not opened)
     - http://localhost:3000
