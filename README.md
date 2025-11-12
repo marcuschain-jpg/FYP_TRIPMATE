@@ -71,6 +71,12 @@ Consist of frontend components(sub-html pages) of all functions
 
 Backend:
 
+Backend codes of function
+
+====================== Coding Standard =================
+- FE files + main function + BE files + Routes> CapitalizeEveryWord (to reduce typescript error)
+- Frontend internal functions > Use camelcasing
+    - example: const activitySelect = ['a','b','c']..
 
 ====================== Errors and fix  ================= 
 
@@ -83,7 +89,9 @@ Backend:
     Caused due to wrong linking from frontend to backend
     - Fix: Insert correct backend path into axios correctly
 
-
+3. Open localhost:3000, output is blank
+    - Fix: Open console in browser (mac: ctrl+option+c, windows:crtl+shift+j > click on console)
+      see error there
         
 === Backend
 

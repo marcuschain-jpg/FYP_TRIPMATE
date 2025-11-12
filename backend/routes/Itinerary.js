@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const dotenv = require("dotenv");
 const axios = require("axios");
+const sql = require("../db.js")
 // --- geo tag lib ---
 const {exiftool} = require("exiftool-vendored"); //photo geotag
 const path = require("path") //photo path
@@ -83,6 +84,17 @@ router.post("/upload", upload.single("photo"), async (req, res) => {
         console.error(err);
         res.status(500).json({error: "Failed to geotag photo"})
     }
+});
+
+router.post("/Test", async(req, res) => {
+  const {activity} = req.body;
+  
+  const {data,error} = await sql
+  .from("messages")
+  .insert([{content: activity}]);
+
+  if(error) return res.status(500).send("failed :(");
+  res.send("insert 成功! :D");
 });
 
 module.exports = router;
