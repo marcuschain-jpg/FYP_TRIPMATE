@@ -2,6 +2,7 @@ import {BrowserRouter, Routes, Route, Link} from 'react-router-dom';
 import ItineraryPlan from './pages/ItineraryPlan';
 import Landing from './pages/Landing';
 
+// named this way as Routes() itself is a inbuilt function, conflicts will happen
 function AppRoutes() {
     return(
         <BrowserRouter>

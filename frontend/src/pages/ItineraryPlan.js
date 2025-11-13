@@ -2,7 +2,8 @@ import InitMaps from "../components/InitMaps";
 import AddNewActivity from "../components/AddNewActivity";
 import UploadPhoto from "../components/UploadPhoto";
 import useMapData from "../hooks/FetchMapData";
-import '../styles/Itinerary.css'
+import '../styles/Itinerary.css';
+import Test from "../components/Test";
 
 function ItineraryPlan() {
     const mapData = useMapData();
@@ -24,6 +25,7 @@ function ItineraryPlan() {
         </div>
         <div className="upload-photo">
           <UploadPhoto />
+          <Test />
         </div>
       </div>
     </div>
