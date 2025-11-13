@@ -17,6 +17,7 @@
     "exiftool-vendored": "^31.2.0",
     "express": "^5.1.0",
     "multer": "^2.0.2",
-    "postgres": "^3.4.7"
+    "postgres": "^3.4.7",
+    "socket.io": "^4.8.1"
   }
 }
