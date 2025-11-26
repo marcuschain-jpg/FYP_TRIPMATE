@@ -71,16 +71,20 @@ router.get("/autocomplete", async (req, res) => {
 });
 
 router.post("/upload", upload.single("photo"), async (req, res) => {
-    const filePath = req.file.path;
+  // 1. Get photo from ../uploads temporarily  
+  const filePath = req.file.path;
 
     try{
-        await exiftool.write(filePath,{
+        // 2. Geotag
+        await exiftool.write(filePath,{ //sample coordinates
             GPSLatitude: 1.3521,
             GPSLongitude: 103.8198,
             GPSLatitudeRef: "N",
             GPSLongitudeRef: "E"
         });
 
+        // 3. Save photo to storage, then db
+        // 4. Remove temp photo from ../uploads
         res.json({message: filePath});
     }
     catch(err) {
