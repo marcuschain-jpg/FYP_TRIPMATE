@@ -1,4 +1,4 @@
-Last update: 10/11/2025
+Last update: 26/11/2025
 
 # FYP_TRIPMATE
 FYP Group: FYP-25-S4-27
@@ -71,11 +71,25 @@ Consist of frontend components(sub-html pages) of all functions
 
 Backend:
 
-Backend codes of function
+Inner workings of events(btn click, page render..)
+- helper (db.js, realtime..) --- components that helps with functions and are not necessarily accessed through routing
+- routes --- main logic & routes of different components of prototypes
+- index.js --- main file of backend, initialize & help with real time updates with socket.io
+- keys.env --- all api keys/passwords needed to access external services
+    - only attainable through telegram
+
+1. To add new prototype functions
+    - Head to any relevant files or create another one (use file as a broad function).
+    - Add routes and insert code & logic
+2. Add helper files (optional)
+    - Maybe inside a routes file, components too large, u can break it up and slam it here
+3. Link route files to index.js
+4. Take latest keys.env file from telegram if not done so
+5. node index.js
 
 ====================== Coding Standard =================
-- FE files + main function + BE files + Routes> CapitalizeEveryWord (to reduce typescript error)
-- Frontend internal functions > Use camelcasing
+- FE files + main function + BE files + Primary Routes> CapitalizeEveryWord (to reduce typescript error)
+- Frontend internal functions + Secondary Routes > Use camelCasing
     - example: const activitySelect = ['a','b','c']..
 
 ====================== Errors and fix  ================= 
