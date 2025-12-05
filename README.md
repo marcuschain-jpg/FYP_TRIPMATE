@@ -1,4 +1,4 @@
-Last update: 10/11/2025
+Last update: 26/11/2025
 
 # FYP_TRIPMATE
 FYP Group: FYP-25-S4-27
@@ -22,7 +22,7 @@ your own node_modules
 
 Install all node_modules:
 - cd frontend
-- rm -rf node_modules
+- rm node_modules
 - npm install
 - cd ..
 - cd backend
@@ -32,16 +32,14 @@ Install all node_modules:
 Download/update keys.env folder from telegram and put in /backend so that API keys can be accessed
 
 Run Application
-1. Start Frontend
-    - cd frontend
-    - npm start
 
-
-2. Start Backend
+1. Start Backend
     - cd backend
     - node index.js
 
-
+2. Start Frontend
+    - cd frontend
+    - npm start
 
 3. Open landing page in browser (if already not opened)
     - http://localhost:3000
@@ -73,6 +71,26 @@ Consist of frontend components(sub-html pages) of all functions
 
 Backend:
 
+Inner workings of events(btn click, page render..)
+- helper (db.js, realtime..) --- components that helps with functions and are not necessarily accessed through routing
+- routes --- main logic & routes of different components of prototypes
+- index.js --- main file of backend, initialize & help with real time updates with socket.io
+- keys.env --- all api keys/passwords needed to access external services
+    - only attainable through telegram
+
+1. To add new prototype functions
+    - Head to any relevant files or create another one (use file as a broad function).
+    - Add routes and insert code & logic
+2. Add helper files (optional)
+    - Maybe inside a routes file, components too large, u can break it up and slam it here
+3. Link route files to index.js
+4. Take latest keys.env file from telegram if not done so
+5. node index.js
+
+====================== Coding Standard =================
+- FE files + main function + BE files + Primary Routes> CapitalizeEveryWord (to reduce typescript error)
+- Frontend internal functions + Secondary Routes > Use camelCasing
+    - example: const activitySelect = ['a','b','c']..
 
 ====================== Errors and fix  ================= 
 
@@ -85,7 +103,9 @@ Backend:
     Caused due to wrong linking from frontend to backend
     - Fix: Insert correct backend path into axios correctly
 
-
+3. Open localhost:3000, output is blank
+    - Fix: Open console in browser (mac: ctrl+option+c, windows:crtl+shift+j > click on console)
+      see error there
         
 === Backend
 

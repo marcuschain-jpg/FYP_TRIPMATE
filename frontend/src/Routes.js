@@ -7,6 +7,7 @@ import Landing from "./pages/Landing";
 //React state
 import React, { useState } from "react";
 
+// named this way as Routes() itself is a inbuilt function, conflicts will happen
 function AppRoutes() {
     
   //Profile dropdown box ("logout" & "MyProfile")
