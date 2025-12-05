@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from "react";
 import InitMaps from "../components/InitMaps";
 import useMapData from "../hooks/FetchMapData";
-<<<<<<< HEAD
-import "../styles/Itinerary.css";
-=======
 import '../styles/Itinerary.css';
 import Test from "../components/Test";
->>>>>>> 6ee9ae9f2ccb3befeb3df76af45a3bbffdb6f534
 
 function ItineraryPlan() {
 
@@ -729,7 +725,6 @@ function ItineraryPlan() {
             <InitMaps mapData={mapData} />
           </div>
         </div>
-<<<<<<< HEAD
 
         {/*Delete activity modal*/}
         {showDeleteModal && (
@@ -1177,11 +1172,6 @@ function ItineraryPlan() {
           <button className="view-btn" onClick={() => setViewMode("media")}>
             View
           </button>
-=======
-        <div className="upload-photo">
-          <UploadPhoto />
-          <Test />
->>>>>>> 6ee9ae9f2ccb3befeb3df76af45a3bbffdb6f534
         </div>
       </div>
     </div>

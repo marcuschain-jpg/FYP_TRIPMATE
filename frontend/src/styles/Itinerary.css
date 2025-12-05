@@ -59,7 +59,6 @@
     cursor: pointer;
 }
 
-<<<<<<< HEAD
 .chat-btn,
 .view-btn {
     background: #0f5b86;
@@ -801,8 +800,4 @@
 .media-delete-btn {
     background-color: #ff5c5c;
     color: white;
-=======
-.upload-photo {
-    background-color: pink;
->>>>>>> 6ee9ae9f2ccb3befeb3df76af45a3bbffdb6f534
 }
