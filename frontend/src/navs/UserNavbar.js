@@ -55,7 +55,6 @@ function UserNavbar(){
             }
 
             .join-btn {
-            font-weight: bold;
             color: white;
             }
 
