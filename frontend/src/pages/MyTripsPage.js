@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Itinerary.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import axios from 'axios';
 
 function MyTripsPage() {
   const navigate = useNavigate();
+  const {userID} = useParams();
 
-  const [trips, setTrips] = useState(() => {
+  /*const [trips, setTrips] = useState(() => {
     const saved = localStorage.getItem("trips");
     return saved ? JSON.parse(saved) : [];
-  });
+  }); */
+  const[loading, setLoading] = useState(true);
+  const [trips, setTrips] = useState([]);
 
   const [showAddTripModal, setShowAddTripModal] = useState(false);
   const [newTripName, setNewTripName] = useState("");
@@ -23,10 +27,26 @@ function MyTripsPage() {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    localStorage.setItem("trips", JSON.stringify(trips));
-  }, [trips]);
+    axios.post("http://localhost:8080/Itinerary/GetAllItineraries", {userid: userID})
+    .then(response => {
+      renderLoadTrip(response.data);
+      setLoading(false);
+    })
+  }, []);
 
-  //Creta new trip
+  const renderLoadTrip = (res) => {
+    const mapTrips = res.map(t => ({
+      id: t.itineray_id,
+      name: t.itinerary_name,
+      destination: t.itinerary_dest,
+      start: t.start_date,
+      end: t.end_date,
+    }));
+
+    setTrips(mapTrips);
+  };
+
+  //Create new trip in modal
   const handleSaveTrip = () => {
     const errors = [];
     if (!newTripName) errors.push("tripName");
@@ -42,14 +62,13 @@ function MyTripsPage() {
     }
 
     const newTrip = {
-      id: Date.now(),
-      name: newTripName,
+      name: newTripName, 
       destination: newDestination,
       start: newStart,
       end: newEnd,
-      status: "In Progress",
-      activities: [],
-      mediaGallery: []
+      // status: "In Progress", // not in db
+      // activities: [], // no need
+      // mediaGallery: [] // no need
     };
 
     setTrips((prev) => [...prev, newTrip]);
@@ -72,7 +91,7 @@ function MyTripsPage() {
 
 
   const filteredTrips = trips.filter((t) =>
-    t.name.toLowerCase().includes(searchTerm.toLowerCase())
+    (t.name ?? "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   //UI render
@@ -102,9 +121,11 @@ function MyTripsPage() {
 
       {/*List of existing trips*/}
       <div className="trip-list">
-        {filteredTrips.length === 0 && <p>No trips found.</p>}
+        {!loading && filteredTrips.length === 0 && <p>No trips found.</p>}
 
-        {filteredTrips.map((trip) => (
+        {loading && <p>Loading..</p>}
+
+        {!loading && filteredTrips.map((trip) => (
           <div
             key={trip.id}
             className={`trip-card ${

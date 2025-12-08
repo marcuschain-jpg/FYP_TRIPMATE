@@ -114,4 +114,16 @@ router.get("/testLoad", async(req, res) => {
   res.send(data);
 });
 
+router.post("/GetAllItineraries", async(req, res) => {
+  const {userid} = req.body;
+
+  const {data,error} = await supabase
+  .from("itinerary")
+  .select("itinerary_id, itinerary_name, itinerary_dest, start_date, end_date")
+  .eq("user_host_id", userid);
+
+  if(error) return res.status(500).send("view all itineraries failed");
+  res.send(data);
+});
+
 module.exports = router;

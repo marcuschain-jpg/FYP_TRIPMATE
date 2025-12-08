@@ -96,13 +96,13 @@ function UserNavbar(){
                 <div className="nav-container">
 
                     <div className="nav-left">
-                        <Link to="/" className="nav-logo">TripMate.com</Link>
+                        <Link to="/" className="nav-logo">TripMate.com</Link> 
                     </div>
 
                     <div className="nav-center">
                         <Link to="/" className="nav-link">Home</Link>
                         <Link to="/ourstory" className="nav-link">Our Story</Link>
-                        <Link to="/mytrips" className="nav-link">My Trips</Link>
+                        <Link to="/mytrips/34a6eeeb-44bf-44f1-ad76-9c040a7c1775" className="nav-link">My Trips</Link> {/* Sample userid, no login page */}
                         <Link to="/feed" className="nav-link">Feed</Link>
                         <Link to="/pricing" className="nav-link">Pricing</Link>
                         <Link to="/join" className="nav-link join-btn">Join A Trip</Link>
