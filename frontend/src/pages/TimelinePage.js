@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import "../styles/Itinerary.css";
+import "../styles/Timeline.css";
 
 function TimelinePage() {
   const { tripId } = useParams();

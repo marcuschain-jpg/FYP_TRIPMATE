@@ -1,0 +1,113 @@
+/*Background*/
+.login-container {
+  width: 100%;
+  height: 100vh;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: flex-start;  
+  justify-content: center;   
+  column-gap: 18rem;          
+  padding-top: 120px;       
+}
+
+
+/*Slogan on the left side*/
+.login-left {
+  max-width: 420px;
+  color: white;
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
+  margin-top: 150px;   
+}
+
+
+.login-left-title {
+  font-size: 52px;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.login-left-subtitle {
+  font-size: 20px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+/*Login card with fields for crednetials*/
+.login-card {
+  width: 420px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  padding: 35px 40px;
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+/*Login card title*/
+.login-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0b6fa4;
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.login-subtitle {
+  text-align: center;
+  color: #444;
+  margin-bottom: 24px;
+}
+
+.login-label {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6px;
+  display: block;
+  text-align: left;
+}
+
+.login-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 15px;
+  margin-bottom: 18px;
+  box-sizing: border-box;
+}
+
+/*Login button*/
+.login-btn {
+  width: 100%;
+  padding: 12px;
+  background: #0b6fa4;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 17px;
+  cursor: pointer;
+  transition: 0.2s ease-in-out;
+}
+
+.login-btn:hover {
+  background: #095a87;
+}
+
+/*Footer --> create account*/
+.login-footer {
+  text-align: center;
+  margin-top: 14px;
+  font-size: 14px;
+  color: #333;
+}
+
+.login-link {
+  color: #0b6fa4;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.login-link:hover {
+  text-decoration: underline;
+}
+

@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import "../styles/Itinerary.css";
+import "../styles/Timeline.css";
 
 function SavedTimelinesPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
 
   const [trip, setTrip] = useState(null);
+  const [activeTimeline, setActiveTimeline] = useState(null);
 
   //Load saved timelines
   useEffect(() => {
     const trips = JSON.parse(localStorage.getItem("trips") || "[]");
     const found = trips.find((t) => t.id === Number(tripId));
-
     if (found) setTrip(found);
   }, [tripId]);
 
@@ -22,6 +22,15 @@ function SavedTimelinesPage() {
 
   //Delete saved timeline
   const handleDelete = (id) => {
+    const timeline = timelines.find((tl) => tl.id === id);
+
+    //Confirmation popup message
+    const ok = window.confirm(
+      `Are you sure you want to delete the timeline "${timeline?.name}"?`
+    );
+
+    if (!ok) return; 
+
     const trips = JSON.parse(localStorage.getItem("trips") || "[]");
 
     const updatedTrips = trips.map((t) => {
@@ -35,57 +44,112 @@ function SavedTimelinesPage() {
 
     localStorage.setItem("trips", JSON.stringify(updatedTrips));
     setTrip(updatedTrips.find((t) => t.id === trip.id));
+
+    //Success popup message 
+    alert("Timeline deleted successfully.");
   };
 
-  //View timeline
+  //View timeline inside the page
   const handleView = (timelineId) => {
-    navigate(`/mytrips/trip/${tripId}/saved-timelines/${timelineId}`);
+    const tl = timelines.find((t) => t.id === timelineId);
+    if (tl) setActiveTimeline(tl);
   };
 
   return (
-    <div className="saved-timelines-page">
-
-      <button className="back-btn" onClick={() => navigate(-1)}>
+    <div className="timeline-page">
+      
+      <button
+        className="back-btn"
+        onClick={() => {
+          if (activeTimeline) {
+            setActiveTimeline(null);
+          } else {
+            navigate(-1);
+          }
+        }}
+      >
         ← Back
       </button>
 
-      <h1>Saved Timelines</h1>
+      {/*View saved timeline mode*/}
+      {activeTimeline && (
+        <>
+          <h1 className="timeline-title">{activeTimeline.name}</h1>
 
-      <div className="timeline-grid">
-        {timelines.map((tl) => {
-          //Pick first node image as preview
-          const preview =
-            tl.nodes?.[0]?.url ||
-            "https://via.placeholder.com/300x200?text=Timeline";
+          <div className="timeline-render-box">
 
-          return (
-            <div key={tl.id} className="timeline-card">
-              <img className="timeline-thumb" src={preview} alt="preview" />
+            {/*Connecting line between nodes on timeline*/}
+            <svg
+              className="timeline-svg"
+              viewBox="0 0 1000 400"
+              preserveAspectRatio="none"
+            >
+              <polyline
+                points={(activeTimeline.nodes || [])
+                  .map((p) => `${(p.x / 100) * 1000},${(p.y / 100) * 400}`)
+                  .join(" ")}
+                fill="none"
+                stroke="white"
+                strokeWidth="6"
+              />
+            </svg>
 
-              <h3 className="timeline-title">{tl.name}</h3>
-
-              <div className="timeline-actions">
-                <button className="view-btn" onClick={() => handleView(tl.id)}>
-                  View
-                </button>
-
-                <button className="delete-btn" onClick={() => handleDelete(tl.id)}>
-                  Delete
-                </button>
+            {/*Individual timeline nodes*/}
+            {(activeTimeline.nodes || []).map((item, index) => (
+              <div
+                key={index}
+                className="timeline-node"
+                style={{ left: `${item.x}%`, top: `${item.y}%` }}
+              >
+                <img src={item.url} alt={item.name} className="timeline-circle" />
+                <div className="pin">📍</div>
+                <p className="timeline-caption">{item.name}</p>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            ))}
+          </div>
+        </>
+      )}
 
-      {timelines.length === 0 && (
-        <p style={{ marginTop: "20px" }}>No saved timelines yet.</p>
+      {/*Displays saved timeline--> grid formatting*/}
+      {!activeTimeline && (
+        <>
+          <h1 className="timeline-title">Saved Timelines</h1>
+
+          <div className="timeline-grid">
+            {timelines.map((tl) => {
+              const preview =
+                tl.nodes?.[0]?.url ||
+                "https://via.placeholder.com/300x200?text=Timeline";
+
+              return (
+                <div key={tl.id} className="timeline-card">
+                  <img className="timeline-thumb" src={preview} alt="preview" />
+
+                  <h3 className="timeline-title" style={{ color: "#053f6b" }}>
+                    {tl.name}
+                  </h3>
+
+                  <div className="timeline-actions">
+                    <button className="view-btn" onClick={() => handleView(tl.id)}>
+                      View
+                    </button>
+
+                    <button className="delete-btn" onClick={() => handleDelete(tl.id)}>
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {timelines.length === 0 && (
+            <p style={{ marginTop: "20px" }}>No saved timelines yet.</p>
+          )}
+        </>
       )}
     </div>
   );
 }
 
 export default SavedTimelinesPage;
-
-
-//STILL WIP SORRY

@@ -1,7 +1,14 @@
+import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-// USER PAGES
+// Navbars
+import UserNavbar from "./navs/UserNavbar";
+import UnregisteredUserNavbar from "./navs/UnregisteredUserNavBar";
+
+// Pages
 import Landing from "./pages/Landing";
+import QuizPage from "./pages/QuizPage";
+import LoginPage from "./pages/LoginPage";
 import MyTripsPage from "./pages/MyTripsPage";
 import TripDetailsPage from "./pages/TripDetailsPage";
 import ItineraryPage from "./pages/ItineraryPage";
@@ -9,13 +16,11 @@ import ActivityFormPage from "./pages/ActivityFormPage";
 import MediaPage from "./pages/MediaPage";
 import TimelinePage from "./pages/TimelinePage";
 import SavedTimelinesPage from "./pages/SavedTimelinesPage";
+import CreateAccountPage from "./pages/CreateAccountPage";
+import PricingPage from "./pages/PricingPage";
+import HomePage from "./pages/HomePage";   // 👈 ADDED
 
-
-// NAVBARS
-import UserNavbar from "./navs/UserNavbar";
-import AdminNavbar from "./navs/AdminNavbar";
-
-// TEMP PLACEHOLDER
+// Temporary placeholder component
 function Placeholder({ title }) {
   return (
     <div style={{ padding: "40px" }}>
@@ -29,26 +34,29 @@ function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-
-        {/* =============================== */}
-        {/* USER ROUTES (with User Navbar) */}
-        {/* =============================== */}
-        <Route element={<UserNavbar />}>
+        {/* ================= PUBLIC ROUTES ================= */}
+        <Route element={<UnregisteredUserNavbar />}>
           <Route path="/" element={<Landing />} />
+          <Route path="/register" element={<CreateAccountPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/quiz" element={<QuizPage />} />
+          <Route path="/pricing" element={<PricingPage />} />
+        </Route>
 
-          {/* My Trips main page */}
+        {/* ================ LOGGED-IN USER ROUTES ================ */}
+        <Route element={<UserNavbar />}>
+          {/* Home after login */}
+          <Route path="/home" element={<HomePage />} />   {/* 👈 ADDED */}
+
+          {/* Trips */}
           <Route path="/mytrips" element={<MyTripsPage />} />
-
-          {/* Trip details */}
           <Route path="/mytrips/trip/:tripId" element={<TripDetailsPage />} />
-
-          {/* Itinerary view */}
           <Route
             path="/mytrips/trip/:tripId/itinerary"
             element={<ItineraryPage />}
           />
 
-          {/* Activity create/edit */}
+          {/* Activity Form */}
           <Route
             path="/mytrips/trip/:tripId/activity/:mode"
             element={<ActivityFormPage />}
@@ -58,41 +66,28 @@ function AppRoutes() {
             element={<ActivityFormPage />}
           />
 
-          {/* Media page */}
+          {/* Media */}
           <Route
             path="/mytrips/trip/:tripId/media"
             element={<MediaPage />}
           />
-          {/*Timeline Page*/}
-          <Route path="/mytrips/trip/:tripId/timeline" element={<TimelinePage />} />
 
-          {/*SavedTimelinesPage*/}
+          {/* Timeline */}
+          <Route
+            path="/mytrips/trip/:tripId/timeline"
+            element={<TimelinePage />}
+          />
+
+          {/* Saved Timelines */}
           <Route
             path="/mytrips/trip/:tripId/saved-timelines"
             element={<SavedTimelinesPage />}
           />
 
-
-
-          {/* Other placeholder pages */}
-          <Route path="/ourstory" element={<Placeholder title="Our Story" />} />
+          {/* Placeholders */}
           <Route path="/feed" element={<Placeholder title="Feed" />} />
-          <Route path="/pricing" element={<Placeholder title="Pricing" />} />
           <Route path="/join" element={<Placeholder title="Join A Trip" />} />
         </Route>
-
-        {/* =============================== */}
-        {/* ADMIN ROUTES (with Admin Navbar) */}
-        {/* =============================== */}
-        <Route element={<AdminNavbar />}>
-          <Route path="/overview" element={<Placeholder title="Overview" />} />
-          <Route path="/users" element={<Placeholder title="Users" />} />
-          <Route path="/systems" element={<Placeholder title="Systems" />} />
-          <Route path="/content" element={<Placeholder title="Content" />} />
-          <Route path="/support" element={<Placeholder title="Support" />} />
-          <Route path="/settings" element={<Placeholder title="Settings" />} />
-        </Route>
-
       </Routes>
     </BrowserRouter>
   );
