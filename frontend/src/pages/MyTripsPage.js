@@ -27,7 +27,7 @@ function MyTripsPage() {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    axios.post("http://localhost:8080/Itinerary/GetAllItineraries", {userid: userID})
+    axios.get("http://localhost:8080/Itinerary/GetAllItineraries", {params:{userid: userID}})
     .then(response => {
       renderLoadTrip(response.data);
       setLoading(false);
@@ -36,7 +36,7 @@ function MyTripsPage() {
 
   const renderLoadTrip = (res) => {
     const mapTrips = res.map(t => ({
-      id: t.itineray_id,
+      id: t.itinerary_id,
       name: t.itinerary_name,
       destination: t.itinerary_dest,
       start: t.start_date,
@@ -47,7 +47,7 @@ function MyTripsPage() {
   };
 
   //Create new trip in modal
-  const handleSaveTrip = () => {
+  const handleSaveTrip = async() => {
     const errors = [];
     if (!newTripName) errors.push("tripName");
     if (!newDestination) errors.push("destination");
@@ -61,32 +61,51 @@ function MyTripsPage() {
       return;
     }
 
-    const newTrip = {
+    //insert trip here if successful then setTrips
+    let newTripID;
+    await axios.post("http://localhost:8080/Itinerary/CreateItinerary", {iName:newTripName, iDest:newDestination, start:newStart, end:newEnd, userid:userID})
+    .then(response => {
+      newTripID = response.data[0].itinerary_id;
+    })
+
+    if(newTripID > 0)
+    {
+      const newTrip = {
+      id: newTripID,
       name: newTripName, 
       destination: newDestination,
       start: newStart,
       end: newEnd,
-      // status: "In Progress", // not in db
-      // activities: [], // no need
-      // mediaGallery: [] // no need
-    };
+      };
 
-    setTrips((prev) => [...prev, newTrip]);
-    setSuccessMsg("Trip successfully created!");
-    setErrorMsg("");
+      setTrips((prev) => [...prev, newTrip]);
+      setSuccessMsg("Trip successfully created!");
 
-    //Reset form
-    setNewTripName("");
-    setNewDestination("");
-    setNewStart("");
-    setNewEnd("");
+      //Reset form
+      setNewTripName("");
+      setNewDestination("");
+      setNewStart("");
+      setNewEnd("");
+      setErrorMsg("");
+      setTimeout(() => setShowAddTripModal(false), 300);
+    }
 
-    setTimeout(() => setShowAddTripModal(false), 1000);
+    else
+    {
+      setErrorMsg("Insert Failed");
+      setNewTripName("");
+      setNewDestination("");
+      setNewStart("");
+      setNewEnd("");
+      return;
+    }
+    
   };
 
   // Delete existing trip
-  const deleteTrip = (id) => {
-    setTrips(trips.filter((trip) => trip.id !== id));
+  const deleteTrip = async(id) => {
+    setTrips(prevTrips => prevTrips.filter((trip) => trip.id !== id));
+    await axios.delete("http://localhost:8080/Itinerary/DeleteItinerary", {data: {itineraryid:id}});
   };
 
 

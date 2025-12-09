@@ -114,8 +114,8 @@ router.get("/testLoad", async(req, res) => {
   res.send(data);
 });
 
-router.post("/GetAllItineraries", async(req, res) => {
-  const {userid} = req.body;
+router.get("/GetAllItineraries", async(req, res) => {
+  const userid = req.query["userid"];
 
   const {data,error} = await supabase
   .from("itinerary")
@@ -124,6 +124,30 @@ router.post("/GetAllItineraries", async(req, res) => {
 
   if(error) return res.status(500).send("view all itineraries failed");
   res.send(data);
+});
+
+router.post("/CreateItinerary", async(req, res) => {
+  const {iName, iDest, start, end, userid} = req.body;
+
+  const {data, error} = await supabase
+  .from("itinerary")
+  .insert({itinerary_name:iName, itinerary_dest:iDest, start_date:start, end_date:end, user_host_id:userid})
+  .select("itinerary_id");
+
+  if(error) return res.status(500).send("create itineraries failed");
+
+  res.send(data);
+});
+
+router.delete("/DeleteItinerary", async(req, res) =>{
+  const {itineraryid} = req.body;
+
+  const {error} = await supabase
+  .from("itinerary")
+  .delete()
+  .eq("itinerary_id", itineraryid);
+
+  if(error) return res.status(500).send("delete itineraries failed")
 });
 
 module.exports = router;
