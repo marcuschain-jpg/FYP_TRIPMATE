@@ -37,7 +37,7 @@ function AppRoutes() {
           <Route path="/" element={<Landing />} />
 
           {/* My Trips main page */}
-          <Route path="/mytrips" element={<MyTripsPage />} />
+          <Route path="/mytrips/:userID" element={<MyTripsPage />} />
 
           {/* Trip details */}
           <Route path="/mytrips/trip/:tripId" element={<TripDetailsPage />} />

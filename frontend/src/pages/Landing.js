@@ -11,9 +11,7 @@ function Landing() {
         <div className="App">
               <header className="App-header">
                 <button onClick={(apiCallbtn)}>Api Call</button>
-                <p>
                   Yay, it works! Welcome to frontend :D<h1>Landing Page</h1>
-                </p>
               </header>
             </div>
     );
