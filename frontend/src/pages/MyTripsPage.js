@@ -60,7 +60,7 @@ function MyTripsPage() {
   };
 
   //Create a new trip --> fill in details in required fields
-  const handleSaveTrip = () => {
+  const handleSaveTrip = async() => {
     const missing = [];
     if (!newTripName) missing.push("tripName");
     if (!newDestination) missing.push("destination");
