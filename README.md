@@ -1,4 +1,4 @@
-Last update: 26/11/2025
+Last update: 8/12/2025
 
 # FYP_TRIPMATE
 FYP Group: FYP-25-S4-27
@@ -59,6 +59,7 @@ Consist of frontend components(sub-html pages) of all functions
     - /src/assets --- places to put images, videos..
     - /src/hooks --- function does not return JSX(web component like div...), usually no need touch
     - /src/index.js --- virtual dom, usually no need to touch
+    - /src/navs --- navbars for user and admin
 
 
 1. To add new pages, add new .js files in pages folder. 
