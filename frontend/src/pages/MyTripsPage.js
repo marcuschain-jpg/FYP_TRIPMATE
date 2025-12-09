@@ -54,6 +54,7 @@ function MyTripsPage() {
       destination: t.itinerary_dest,
       start: t.start_date,
       end: t.end_date,
+      status: t.completed
     }));
 
     setTrips(mapTrips);
@@ -116,7 +117,7 @@ function MyTripsPage() {
   };
 
   // Delete existing trip
-  const deleteTrip = async(id) => {
+  const requestDeleteTrip = async(id) => {
     const trip = trips.find((t) => t.id === id);
     setTripToDelete(trip);
     setShowDeleteConfirm(true);
@@ -127,6 +128,7 @@ function MyTripsPage() {
     if (!tripToDelete) return;
 
     setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
+    axios.delete("http://localhost:8080/Itinerary/DeleteItinerary", {data:{itineraryid:tripToDelete.id}});
 
     setShowDeleteConfirm(false);
     setTripToDelete(null);
@@ -263,10 +265,11 @@ function MyTripsPage() {
 
               <div
                 className={`trip-status ${
-                  trip.status === "Completed" ? "completed" : "inprogress"
+                  trip.status === true ? "completed" : "inprogress"
                 }`}
               >
-                {trip.status}
+                {trip.status && "Completed"}
+                {!trip.status && "In Progress"}
               </div>
             </div>
 

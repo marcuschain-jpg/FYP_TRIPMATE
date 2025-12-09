@@ -119,7 +119,7 @@ router.get("/GetAllItineraries", async(req, res) => {
 
   const {data,error} = await supabase
   .from("itinerary")
-  .select("itinerary_id, itinerary_name, itinerary_dest, start_date, end_date")
+  .select("itinerary_id, itinerary_name, itinerary_dest, start_date, end_date, completed")
   .eq("user_host_id", userid);
 
   if(error) return res.status(500).send("view all itineraries failed");
