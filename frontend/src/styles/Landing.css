@@ -1,0 +1,48 @@
+/*Import background image*/
+.landing-container {
+    width: 100%;
+    height: 100vh;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding-left: 80px;
+    position: relative;
+  }
+  
+  .hero-section {
+    color: white;
+    max-width: 650px;
+    text-shadow: 0 4px 8px rgba(0,0,0,0.4);
+  }
+  
+  .hero-title {
+    font-size: 48px;
+    font-weight: 800;
+    margin-bottom: 15px;
+  }
+  
+  .hero-subtitle {
+    font-size: 22px;
+    margin-bottom: 25px;
+  }
+  
+  .hero-btn {
+    background: white;
+    color: #0077b6;
+    border: 2px solid white;
+    padding: 12px 28px;
+    font-size: 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s ease;
+  }
+  
+  .hero-btn:hover {
+    background: #e8f4ff;
+  }
+  

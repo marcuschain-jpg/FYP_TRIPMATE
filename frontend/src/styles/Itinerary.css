@@ -1,6 +1,6 @@
 /*'My Tripss' page*/
 .mytrips-page {
-    background: #e9f5ff;
+    background: #e4eeef;
     min-height: 100vh;
     padding: 40px 80px;
     font-family: "Inter", sans-serif;
@@ -14,11 +14,13 @@
 }
 
 .search-bar {
-    width: 350px;
+    width: 600px;
+    position: relative;
     padding: 10px 18px;
     border-radius: 20px;
     border: 1px solid #ccc;
-    margin-bottom: 30px;
+    
+    margin-top: 50;
 }
 
 .add-trip-btn {
@@ -70,63 +72,326 @@
     color: white;
 }
 
-/*Completed trips marked in greenn*/
-.trip-card.trip-completed {
-    background: #d6f5d6 !important;
-    border: 1px solid #6ac46a;
-}
 
-.trip-card.trip-completed .trip-name {
-    color: #1b5e20;
-    font-weight: 700;
-}
+/*Trip status labels*/
+.trip-status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 8px;
+  }
+  
+  /*In Progress--> red*/
+  .trip-status.inprogress {
+    border: 1px solid #f3b37b;
+    background: #fff2e5;
+    color: #c26a2e;
+  }
+  
+  /*Completed--> green*/
+  .trip-status.completed {
+    border: 1px solid #0db510;
+    background: #d8f8e1;
+    color: #13b21d;
+  }
+  
 
-/*Trip details*/
-.itinerary-page {
-    padding: 40px 80px;
-    background: #fdfaf3;
+  .mytrips-page-container {
+    background: #e9f5ff;
     min-height: 100vh;
+    padding: 40px 80px;
     font-family: "Inter", sans-serif;
+  }
+
+
+
+  .modal-box {
+    width: 520px;
+    margin: 0 auto;
+    padding: 30px 40px;
+    border-radius: 16px;
+    background: white;
+    text-align: center;
 }
 
-.back-btn {
-    background: none;
-    border: none;
-    color: #0f5b86;
-    font-size: 16px;
+/*form content --> aign centre */
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;     
+    text-align: center;
+}
+
+/*Fields when creating new trip*/
+.modal-row {
+    display: flex;
+    justify-content: center;  
+    align-items: center;
+    gap: 40px;                
+    width: 100%;             
+    margin-top: 18px;
+}
+
+
+.modal-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;      
+    width: 220px;           
+}
+
+.modal-input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    margin-top: 6px;
+    text-align: left;        
+}
+
+
+/*Button for saving/ cancelling new trip*/
+/*Button row */
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    margin-top: 25px;
+}
+
+
+.modal-actions button {
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-size: 14px;
     cursor: pointer;
-    margin-bottom: 20px;
+    min-width: 90px;
+    border: none;
+    transition: 0.2s ease;
 }
 
-.completed-label {
+/*Cancel button*/
+.modal-cancel {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+.modal-cancel:hover {
+    background-color: #c8c8c8;
+}
+
+/*Save button*/
+.modal-save {
+    background-color: #007bff;
+    color: white;
+}
+
+.modal-save:hover {
+    background-color: #0069d9;
+}
+
+  
+  /*Top controls row*/
+  .top-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+  }
+  
+
+  /*Filter*/
+  /*Filter button*/
+.filter-toggle {
+    height: 40px;
+    padding: 0 18px;
+    background: #ffffff;
+    border: 1px solid #cfd8dc;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    color: #053f6b;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: 0.2s ease;
+  }
+  
+  .filter-toggle:hover {
+    background: #f2f6f8;
+  }
+  
+  /*Wrapper--> anchor dropdown under button*/
+  .filter-dropdown-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+  
+  /*Dropdown Panel*/
+  .filter-panel {
+    position: absolute;
+    top: 48px;
+    right: 0;
+    width: 280px;
+    padding: 20px 22px;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.12);
+    z-index: 20;
+    animation: fadeSlide 0.18s ease-out;
+  }
+  
+  /*Animation*/
+  @keyframes fadeSlide {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .filter-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #053f6b;
+    margin-bottom: 6px;
+  }
+  
+  /*Groups*/
+  .filter-section {
+    margin-bottom: 16px;
+  }
+  
+  /*Radio button rows*/
+  .filter-option {
     display: flex;
     align-items: center;
     gap: 8px;
+    margin: 6px 0;
+    font-size: 14px;
+    color: #053f6b;
+  }
+  
+  .filter-option input {
+    accent-color: #0a4d75;
+  }
+  
+  
+  /*Align add new trip button with filter*/
+  .add-trip-btn {
+    height: 40px;
+    padding: 0 18px;
+    border-radius: 8px;
+  }
+  
+
+
+
+/*Trip details page*/
+
+
+.tripdetails-page {
+    background: #E4EEEF;        
+    min-height: 100vh;
+    padding: 40px 0;            
+    font-family: "Inter", sans-serif;
+}
+
+.tripdetails-inner {
+    max-width: 1120px;          
+    margin: 0 auto;
+    padding: 0 40px;           
+}
+
+/*Back button*/
+.tripdetails-page .back-btn {
+    background: transparent;
+    border: 1px solid #0f5b86;
+    color: #0f5b86;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.tripdetails-page .back-btn:hover {
+    background: #0f5b8620;
+}
+
+/*Title & date*/
+.tripdetails-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #0f5b86;
+    margin-bottom: 4px;
+}
+
+.trip-date {
+    font-size: 15px;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+/*Trip completed checkbox*/
+.completed-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f5b86;
     margin-bottom: 25px;
 }
 
+/*Section cards*/
 .section-card {
-    background: white;
-    border: 1px solid #dcdcdc;
+    background: #ffffff;
     border-radius: 12px;
-    padding: 25px 30px;
-    margin-bottom: 30px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    padding: 22px 26px;
+    margin-bottom: 18px;
+    border: 1px solid #cfd7d9;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
 }
 
-.sub-header {
-    margin-top: 40px;
-    margin-bottom: 15px;
-    font-size: 24px;
-    font-weight: 600;
+.section-content h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #0f5b86;
 }
 
-.maps-wrapper {
-    margin-top: 20px;
+.section-content p {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 12px;
 }
+
+/*View button inside respective cards */
+.section-content .view-btn {
+    background: #0f5b86;
+    color: white;
+    padding: 8px 18px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.section-content .view-btn:hover {
+    background: #0c4a6a;
+}
+
+
 /*View itinerary & activities*/
 .itinerary-view {
-    background: #faf6ef;
+    background: #e4eeef;
     min-height: 100vh;
     padding: 40px 80px;
     font-family: "Inter", sans-serif;
@@ -175,6 +440,23 @@
 .right-side > div { /*Stretch map such that it fills up all the container space*/
     width: 100% !important;
     height: 100% !important;
+}
+
+  
+.back-btn {
+    background: #0f5b86 !important;   /*Back button for viewing itinerary activities*/
+    color: white !important;
+    padding: 8px 18px;
+    border-radius: 8px;
+    border: none !important;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: 0.2s ease;
+}
+
+.back-btn:hover {
+    background: #0c4a6a !important;   /* slightly darker */
 }
 
 .add-activity-big {
@@ -801,227 +1083,71 @@
     background-color: #ff5c5c;
     color: white;
 }
-
-/*Generate Timeline*/
-.timeline-page .back-btn {
-    color: white !important;
-    border: 1px solid white;
-    background: transparent;
-  }
-  
-  .timeline-page .back-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-  }
-
-.timeline-page {
-    padding: 40px;
-    background: linear-gradient(180deg, #0a4d75, #0b5c9a);
-    min-height: 100vh;
-    color: white;
-    font-family: "Inter", sans-serif;
-  }
-  
-  .timeline-title {
-    font-size: 32px;
-    font-weight: 700;
-  }
-  
-  .timeline-subtitle {
-    opacity: 0.8;
-    margin-bottom: 20px;
-  }
-  
-  .section-heading {
-    margin-top: 40px;
-    font-size: 24px;
-    font-weight: 600;
-  }
-  
-  /*Photo grid with available media to be included in timeline*/
-  .timeline-select-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 20px;
-  }
-  
-  .timeline-photo-select {
-    padding: 12px;
-    border-radius: 12px;
-    background: #ffffff15;
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: 0.2s;
-  }
-  
-  .timeline-photo-select img {
-    width: 100%;
-    height: 120px;
-    object-fit: cover;
-    border-radius: 10px;
-  }
-  
-  .timeline-photo-select.selected {
-    border-color: #ffbb33;
-    background: #ffffff25;
-  }
-  
-  /*Generate timeline button*/
-  .generate-btn {
-    margin-top: 25px;
-    padding: 12px 30px;
-    background: #ffbb33;
-    border: none;
-    border-radius: 10px;
-    font-size: 18px;
-    cursor: pointer;
-    color: #0a2a3f;
-  }
-  
-  .generate-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-  
-
-  .timeline-render-box {
-    position: relative;
-    width: 100%;
-    height: 500px;
-    margin-top: 40px;
-  }
-  
-  /*Connecting line for waypoints on timeline*/
-  .timeline-svg {
-    position: absolute;
+/*Edit media modal & fields that can be editted (date, title of picture)*/
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    overflow: visible;
-  }
-  
- 
-  .timeline-node {
-    position: absolute;
-    transform: translate(-50%, -50%);
-    text-align: center;
-  }
-  
-  .timeline-circle {
-    width: 130px;
-    height: 130px;
-    border-radius: 50%;
-    border: 4px solid white;
-    object-fit: cover;
-  }
-  
-  .pin {
-    margin-top: 5px;
-    font-size: 24px;
-  }
-  
-  .timeline-date {
-    margin-top: 8px;
-    font-weight: 600;
-  }
-  
-  .timeline-caption {
-    opacity: 0.85;
-  }
- 
-/*saved timelines page*/
-.saved-timelines-page {
-    padding: 30px;
-    color: white;
-  }
-  
-  .saved-timelines-page h1 {
-    font-size: 2.2rem;
-    margin-bottom: 20px;
-  }
-  
-  .back-btn {
-    background: transparent;
-    border: 2px solid white;
-    padding: 6px 14px;
-    border-radius: 6px;
-    color: white;
-    cursor: pointer;
-    margin-bottom: 20px;
-    font-size: 1rem;
-  }
-  
-  .back-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-  }
-  
-  /*Saved timeline card grid*/
-  .timeline-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 26px;
-    margin-top: 20px;
-  }
-  
-/*Individual saved timeline cards*/ 
-  .timeline-card {
-    background: white;
-    color: #053f6b;
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  
-  .timeline-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.22);
-  }
-  
-  /*Preview photo*/
-  .timeline-thumb {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-    background: #e0e0e0;
-  }
-  
-  .timeline-title {
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin: 14px;
-  }
-  
-  .timeline-actions {
+    background: rgba(0,0,0,0.4);
     display: flex;
-    justify-content: space-between;
-    padding: 14px;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
   }
   
-  .view-btn, .delete-btn {
-    padding: 8px 16px;
+  .media-edit-modal {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    width: 380px;              
+    max-height: 80vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .media-edit-preview {
+    width: 100%;
+    height: 240px;              
+    object-fit: cover;
+    border-radius: 8px;
+    background: #f3f3f3;
+  }
+  
+  .media-edit-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .media-edit-input {
+    padding: 10px;
+    border: 1px solid #ccc;
     border-radius: 6px;
+  }
+  
+  .media-edit-buttons {
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+  
+  .media-edit-cancel {
+    background: #ccc;
     border: none;
-    font-weight: 600;
-    cursor: pointer;
+    padding: 8px 14px;
+    border-radius: 6px;
   }
   
-  .view-btn {
-    background: #006bb3;
+  .media-edit-save {
+    background: #0b6fa4;
     color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
   }
-  
-  .view-btn:hover {
-    background: #00528c;
-  }
-  
-  .delete-btn {
-    background: #ff6b6b;
-    color: white;
-  }
-  
-  .delete-btn:hover {
-    background: #e05757;
-  }
-  
-
-  
   

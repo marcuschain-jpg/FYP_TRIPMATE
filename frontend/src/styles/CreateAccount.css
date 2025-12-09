@@ -1,0 +1,138 @@
+/*Cretae account background*/
+.register-bg {
+    width: 100%;
+    height: 100vh;
+    background-image: url("../Assets/CreateAccount.jpg");
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /*White card container*/
+  .register-card {
+    width: 460px;
+    background: white;
+    border-radius: 20px;
+    padding: 35px 40px;
+    box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.15);
+    text-align: center;
+  }
+  
+  /*TripMate logo */
+  .register-logo {
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+  }
+  
+  /*Form title*/
+  .register-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0059b3;
+    margin-bottom: 20px;
+  }
+  
+  /*Form--> align centre*/
+  .register-form {
+    width: 360px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    text-align: left;
+  }
+  
+  /*Form inputs*/
+  .register-form input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #268bdc;
+    border-radius: 8px;
+    box-sizing: border-box;
+  }
+  
+  /*First & last name row*/
+  .name-row {
+    display: flex; 
+    gap: 16px;/*Gap between both field boxes*/
+  }
+  
+  .name-row div {
+    flex: 1;
+  }
+  
+  /*Register account button*/
+  .register-btn {
+    width: 100%;
+    margin-top: 18px;
+    background: #268bdc;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  
+  .register-btn:hover {
+    background: #1a6dad;
+  }
+  
+ 
+  .register-login-text {
+    margin-top: 18px;
+    font-size: 14px;
+  }
+  
+  .register-login-text a {
+    color: #0059b3;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  /*Toast message (success/ error)*/
+.toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 14px 22px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    z-index: 9999;
+    animation: fadeInOut 2.5s ease;
+  }
+  
+  .toast-success {
+    background-color: #2ecc71; /*green = success*/
+  }
+  
+  .toast-error {
+    background-color: #e74c3c; /*red = error*/
+  }
+  
+  @keyframes fadeInOut {
+    0% { opacity: 0; transform: translate(-50%, -10px); }
+    10% { opacity: 1; transform: translate(-50%, 0); }
+    90% { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -10px); }
+  }
+  .create-login-link {
+    font-weight: 700;     
+    text-decoration: underline;  
+    color: #0b6fa4;
+    cursor: pointer;
+  }
+  
+  .create-login-link:hover {
+    opacity: 0.8;
+  }
+  
