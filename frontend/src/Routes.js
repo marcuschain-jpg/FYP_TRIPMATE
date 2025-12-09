@@ -48,10 +48,8 @@ function AppRoutes() {
           {/* Home after login */}
           <Route path="/home" element={<HomePage />} />   {/* 👈 ADDED */}
 
-          {/* My Trips main page */}
-          <Route path="/mytrips/:userID" element={<MyTripsPage />} />
-
-          {/* Trip details */}
+          {/* Trips */}
+          <Route path="/mytrips" element={<MyTripsPage />} />
           <Route path="/mytrips/trip/:tripId" element={<TripDetailsPage />} />
           <Route
             path="/mytrips/trip/:tripId/itinerary"
