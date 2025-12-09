@@ -39,6 +39,25 @@ function ItineraryPage() {
     (a) => a.date === selectedDate
   );
 
+  //Delete actiity from itinerary
+  const handleDeleteActivity = (index) => {
+    if (!window.confirm("Are you sure you want to delete this activity?")) { //confirmation message for delete funciton
+      return;
+    }
+
+    const updatedTrips = [...trips];
+    const thisTrip = updatedTrips.find((t) => t.id === Number(tripId));
+
+    if (!thisTrip) return;
+
+    thisTrip.activities.splice(index, 1);
+
+    localStorage.setItem("trips", JSON.stringify(updatedTrips));
+    setTrips(updatedTrips);
+    setTrip({ ...thisTrip });
+    alert("Activity deleted successfully!");
+  };
+
   return (
     <div className="itinerary-view">
       <button
@@ -60,7 +79,7 @@ function ItineraryPage() {
         <div className="left-side">
           <h2>Activities</h2>
 
-          {/*Date filer/ drop down bar--> user can view activities for selected date*/}
+          {/*Date drop down bar--> user can view activities for selected date*/}
           {activities.length > 0 && (
             <select
               className="date-filter-dropdown"
@@ -106,11 +125,10 @@ function ItineraryPage() {
                     Edit
                   </button>
 
+                  {/* FIXED DELETE BUTTON */}
                   <button
                     className="activity-delete-btn"
-                    onClick={() =>
-                      navigate(`/mytrips/trip/${tripId}/activity/delete/${index}`)
-                    }
+                    onClick={() => handleDeleteActivity(index)}
                   >
                     Delete
                   </button>

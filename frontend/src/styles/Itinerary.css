@@ -1,6 +1,6 @@
 /*'My Tripss' page*/
 .mytrips-page {
-    background: #e9f5ff;
+    background: #e4eeef;
     min-height: 100vh;
     padding: 40px 80px;
     font-family: "Inter", sans-serif;
@@ -1083,4 +1083,71 @@
     background-color: #ff5c5c;
     color: white;
 }
-
+/*Edit media modal & fields that can be editted (date, title of picture)*/
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+  }
+  
+  .media-edit-modal {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    width: 380px;              
+    max-height: 80vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .media-edit-preview {
+    width: 100%;
+    height: 240px;              
+    object-fit: cover;
+    border-radius: 8px;
+    background: #f3f3f3;
+  }
+  
+  .media-edit-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .media-edit-input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+  }
+  
+  .media-edit-buttons {
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+  
+  .media-edit-cancel {
+    background: #ccc;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+  }
+  
+  .media-edit-save {
+    background: #0b6fa4;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+  }
+  

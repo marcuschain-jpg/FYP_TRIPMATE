@@ -10,6 +10,12 @@ function MediaPage() {
   const [trip, setTrip] = useState(null);
   const [gallery, setGallery] = useState([]);
 
+  //Modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editItem, setEditItem] = useState(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDate, setEditDate] = useState("");
+
   //Load trip & media from local storage
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("trips") || "[]");
@@ -24,7 +30,6 @@ function MediaPage() {
 
   if (!trip) return <p>Trip not found.</p>;
 
- 
   //Update media gallery for the trip
   const updateTripMedia = (updatedGallery) => {
     const updatedTrips = trips.map((t) =>
@@ -49,27 +54,33 @@ function MediaPage() {
       name: file.name,
       type: file.type,
       url: URL.createObjectURL(file),
+      date: "" // added optional date field
     };
 
     updateTripMedia([...gallery, newMedia]);
   };
 
-  //Edit media title--> sync name across activities, media page, timeline page 
-  const handleEdit = (item) => {
-    const newTitle = prompt("Enter new title:", item.name);
-    if (!newTitle) return;
+  
+  const openEditModal = (item) => {
+    setEditItem(item);
+    setEditTitle(item.name);
+    setEditDate(item.date || "");
+    setShowEditModal(true);
+  };
 
+  //Edit media title--> sync name across activities, media page, timeline page 
+  const saveEditChanges = () => {
     const updatedTrips = trips.map((t) => {
       if (t.id !== trip.id) return t;
 
       const updatedGallery = (t.mediaGallery || []).map((m) =>
-        m.id === item.id ? { ...m, name: newTitle } : m
+        m.id === editItem.id ? { ...m, name: editTitle, date: editDate } : m
       );
 
       const updatedActivities = (t.activities || []).map((act) => ({
         ...act,
         media: (act.media || []).map((m) =>
-          m.id === item.id ? { ...m, name: newTitle } : m
+          m.id === editItem.id ? { ...m, name: editTitle, date: editDate } : m
         ),
       }));
 
@@ -82,9 +93,12 @@ function MediaPage() {
 
     localStorage.setItem("trips", JSON.stringify(updatedTrips));
     setTrips(updatedTrips);
+
     const updatedTrip = updatedTrips.find((t) => t.id === trip.id);
     setTrip(updatedTrip || null);
     setGallery(updatedTrip?.mediaGallery || []);
+
+    setShowEditModal(false);
   };
 
   //Delete media--> sync across activities, media page, timeline page 
@@ -166,10 +180,16 @@ function MediaPage() {
                   <div className="media-card-body">
                     <p className="media-title-text">{item.name}</p>
 
+                    {item.date && (
+                      <p className="media-date-text">
+                        <strong>Date:</strong> {item.date}
+                      </p>
+                    )}
+
                     <div className="media-card-actions">
                       <button
                         className="media-edit-btn"
-                        onClick={() => handleEdit(item)}
+                        onClick={() => openEditModal(item)}
                       >
                         Edit
                       </button>
@@ -188,6 +208,50 @@ function MediaPage() {
           )}
         </div>
       </div>
+
+      {/*Edit media title & add date field --> will be auto geotagged later on*/}
+      {showEditModal && (
+        <div className="modal-overlay">
+          <div className="media-edit-modal">
+
+            <img src={editItem.url} className="media-edit-preview" />
+
+            <div className="media-edit-fields">
+              <label>Title</label>
+              <input
+                className="media-edit-input"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+              />
+
+              <label>Date</label>
+              <input
+                type="date"
+                className="media-edit-input"
+                value={editDate}
+                onChange={(e) => setEditDate(e.target.value)}
+              />
+
+              <div className="media-edit-buttons">
+                <button
+                  className="media-edit-cancel"
+                  onClick={() => setShowEditModal(false)}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  className="media-edit-save"
+                  onClick={saveEditChanges}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }
