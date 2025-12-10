@@ -5,12 +5,12 @@ const { Server } = require("socket.io");
 //Import routes
 const landingRouter = require("./routes/Landing")
 const itineraryRouter = require("./routes/Itinerary");
-const authServiceRouter = require("./route/AuthService");
+const authServiceRouter = require("./routes/AuthService");
 const InitRealtime = require("./helper/Realtime")
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {cors: {origin: "http://localhost:3000"}})
+//const io = new Server(server, {cors: {origin: "http://localhost:3000"}})
 
 //Middleware
 app.use( cors({ origin: "http://localhost:3000",}));
@@ -22,7 +22,7 @@ app.use("/Itinerary", itineraryRouter);
 app.use('/Auth', authServiceRouter);
 
 //Realtime update
-InitRealtime(io);
+//InitRealtime(io);
 
 
 server.listen(8080, () => {
