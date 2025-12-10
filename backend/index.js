@@ -26,5 +26,5 @@ app.use('/Auth', authServiceRouter);
 
 
 server.listen(8080, () => {
-    console.log('server listening on port 8080');
+    console.log('BE server listening on port 8080');
 })

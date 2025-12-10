@@ -3,7 +3,8 @@ const router = express.Router();
 const dotenv = require("dotenv");
 const axios = require("axios");
 // --- DB stuff ---
-const supabase = require("../helper/db.js")
+const supabase = require("../helper/db.js");
+const pool = require("../helper/db.js");
 // --- geo tag lib ---
 const {exiftool} = require("exiftool-vendored"); //photo geotag
 const path = require("path") //photo path
@@ -117,13 +118,16 @@ router.get("/testLoad", async(req, res) => {
 router.get("/GetAllItineraries", async(req, res) => {
   const userid = req.query["userid"];
 
-  const {data,error} = await supabase
-  .from("itinerary")
-  .select("itinerary_id, itinerary_name, itinerary_dest, start_date, end_date, completed")
-  .eq("user_host_id", userid);
+  try{
+    const data = await pool.query(
+      'SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date FROM itinerary WHERE user_host_id = $1', [userid]
+    );
+    res.json(data.rows);
+  }
 
-  if(error) return res.status(500).send("view all itineraries failed");
-  res.send(data);
+  catch(err){
+    res.status(500).send('View all itineraries failed');
+  }
 });
 
 router.post("/CreateItinerary", async(req, res) => {
