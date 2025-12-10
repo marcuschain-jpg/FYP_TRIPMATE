@@ -5,6 +5,7 @@ const { Server } = require("socket.io");
 //Import routes
 const landingRouter = require("./routes/Landing")
 const itineraryRouter = require("./routes/Itinerary");
+const authServiceRouter = require("./route/AuthService");
 const InitRealtime = require("./helper/Realtime")
 
 const app = express();
@@ -18,6 +19,7 @@ app.use(express.json());
 //Use route
 app.use("/Landing", landingRouter);
 app.use("/Itinerary", itineraryRouter);
+app.use('/Auth', authServiceRouter);
 
 //Realtime update
 InitRealtime(io);
