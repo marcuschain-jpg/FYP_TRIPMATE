@@ -4,6 +4,21 @@ import InitMaps from "../components/InitMaps";
 import useMapData from "../hooks/FetchMapData";
 import "../styles/Itinerary.css";
 
+//Scope trips per logged-in user
+function getTripKey() {
+  const loggedStr = localStorage.getItem("loggedInUser");
+  if (loggedStr) {
+    try {
+      const user = JSON.parse(loggedStr);
+      const uniqueId = user.id || user.email;
+      if (uniqueId) {
+        return `trips_${uniqueId}`;
+      }
+    } catch (e) {}
+  }
+  return "trips_guest";
+}
+
 function ItineraryPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
@@ -16,7 +31,8 @@ function ItineraryPage() {
 
   //Load trip & activities
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("trips") || "[]");
+    const tripKey = getTripKey();
+    const saved = JSON.parse(localStorage.getItem(tripKey) || "[]");
     setTrips(saved);
 
     const foundTrip = saved.find((t) => t.id === Number(tripId));
@@ -45,6 +61,7 @@ function ItineraryPage() {
       return;
     }
 
+    const tripKey = getTripKey();
     const updatedTrips = [...trips];
     const thisTrip = updatedTrips.find((t) => t.id === Number(tripId));
 
@@ -52,7 +69,7 @@ function ItineraryPage() {
 
     thisTrip.activities.splice(index, 1);
 
-    localStorage.setItem("trips", JSON.stringify(updatedTrips));
+    localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
     setTrips(updatedTrips);
     setTrip({ ...thisTrip });
     alert("Activity deleted successfully!");
@@ -125,7 +142,7 @@ function ItineraryPage() {
                     Edit
                   </button>
 
-                  {/* FIXED DELETE BUTTON */}
+                  {/*Delete button*/}
                   <button
                     className="activity-delete-btn"
                     onClick={() => handleDeleteActivity(index)}

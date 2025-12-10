@@ -2,6 +2,21 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "../styles/Timeline.css";
 
+//Ensures that saved timelines can only be viewed by user who saved them
+function getTripKey() {
+  const loggedStr = localStorage.getItem("loggedInUser");
+  if (loggedStr) {
+    try {
+      const user = JSON.parse(loggedStr);
+      const uniqueId = user.id || user.email;
+      if (uniqueId) {
+        return `trips_${uniqueId}`;
+      }
+    } catch (e) {}
+  }
+  return "trips_guest";
+}
+
 function SavedTimelineViewPage() {
   const { tripId, timelineId } = useParams();
   const navigate = useNavigate();
@@ -9,9 +24,10 @@ function SavedTimelineViewPage() {
   const [trip, setTrip] = useState(null);
   const [timeline, setTimeline] = useState(null);
 
-  // Load the saved timeline from localStorage
+  //Load the saved timeline from localStorage
   useEffect(() => {
-    const trips = JSON.parse(localStorage.getItem("trips") || "[]");
+    const tripKey = getTripKey();
+    const trips = JSON.parse(localStorage.getItem(tripKey) || "[]");
     const found = trips.find((t) => t.id === Number(tripId));
 
     if (!found) return;
@@ -41,7 +57,7 @@ function SavedTimelineViewPage() {
 
       <div className="timeline-render-box">
 
-        {/* Connecting polyline */}
+        {/*Line to connect individual nodes on timeline*/}
         <svg className="timeline-svg" viewBox="0 0 1000 400" preserveAspectRatio="none">
           <polyline
             points={timeline
@@ -55,7 +71,7 @@ function SavedTimelineViewPage() {
           />
         </svg>
 
-        {/* Render each node */}
+        {/*Render each node*/}
         {timeline.map((item, idx) => (
           <div
             key={idx}

@@ -2,12 +2,31 @@ import React, { useState, useEffect } from "react";
 import "../styles/Itinerary.css";
 import { useNavigate } from "react-router-dom";
 
+//Use loggedInUser to decide which localStorage key to use--> ensures user A can only see user A's created trips 
+function getTripKey() {
+  const loggedStr = localStorage.getItem("loggedInUser");
+  if (loggedStr) {
+    try {
+      const user = JSON.parse(loggedStr);
+      const uniqueId = user.id || user.email; //use id/email
+      if (uniqueId) {
+        return `trips_${uniqueId}`;
+      }
+    } catch (e) {
+      //Ignore and fall back
+    }
+  }
+  return "trips_guest";
+}
+
 function MyTripsPage() {
   const navigate = useNavigate();
 
-  //Load all existing trips 
+  const tripKey = getTripKey(); //User’s personal trip storage key
+
+  //Load all existing trips  (for THIS user only)
   const [trips, setTrips] = useState(() => {
-    const saved = localStorage.getItem("trips");
+    const saved = localStorage.getItem(tripKey);
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -35,10 +54,10 @@ function MyTripsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [tripToDelete, setTripToDelete] = useState(null);
 
-  //Save trips on change
+  //Save trips on change (for THIS user only)
   useEffect(() => {
-    localStorage.setItem("trips", JSON.stringify(trips));
-  }, [trips]);
+    localStorage.setItem(tripKey, JSON.stringify(trips));
+  }, [trips, tripKey]);
 
   //Create a new trip --> fill in details in required fields
   const handleSaveTrip = () => {
@@ -131,7 +150,6 @@ function MyTripsPage() {
           >
             Filter ▾
           </button>
-
 
           {/*Filter options*/}
           {showFilters && (

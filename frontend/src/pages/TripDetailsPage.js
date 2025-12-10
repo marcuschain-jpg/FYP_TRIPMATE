@@ -2,6 +2,23 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "../styles/Itinerary.css";
 
+//Ensures that trips created by each user are only visible by that user
+function getTripKey() {
+  const loggedStr = localStorage.getItem("loggedInUser");
+  if (loggedStr) {
+    try {
+      const user = JSON.parse(loggedStr);
+      const uniqueId = user.id || user.email; //Use id/email
+      if (uniqueId) {
+        return `trips_${uniqueId}`;
+      }
+    } catch (e) {
+      //Ignore JSON parse errors and fall back
+    }
+  }
+  return "trips_guest";
+}
+
 function TripDetailsPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
@@ -11,14 +28,16 @@ function TripDetailsPage() {
 
   //Load trips and set current trip
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("trips") || "[]");
+    const tripKey = getTripKey();
+    const saved = JSON.parse(localStorage.getItem(tripKey) || "[]");
     setTrips(saved);
     const found = saved.find((t) => t.id === Number(tripId));
     setTrip(found || null);
   }, [tripId]);
 
   const updateTrips = (updatedTrips) => {
-    localStorage.setItem("trips", JSON.stringify(updatedTrips));
+    const tripKey = getTripKey();
+    localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
     setTrips(updatedTrips);
   };
 

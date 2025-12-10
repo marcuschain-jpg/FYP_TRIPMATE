@@ -2,6 +2,21 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../styles/Timeline.css";
 
+//Ensures that timelines saved by each user are only visible by that user
+function getTripKey() {
+  const loggedStr = localStorage.getItem("loggedInUser");
+  if (loggedStr) {
+    try {
+      const user = JSON.parse(loggedStr);
+      const uniqueId = user.id || user.email;
+      if (uniqueId) {
+        return `trips_${uniqueId}`;
+      }
+    } catch (e) {}
+  }
+  return "trips_guest";
+}
+
 function SavedTimelinesPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
@@ -11,7 +26,8 @@ function SavedTimelinesPage() {
 
   //Load saved timelines
   useEffect(() => {
-    const trips = JSON.parse(localStorage.getItem("trips") || "[]");
+    const tripKey = getTripKey();
+    const trips = JSON.parse(localStorage.getItem(tripKey) || "[]");
     const found = trips.find((t) => t.id === Number(tripId));
     if (found) setTrip(found);
   }, [tripId]);
@@ -31,7 +47,8 @@ function SavedTimelinesPage() {
 
     if (!ok) return; 
 
-    const trips = JSON.parse(localStorage.getItem("trips") || "[]");
+    const tripKey = getTripKey();
+    const trips = JSON.parse(localStorage.getItem(tripKey) || "[]");
 
     const updatedTrips = trips.map((t) => {
       if (t.id !== trip.id) return t;
@@ -42,7 +59,7 @@ function SavedTimelinesPage() {
       };
     });
 
-    localStorage.setItem("trips", JSON.stringify(updatedTrips));
+    localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
     setTrip(updatedTrips.find((t) => t.id === trip.id));
 
     //Success popup message 
