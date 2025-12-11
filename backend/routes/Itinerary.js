@@ -164,4 +164,39 @@ router.delete("/DeleteItinerary", async(req, res) =>{
   }
 });
 
+router.get("/GetItinerary", async(req, res) => {
+  const i_id = req.query["i_id"];
+
+  try{
+    const data = await pool.query(
+      `SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date, completed
+       FROM itinerary WHERE itinerary_id = $1`, [i_id]
+    );
+    res.json(data.rows);
+  }
+  catch(err){ //error running sql
+    res.status(500).send('Load itinerary failed');
+  }
+});
+
+router.patch("/UpdateItineraryComplete", async(req, res) => {
+  const {i_id, completed} = req.body;
+
+  try{
+    const data = await pool.query(
+      `UPDATE itinerary
+       SET completed = $2
+       WHERE itinerary_id = $1`, [i_id, completed]
+    );
+    if(data.rowCount === 1) //successfully delete
+    {
+      res.send(true);
+    }
+  }
+  catch(err){
+    res.status(500).send("UpdateCompleteFailed");
+  }
+});
+
+
 module.exports = router;
