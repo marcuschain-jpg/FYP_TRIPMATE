@@ -125,7 +125,7 @@ router.get("/GetAllItineraries", async(req, res) => {
     res.json(data.rows);
   }
 
-  catch(err){
+  catch(err){ //error running sql
     res.status(500).send('View all itineraries failed');
   }
 });
@@ -133,25 +133,35 @@ router.get("/GetAllItineraries", async(req, res) => {
 router.post("/CreateItinerary", async(req, res) => {
   const {iName, iDest, start, end, userid} = req.body;
 
-  const {data, error} = await supabase
-  .from("itinerary")
-  .insert({itinerary_name:iName, itinerary_dest:iDest, start_date:start, end_date:end, user_host_id:userid})
-  .select("itinerary_id");
-
-  if(error) return res.status(500).send("create itineraries failed");
-
-  res.send(data);
+  try{
+    const data = await pool.query(
+      `INSERT INTO itinerary (itinerary_name, itinerary_dest, start_date, end_date, user_host_id)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING itinerary_id`, [iName, iDest,start,end,userid]
+    );
+    res.json(data.rows);
+  }
+  catch(err){
+    res.status(500).send("Create itinerary failed");
+  }
 });
 
 router.delete("/DeleteItinerary", async(req, res) =>{
   const {itineraryid} = req.body;
 
-  const {error} = await supabase
-  .from("itinerary")
-  .delete()
-  .eq("itinerary_id", itineraryid);
-
-  if(error) return res.status(500).send("delete itineraries failed")
+  try{
+    const data = await pool.query(
+      `DELETE FROM itinerary
+       WHERE itinerary_id = $1`, [itineraryid]
+    );
+    if(data.rowCount === 1) //successfully delete
+    {
+      res.send(true);
+    }
+  }
+  catch(err){
+    res.status(500).send("Create itinerary failed");
+  }
 });
 
 module.exports = router;
