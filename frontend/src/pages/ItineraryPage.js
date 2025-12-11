@@ -97,25 +97,32 @@ function ItineraryPage() {
           <h2>Activities</h2>
 
           {/*Date drop down bar--> user can view activities for selected date*/}
-          {activities.length > 0 && (
-            <select
-              className="date-filter-dropdown"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-            >
-              {Array.from(new Set(activities.map((a) => a.date)))
-                .sort()
-                .map((d) => (
-                  <option key={d} value={d}>
-                    {new Date(d).toLocaleDateString("en-GB", {
-                      weekday: "short",
-                      day: "numeric",
-                      month: "long",
-                    })}
-                  </option>
-                ))}
-            </select>
-          )}
+          {/* Date dropdown + Arrange button */}
+            {activities.length > 0 && (
+            <div className="date-row">
+                <select
+                className="date-filter-dropdown"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                >
+                {Array.from(new Set(activities.map((a) => a.date)))
+                    .sort()
+                    .map((d) => (
+                    <option key={d} value={d}>
+                        {new Date(d).toLocaleDateString("en-GB", {
+                        weekday: "short",
+                        day: "numeric",
+                        month: "long",
+                        })}
+                    </option>
+                    ))}
+                </select>
+
+                {/* ⭐ Arrange button (no function needed) */}
+                <button className="arrange-btn">Arrange</button>
+            </div>
+            )}
+
 
           {/*Activity section*/}
           <div className="activities-section">

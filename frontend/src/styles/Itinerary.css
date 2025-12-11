@@ -403,12 +403,20 @@
     align-items: center;
 }
 
+.date-row {
+    display: flex;
+    align-items: center;
+    gap: 230px;   /*Space between date drop dow and arange button*/
+    margin-bottom: 12px;
+  }
+  
 .arrange-btn {
     background: #0f5b86;
     color: white;
     padding: 10px 20px;
     border-radius: 6px;
     border: none;
+    
 }
 
 .date-text {
