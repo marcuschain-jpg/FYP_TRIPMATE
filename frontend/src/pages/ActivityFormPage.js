@@ -3,8 +3,10 @@ import { useState, useEffect } from "react";
 import InitMaps from "../components/InitMaps";
 import useMapData from "../hooks/FetchMapData";
 import "../styles/Itinerary.css";
+import axios from 'axios';
 
 //Ensures that activities created by each user are only visible by that user
+/*
 function getTripKey() {
   const loggedStr = localStorage.getItem("loggedInUser");
   if (loggedStr) {
@@ -17,10 +19,10 @@ function getTripKey() {
     } catch (e) {}
   }
   return "trips_guest";
-}
+}*/
 
 function ActivityFormPage() {
-  const { tripId, mode, index } = useParams(); 
+  const { tripId, mode, index} = useParams(); 
   const navigate = useNavigate();
   const mapData = useMapData();
 
@@ -39,7 +41,7 @@ function ActivityFormPage() {
   const editing = mode === "edit";
 
   //Load trip & existing activity if editing
-  useEffect(() => {
+  /*useEffect(() => {
     const tripKey = getTripKey();
     const saved = JSON.parse(localStorage.getItem(tripKey) || "[]");
     setTrips(saved);
@@ -59,12 +61,12 @@ function ActivityFormPage() {
         setOriginalMediaIds((act.media || []).map((m) => m.id));
       }
     }
-  }, [tripId, mode, index, editing]);
+  }, [tripId, mode, index, editing]);*/
 
-  if (!trip) return <p>Trip not found.</p>;
+  if (!trip && editing) return <p>Trip not found.</p>;
 
   //Save activity 
-  const handleSave = () => {
+  const handleSave = async() => {
     //Convert newly uploaded files from device to media objects using object URLs
     const newMediaObjects =
       media.length > 0
@@ -77,7 +79,7 @@ function ActivityFormPage() {
         : [];
 
     //List of media for specific activity
-    const finalMedia = [...existingMedia, ...newMediaObjects];
+    /*const finalMedia = [...existingMedia, ...newMediaObjects];
 
     const newActivity = {
       name,
@@ -88,14 +90,15 @@ function ActivityFormPage() {
     };
 
     const updatedTrips = trips.map((t) => {
-      if (t.id !== trip.id) return t;
+      //if (t.id !== trip.id) return t;
 
-      const existingActivities = t.activities || [];
+      //const existingActivities = t.activities || [];
 
       //Insert or replace activity
       let updatedActivities = [...existingActivities];
       if (editing) {
         updatedActivities[Number(index)] = newActivity;
+
       } else {
         updatedActivities.push(newActivity);
       }
@@ -118,15 +121,32 @@ function ActivityFormPage() {
         activities: updatedActivities,
         mediaGallery: updatedMediaGallery,
       };
-    });
+    });*/
 
-    const tripKey = getTripKey();
+    /*const tripKey = getTripKey();
     localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
     setTrips(updatedTrips);
     const updatedTrip = updatedTrips.find((t) => t.id === trip.id);
-    setTrip(updatedTrip || null);
+    setTrip(updatedTrip || null);*/
 
-    navigate(`/mytrips/trip/${tripId}/itinerary`);
+    //Backend create and edit start here! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    if(editing) //edit
+    {
+      axios.patch("http://localhost:8080/Itinerary/UpdateItineraryComplete", {a_id:index, aName: name, aLoc: locationName, aAddress: address, aDate: date}) //trip id is activityid here
+      .then(response => {
+        if(response.data === true) alert("Succesfully edit activity!")
+      });
+    }
+    else //create
+    {
+      await axios.post("http://localhost:8080/Itinerary/CreateActivity", {aName: name, aLoc: locationName, aAddress: address, aDate: date, i_id: tripId})
+      .then(res=>{
+        if(res.data === true) alert("Successfully created activity!")
+      })
+    }
+
+
+    navigate(`/mytrips/trip/itinerary/${tripId}`);
   };
 
   return (
@@ -231,7 +251,7 @@ function ActivityFormPage() {
             <button
               className="cancel-btn"
               onClick={() =>
-                navigate(`/mytrips/trip/${tripId}/itinerary`)
+                navigate(`/mytrips/trip/itinerary/${tripId}`)
               }
             >
               Cancel

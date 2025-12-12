@@ -94,6 +94,7 @@ router.post("/upload", upload.single("photo"), async (req, res) => {
 
 // ================================== Prototype Functions ===================================
 
+// ================================== MyTripsPage============================================
 router.get("/GetAllItineraries", async(req, res) => {
   const userid = req.query["userid"];
 
@@ -143,6 +144,7 @@ router.delete("/DeleteItinerary", async(req, res) =>{
   }
 });
 
+// ================================== TripDetailsPage ============================================
 router.get("/GetItinerary", async(req, res) => {
   const i_id = req.query["i_id"];
 
@@ -167,7 +169,7 @@ router.patch("/UpdateItineraryComplete", async(req, res) => {
        SET completed = $2
        WHERE itinerary_id = $1`, [i_id, completed]
     );
-    if(data.rowCount === 1) //successfully delete
+    if(data.rowCount === 1) //successfully update
     {
       res.send(true);
     }
@@ -177,29 +179,93 @@ router.patch("/UpdateItineraryComplete", async(req, res) => {
   }
 });
 
+// ================================== ItineraryPage ============================================
 router.get("/GetAllActivities", async(req, res) => {
   const i_id = req.query['i_id'];
 
   try{
     const data = await pool.query(
-      `SELECT a.activity_id, a.activity_name, a.activity_address, i.itinerary_name, 
+      `SELECT a.activity_id, a.activity_name, a.activity_address, i.itinerary_name, a.activity_location, 
        TO_CHAR(i.start_date, 'DD/MM/YYYY') AS start_date,
        TO_CHAR(i.end_date, 'DD/MM/YYYY') AS end_date,
        TO_CHAR(a.activity_date, 'YYYY-MM-DD') AS activity_date
        FROM itinerary i
        LEFT JOIN activity a
        ON i.itinerary_id = a.itinerary_id
-       WHERE i.itinerary_id = $1`, [i_id]
+       WHERE i.itinerary_id = $1
+       ORDER BY activity_date ASC, a.activity_order ASC`, [i_id]
     );
-    
-    console.log(data.rows);
-    res.send(data.rows);
+    res.json(data.rows);
   }
   catch(err)
   {
     res.status(500).send("GetAllActivities failed");
   }
-})
+});
+
+router.delete("/DeleteActivity", async(req, res) => {
+  const {activityid} = req.body;
+  
+  try{
+    const data = await pool.query(
+      `DELETE FROM activity
+       WHERE activity_id = $1`, [activityid]
+    );
+    if(data.rowCount === 1) //successfully delete
+    {
+      res.send(true);
+    }
+  }
+  catch(err){
+    res.status(500).send("DeleteActivity failed")
+  }
+  
+});
+
+//==================================================== ActivityFormPage ==========================
+router.post("/CreateActivity", async(req,res) => {
+  const {aName, aLoc, aAddress, aDate, i_id} = req.body;
+  const aPlaceID = "abcabc" //dummy
+
+  try{
+    const data = await pool.query(
+      `INSERT INTO activity (activity_name, activity_location, activity_address, activity_date, gmaps_placeid, itinerary_id)
+       VALUES ($1, $2, $3, $4, $5, $6)`, [aName, aLoc, aAddress, aDate, aPlaceID, i_id]
+    );
+    if(data.rowCount === 1) //successfully insert
+    {
+      res.send(true);
+    }
+  }
+  catch(err){
+    console.log(err);
+    res.status(500).send("CreateActivity Failed");
+  }
+});
+
+router.patch("/EditActivity", async(req, res) => {
+  const {a_id, aName, aLoc, aAddress, aDate} = req.body;
+  const aPlaceID = "abcabc" //dummy
+
+  try{
+    const data = await pool.query(
+      `UPDATE activity
+       SET activity_name = $2, activity_location = $3, activity_address = $4, activity_date = $5, gmaps_placeid = $6   
+       WHERE activity_id = $1`, [a_id, aName, aLoc, aAddress, aDate, aPlaceID]
+    );
+    if(data.rowCount === 1) //successfully update
+    {
+      res.send(true);
+    }
+  }
+  catch(err){
+    res.status(500).send("UpdateCompleteFailed");
+  }
+});
+
+
+
+
 
 
 module.exports = router;

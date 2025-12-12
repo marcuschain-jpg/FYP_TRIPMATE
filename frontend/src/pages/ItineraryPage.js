@@ -50,6 +50,7 @@ function ItineraryPage() {
       name: a.activity_name,
       date: a.activity_date,
       address: a.activity_address,
+      location: a.activity_location,
     }));
 
     setActivities(mapAct);
@@ -59,27 +60,34 @@ function ItineraryPage() {
   if (!trip) return <p className="loading-text">Trip not found.</p>;
 
 
-  const filteredActivities = activities.filter(
+  let filteredActivities = activities.filter(
     (a) => a.date === selectedDate
   );
 
   //Delete actiity from itinerary
-  const handleDeleteActivity = (index) => {
+  const handleDeleteActivity = async(index) => {
     if (!window.confirm("Are you sure you want to delete this activity?")) { //confirmation message for delete funciton
       return;
     }
 
-    //const tripKey = getTripKey();
+    /*const tripKey = getTripKey();
     const updatedTrips = [...trips];
-    const thisTrip = updatedTrips.find((t) => t.id === Number(tripId));
+    const thisTrip = updatedTrips.find((t) => t.id === Number(tripId));*/
 
-    if (!thisTrip) return;
+    //if (!thisTrip) return;
 
-    thisTrip.activities.splice(index, 1);
+    /*thisTrip.activities.splice(index, 1);
 
-    //localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
+    localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
     setTrips(updatedTrips);
-    setTrip({ ...thisTrip });
+    setTrip({ ...thisTrip });*/
+    await axios.delete("http://localhost:8080/Itinerary/DeleteActivity", {data:{activityid:index}})
+    .then(response => {
+      if(response.data === true) 
+      {
+        setActivities((prev) => prev.filter((a) => a.id !== index));
+      }
+    });
     alert("Activity deleted successfully!");
   };
 
@@ -138,8 +146,8 @@ function ItineraryPage() {
               <p>No activities for this day.</p>
             )}
 
-            {!Loading && filteredActivities.map((act, index) => (
-              <div key={index} className="activity-card">
+            {!Loading && filteredActivities.map((act) => (
+              <div key={act.id} className="activity-card">
                 <h3>{act.name}</h3>
                 <p>
                   <strong>{act.date}</strong>
@@ -151,7 +159,7 @@ function ItineraryPage() {
                   <button
                     className="activity-edit-btn"
                     onClick={() =>
-                      navigate(`/mytrips/trip/${tripId}/activity/edit/${index}`)
+                      navigate(`/mytrips/trip/activity/edit/${tripId}/${act.id}`)
                     }
                   >
                     Edit
@@ -160,7 +168,7 @@ function ItineraryPage() {
                   {/*Delete button*/}
                   <button
                     className="activity-delete-btn"
-                    onClick={() => handleDeleteActivity(index)}
+                    onClick={() => handleDeleteActivity(act.id)}
                   >
                     Delete
                   </button>
@@ -173,7 +181,7 @@ function ItineraryPage() {
           <button
             className="add-activity-big"
             onClick={() =>
-              navigate(`/mytrips/trip/${tripId}/activity/create`)
+              navigate(`/mytrips/trip/activity/create/${trip.id}`)
             }
           >
             Add Activity +

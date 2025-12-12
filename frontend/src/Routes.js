@@ -58,11 +58,12 @@ function AppRoutes() {
 
           {/* Activity Form */}
           <Route
-            path="/mytrips/trip/:tripId/activity/:mode"
+            path="/mytrips/trip/activity/:mode/:tripId"
             element={<ActivityFormPage />}
           />
+          
           <Route
-            path="/mytrips/trip/:tripId/activity/:mode/:index"
+            path="/mytrips/trip/activity/:mode/:tripId/:index"
             element={<ActivityFormPage />}
           />
 
