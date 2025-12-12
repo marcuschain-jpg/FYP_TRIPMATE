@@ -1,11 +1,18 @@
 // db.js
-const { createClient } = require("@supabase/supabase-js");
 const dotenv = require("dotenv");
 dotenv.config({ path: "keys.env" });
+const{ Pool } = require("pg");
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,               // e.g., https://xyz.supabase.co
-  process.env.SUPABASE_SERVICE_ROLE_KEY   // use anon key for basic insert
-);
+const pool = new Pool({
+  host: process.env.PGHOST,
+  user: process.env.PGUSER,
+  password: process.env.PASSWORD,
+  database: process.env.PGDATABASE,
+  port: process.env.PGPORT,
+});
 
-module.exports = supabase;
+pool.on('connect', ()=>{
+  console.log('Connected to PostgreSQL')
+})
+
+module.exports = pool;
