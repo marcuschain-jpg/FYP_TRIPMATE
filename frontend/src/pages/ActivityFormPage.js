@@ -4,6 +4,21 @@ import InitMaps from "../components/InitMaps";
 import useMapData from "../hooks/FetchMapData";
 import "../styles/Itinerary.css";
 
+//Ensures that activities created by each user are only visible by that user
+function getTripKey() {
+  const loggedStr = localStorage.getItem("loggedInUser");
+  if (loggedStr) {
+    try {
+      const user = JSON.parse(loggedStr);
+      const uniqueId = user.id || user.email;
+      if (uniqueId) {
+        return `trips_${uniqueId}`;
+      }
+    } catch (e) {}
+  }
+  return "trips_guest";
+}
+
 function ActivityFormPage() {
   const { tripId, mode, index } = useParams(); 
   const navigate = useNavigate();
@@ -17,15 +32,16 @@ function ActivityFormPage() {
   const [locationName, setLocationName] = useState("");
   const [address, setAddress] = useState("");
   const [date, setDate] = useState("");
-  const [media, setMedia] = useState([]); // newly uploaded files
-  const [existingMedia, setExistingMedia] = useState([]); // already-saved media for this activity
-  const [originalMediaIds, setOriginalMediaIds] = useState([]); // for delete-sync
+  const [media, setMedia] = useState([]); //Newly uploaded files
+  const [existingMedia, setExistingMedia] = useState([]); //Already-saved media for this activity
+  const [originalMediaIds, setOriginalMediaIds] = useState([]); //For delete-sync
 
   const editing = mode === "edit";
 
-  //Load trip + existing activity if editing
+  //Load trip & existing activity if editing
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("trips") || "[]");
+    const tripKey = getTripKey();
+    const saved = JSON.parse(localStorage.getItem(tripKey) || "[]");
     setTrips(saved);
 
     const foundTrip = saved.find((t) => t.id === Number(tripId));
@@ -104,7 +120,8 @@ function ActivityFormPage() {
       };
     });
 
-    localStorage.setItem("trips", JSON.stringify(updatedTrips));
+    const tripKey = getTripKey();
+    localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
     setTrips(updatedTrips);
     const updatedTrip = updatedTrips.find((t) => t.id === trip.id);
     setTrip(updatedTrip || null);

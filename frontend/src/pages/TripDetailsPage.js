@@ -3,6 +3,23 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import "../styles/Itinerary.css";
 
+//Ensures that trips created by each user are only visible by that user
+function getTripKey() {
+  const loggedStr = localStorage.getItem("loggedInUser");
+  if (loggedStr) {
+    try {
+      const user = JSON.parse(loggedStr);
+      const uniqueId = user.id || user.email; //Use id/email
+      if (uniqueId) {
+        return `trips_${uniqueId}`;
+      }
+    } catch (e) {
+      //Ignore JSON parse errors and fall back
+    }
+  }
+  return "trips_guest";
+}
+
 function TripDetailsPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();

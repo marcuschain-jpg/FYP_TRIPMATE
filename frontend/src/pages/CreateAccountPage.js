@@ -35,7 +35,15 @@ export default function CreateAccountPage() {
     }
 
     //Save new user and create account
-    const newUser = { email, password, firstName, lastName };
+    // 🔥 ADD UNIQUE USER ID HERE
+    const newUser = { 
+      id: Date.now(),  // ← UNIQUE ID FOR THIS USER
+      email, 
+      password, 
+      firstName, 
+      lastName 
+    };
+
     users.push(newUser);
     localStorage.setItem("users", JSON.stringify(users));
 

@@ -82,9 +82,15 @@
   .timeline-render-box {
     position: relative;
     width: 100%;
-    height: 500px;
-    margin-top: 40px;
+    height: 500px; 
+    border-radius: 15px;
+    margin-top: 20px;
+    overflow: visible; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
+  
   
   /*Connecting line for waypoints on timeline*/
   .timeline-svg {

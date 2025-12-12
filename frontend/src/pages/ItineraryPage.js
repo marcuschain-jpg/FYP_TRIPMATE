@@ -4,6 +4,21 @@ import InitMaps from "../components/InitMaps";
 import useMapData from "../hooks/FetchMapData";
 import "../styles/Itinerary.css";
 
+//Scope trips per logged-in user
+function getTripKey() {
+  const loggedStr = localStorage.getItem("loggedInUser");
+  if (loggedStr) {
+    try {
+      const user = JSON.parse(loggedStr);
+      const uniqueId = user.id || user.email;
+      if (uniqueId) {
+        return `trips_${uniqueId}`;
+      }
+    } catch (e) {}
+  }
+  return "trips_guest";
+}
+
 function ItineraryPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
@@ -16,7 +31,8 @@ function ItineraryPage() {
 
   //Load trip & activities
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("trips") || "[]");
+    const tripKey = getTripKey();
+    const saved = JSON.parse(localStorage.getItem(tripKey) || "[]");
     setTrips(saved);
 
     const foundTrip = saved.find((t) => t.id === Number(tripId));
@@ -45,6 +61,7 @@ function ItineraryPage() {
       return;
     }
 
+    const tripKey = getTripKey();
     const updatedTrips = [...trips];
     const thisTrip = updatedTrips.find((t) => t.id === Number(tripId));
 
@@ -52,7 +69,7 @@ function ItineraryPage() {
 
     thisTrip.activities.splice(index, 1);
 
-    localStorage.setItem("trips", JSON.stringify(updatedTrips));
+    localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
     setTrips(updatedTrips);
     setTrip({ ...thisTrip });
     alert("Activity deleted successfully!");
@@ -80,25 +97,32 @@ function ItineraryPage() {
           <h2>Activities</h2>
 
           {/*Date drop down bar--> user can view activities for selected date*/}
-          {activities.length > 0 && (
-            <select
-              className="date-filter-dropdown"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-            >
-              {Array.from(new Set(activities.map((a) => a.date)))
-                .sort()
-                .map((d) => (
-                  <option key={d} value={d}>
-                    {new Date(d).toLocaleDateString("en-GB", {
-                      weekday: "short",
-                      day: "numeric",
-                      month: "long",
-                    })}
-                  </option>
-                ))}
-            </select>
-          )}
+          {/* Date dropdown + Arrange button */}
+            {activities.length > 0 && (
+            <div className="date-row">
+                <select
+                className="date-filter-dropdown"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                >
+                {Array.from(new Set(activities.map((a) => a.date)))
+                    .sort()
+                    .map((d) => (
+                    <option key={d} value={d}>
+                        {new Date(d).toLocaleDateString("en-GB", {
+                        weekday: "short",
+                        day: "numeric",
+                        month: "long",
+                        })}
+                    </option>
+                    ))}
+                </select>
+
+                {/* ⭐ Arrange button (no function needed) */}
+                <button className="arrange-btn">Arrange</button>
+            </div>
+            )}
+
 
           {/*Activity section*/}
           <div className="activities-section">
@@ -125,7 +149,7 @@ function ItineraryPage() {
                     Edit
                   </button>
 
-                  {/* FIXED DELETE BUTTON */}
+                  {/*Delete button*/}
                   <button
                     className="activity-delete-btn"
                     onClick={() => handleDeleteActivity(index)}

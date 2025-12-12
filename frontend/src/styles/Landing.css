@@ -1,17 +1,18 @@
-/*Import background image*/
+
+/*Landing page*/
 .landing-container {
     width: 100%;
     height: 100vh;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-  
     display: flex;
     justify-content: flex-start;
     align-items: center;
     padding-left: 80px;
     position: relative;
   }
+  
   
   .hero-section {
     color: white;
