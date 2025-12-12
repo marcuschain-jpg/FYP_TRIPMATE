@@ -124,17 +124,22 @@ function MyTripsPage() {
   };
 
   //Final delete after confirmation
-  const deleteTripConfirmed = () => {
+  const deleteTripConfirmed = async() => {
     if (!tripToDelete) return;
 
-    setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
-    axios.delete("http://localhost:8080/Itinerary/DeleteItinerary", {data:{itineraryid:tripToDelete.id}});
+    await axios.delete("http://localhost:8080/Itinerary/DeleteItinerary", {data:{itineraryid:tripToDelete.id}})
+    .then(response => {
+      if(response.data === true) 
+      {
+        setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
+        setShowDeleteConfirm(false);
+        setTripToDelete(null);
 
-    setShowDeleteConfirm(false);
-    setTripToDelete(null);
+        setSuccessMsg("Trip deleted successfully!");
+        setTimeout(() => setSuccessMsg(""), 1500);
+      }
+    });
 
-    setSuccessMsg("Trip deleted successfully!");
-    setTimeout(() => setSuccessMsg(""), 1500);
   };
 
   //Apply filters to search for trips in list
