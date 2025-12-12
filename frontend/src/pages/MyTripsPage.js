@@ -1,34 +1,17 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Itinerary.css";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import axios from 'axios';
 
-//Use loggedInUser to decide which localStorage key to use--> ensures user A can only see user A's created trips 
-function getTripKey() {
-  const loggedStr = localStorage.getItem("loggedInUser");
-  if (loggedStr) {
-    try {
-      const user = JSON.parse(loggedStr);
-      const uniqueId = user.id || user.email; //use id/email
-      if (uniqueId) {
-        return `trips_${uniqueId}`;
-      }
-    } catch (e) {
-      //Ignore and fall back
-    }
-  }
-  return "trips_guest";
-}
 
 function MyTripsPage() {
   const navigate = useNavigate();
+  const { userID } = useParams();
 
-  const tripKey = getTripKey(); //User’s personal trip storage key
 
   //Load all existing trips  (for THIS user only)
-  const [trips, setTrips] = useState(() => {
-    const saved = localStorage.getItem(tripKey);
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [trips, setTrips] = useState([]);
+  const [Loading, setLoading] = useState(true);
 
   //Modal states
   const [showAddTripModal, setShowAddTripModal] = useState(false);
@@ -70,7 +53,7 @@ function MyTripsPage() {
       destination: t.itinerary_dest,
       start: t.start_date,
       end: t.end_date,
-      status: t.completed
+      status: t.completed,
     }));
 
     setTrips(mapTrips);
@@ -91,28 +74,45 @@ function MyTripsPage() {
       return;
     }
 
-    const newTrip = {
-      id: Date.now(),
-      name: newTripName,
+    //insert trip here if successful then setTrips
+    let newTripID;
+    await axios.post("http://localhost:8080/Itinerary/CreateItinerary", {iName:newTripName, iDest:newDestination, start:newStart, end:newEnd, userid:userID})
+    .then(response => {
+      newTripID = response.data[0].itinerary_id;
+    })
+
+    if(newTripID > 0)
+    {
+      const newTrip = {
+      id: newTripID,
+      name: newTripName, 
       destination: newDestination,
       start: newStart,
       end: newEnd,
-      status: "In Progress",
-      type: "Private",
-      activities: [],
-      mediaGallery: [],
-    };
+      };
 
-    setTrips((prev) => [...prev, newTrip]);
-    setSuccessMsg("Trip successfully created!");
-    setErrorMsg("");
+      setTrips((prev) => [...prev, newTrip]);
+      setSuccessMsg("Trip successfully created!");
 
-    setNewTripName("");
-    setNewDestination("");
-    setNewStart("");
-    setNewEnd("");
+      //Reset form
+      setNewTripName("");
+      setNewDestination("");
+      setNewStart("");
+      setNewEnd("");
+      setErrorMsg("");
+      setTimeout(() => setShowAddTripModal(false), 300);
+    }
 
-    setTimeout(() => setShowAddTripModal(false), 800);
+    else
+    {
+      setErrorMsg("Insert Failed");
+      setNewTripName("");
+      setNewDestination("");
+      setNewStart("");
+      setNewEnd("");
+      return;
+    }
+
   };
 
   // Delete existing trip
@@ -257,9 +257,11 @@ function MyTripsPage() {
 
       {/*Trip cards*/}
       <div className="trip-list">
-        {filteredTrips.length === 0 && <p>No trips found.</p>}
+        {!Loading && filteredTrips.length === 0 && <p>No trips found.</p>}
+        
+        {Loading && <p>Loading..</p>}
 
-        {filteredTrips.map((trip) => (
+        {!Loading && filteredTrips.map((trip) => (
           <div key={trip.id} className="trip-card">
             <div>
               <h2 className="trip-name">{trip.name}</h2>

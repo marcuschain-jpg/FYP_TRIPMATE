@@ -3,13 +3,11 @@ const router = express.Router();
 const dotenv = require("dotenv");
 const axios = require("axios");
 // --- DB stuff ---
-const supabase = require("../helper/db.js");
 const pool = require("../helper/db.js");
 // --- geo tag lib ---
 const {exiftool} = require("exiftool-vendored"); //photo geotag
 const path = require("path") //photo path
 const multer = require("multer");
-const postgres = require("postgres");
 // --- end geo tag lib ---
 
 // Load custom env file
@@ -94,33 +92,14 @@ router.post("/upload", upload.single("photo"), async (req, res) => {
     }
 });
 
-router.post("/test", async(req, res) => {
-  const {activity} = req.body;
-  
-  const {data,error} = await supabase
-  .from("messages")
-  .insert([{content: activity}]);
-
-  if(error) return res.status(500).send("failed :(");
-  res.send("insert 成功! :D");
-});
-
-router.get("/testLoad", async(req, res) => {
-  
-  const {data,error} = await supabase
-  .from("messages")
-  .select("*");
-
-  if(error) return res.status(500).send("failed :(");
-  res.send(data);
-});
+// ================================== Prototype Functions ===================================
 
 router.get("/GetAllItineraries", async(req, res) => {
   const userid = req.query["userid"];
 
   try{
     const data = await pool.query(
-      'SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date FROM itinerary WHERE user_host_id = $1', [userid]
+      'SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date, completed FROM itinerary WHERE user_host_id = $1', [userid]
     );
     res.json(data.rows);
   }
@@ -197,6 +176,30 @@ router.patch("/UpdateItineraryComplete", async(req, res) => {
     res.status(500).send("UpdateCompleteFailed");
   }
 });
+
+router.get("/GetAllActivities", async(req, res) => {
+  const i_id = req.query['i_id'];
+
+  try{
+    const data = await pool.query(
+      `SELECT a.activity_id, a.activity_name, a.activity_address, i.itinerary_name, 
+       TO_CHAR(i.start_date, 'DD/MM/YYYY') AS start_date,
+       TO_CHAR(i.end_date, 'DD/MM/YYYY') AS end_date,
+       TO_CHAR(a.activity_date, 'YYYY-MM-DD') AS activity_date
+       FROM itinerary i
+       LEFT JOIN activity a
+       ON i.itinerary_id = a.itinerary_id
+       WHERE i.itinerary_id = $1`, [i_id]
+    );
+    
+    console.log(data.rows);
+    res.send(data.rows);
+  }
+  catch(err)
+  {
+    res.status(500).send("GetAllActivities failed");
+  }
+})
 
 
 module.exports = router;
