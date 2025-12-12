@@ -56,28 +56,11 @@ function MyTripsPage() {
 
   //Save trips on change (for THIS user only)
   useEffect(() => {
-    axios.get("http://localhost:8080/Itinerary/GetAllItineraries", {params:{userid: userID}})
-    .then(response => {
-      renderLoadTrip(response.data);
-      setLoading(false);
-    })
-  }, []);
-
-  const renderLoadTrip = (res) => {
-    const mapTrips = res.map(t => ({
-      id: t.itinerary_id,
-      name: t.itinerary_name,
-      destination: t.itinerary_dest,
-      start: t.start_date,
-      end: t.end_date,
-      status: t.completed
-    }));
-
-    setTrips(mapTrips);
-  };
+    localStorage.setItem(tripKey, JSON.stringify(trips));
+  }, [trips, tripKey]);
 
   //Create a new trip --> fill in details in required fields
-  const handleSaveTrip = async() => {
+  const handleSaveTrip = () => {
     const missing = [];
     if (!newTripName) missing.push("tripName");
     if (!newDestination) missing.push("destination");
@@ -115,30 +98,24 @@ function MyTripsPage() {
     setTimeout(() => setShowAddTripModal(false), 800);
   };
 
-  // Delete existing trip
-  const requestDeleteTrip = async(id) => {
+  //Confirmation popup
+  const requestDeleteTrip = (id) => {
     const trip = trips.find((t) => t.id === id);
     setTripToDelete(trip);
     setShowDeleteConfirm(true);
   };
 
   //Final delete after confirmation
-  const deleteTripConfirmed = async() => {
+  const deleteTripConfirmed = () => {
     if (!tripToDelete) return;
 
-    await axios.delete("http://localhost:8080/Itinerary/DeleteItinerary", {data:{itineraryid:tripToDelete.id}})
-    .then(response => {
-      if(response.data === true) 
-      {
-        setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
-        setShowDeleteConfirm(false);
-        setTripToDelete(null);
+    setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
 
-        setSuccessMsg("Trip deleted successfully!");
-        setTimeout(() => setSuccessMsg(""), 1500);
-      }
-    });
+    setShowDeleteConfirm(false);
+    setTripToDelete(null);
 
+    setSuccessMsg("Trip deleted successfully!");
+    setTimeout(() => setSuccessMsg(""), 1500);
   };
 
   //Apply filters to search for trips in list
@@ -266,11 +243,10 @@ function MyTripsPage() {
 
               <div
                 className={`trip-status ${
-                  trip.status === true ? "completed" : "inprogress"
+                  trip.status === "Completed" ? "completed" : "inprogress"
                 }`}
               >
-                {trip.status && "Completed"}
-                {!trip.status && "In Progress"}
+                {trip.status}
               </div>
             </div>
 

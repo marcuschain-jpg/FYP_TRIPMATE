@@ -3,8 +3,7 @@ const router = express.Router();
 const dotenv = require("dotenv");
 const axios = require("axios");
 // --- DB stuff ---
-const supabase = require("../helper/db.js");
-const pool = require("../helper/db.js");
+const supabase = require("../helper/db.js")
 // --- geo tag lib ---
 const {exiftool} = require("exiftool-vendored"); //photo geotag
 const path = require("path") //photo path
@@ -114,89 +113,5 @@ router.get("/testLoad", async(req, res) => {
   if(error) return res.status(500).send("failed :(");
   res.send(data);
 });
-
-router.get("/GetAllItineraries", async(req, res) => {
-  const userid = req.query["userid"];
-
-  try{
-    const data = await pool.query(
-      'SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date FROM itinerary WHERE user_host_id = $1', [userid]
-    );
-    res.json(data.rows);
-  }
-
-  catch(err){ //error running sql
-    res.status(500).send('View all itineraries failed');
-  }
-});
-
-router.post("/CreateItinerary", async(req, res) => {
-  const {iName, iDest, start, end, userid} = req.body;
-
-  try{
-    const data = await pool.query(
-      `INSERT INTO itinerary (itinerary_name, itinerary_dest, start_date, end_date, user_host_id)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING itinerary_id`, [iName, iDest,start,end,userid]
-    );
-    res.json(data.rows);
-  }
-  catch(err){
-    res.status(500).send("Create itinerary failed");
-  }
-});
-
-router.delete("/DeleteItinerary", async(req, res) =>{
-  const {itineraryid} = req.body;
-
-  try{
-    const data = await pool.query(
-      `DELETE FROM itinerary
-       WHERE itinerary_id = $1`, [itineraryid]
-    );
-    if(data.rowCount === 1) //successfully delete
-    {
-      res.send(true);
-    }
-  }
-  catch(err){
-    res.status(500).send("Create itinerary failed");
-  }
-});
-
-router.get("/GetItinerary", async(req, res) => {
-  const i_id = req.query["i_id"];
-
-  try{
-    const data = await pool.query(
-      `SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date, completed
-       FROM itinerary WHERE itinerary_id = $1`, [i_id]
-    );
-    res.json(data.rows);
-  }
-  catch(err){ //error running sql
-    res.status(500).send('Load itinerary failed');
-  }
-});
-
-router.patch("/UpdateItineraryComplete", async(req, res) => {
-  const {i_id, completed} = req.body;
-
-  try{
-    const data = await pool.query(
-      `UPDATE itinerary
-       SET completed = $2
-       WHERE itinerary_id = $1`, [i_id, completed]
-    );
-    if(data.rowCount === 1) //successfully delete
-    {
-      res.send(true);
-    }
-  }
-  catch(err){
-    res.status(500).send("UpdateCompleteFailed");
-  }
-});
-
 
 module.exports = router;
