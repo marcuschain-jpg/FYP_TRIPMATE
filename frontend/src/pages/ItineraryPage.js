@@ -55,9 +55,9 @@ function ItineraryPage() {
     (a) => a.date === selectedDate
   );
 
-  //Delete actiity from itinerary
-  const handleDeleteActivity = (index) => {
-    if (!window.confirm("Are you sure you want to delete this activity?")) { //confirmation message for delete funciton
+  //Delete activity from itinerary 
+  const handleDeleteActivity = (realIndex) => {
+    if (!window.confirm("Are you sure you want to delete this activity?")) {
       return;
     }
 
@@ -67,7 +67,7 @@ function ItineraryPage() {
 
     if (!thisTrip) return;
 
-    thisTrip.activities.splice(index, 1);
+    thisTrip.activities.splice(realIndex, 1);
 
     localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
     setTrips(updatedTrips);
@@ -83,6 +83,7 @@ function ItineraryPage() {
       >
         ← Back
       </button>
+
       <div className="itinerary-top-row">
         <div>
           <h1>{trip.name}</h1>
@@ -96,33 +97,30 @@ function ItineraryPage() {
         <div className="left-side">
           <h2>Activities</h2>
 
-          {/*Date drop down bar--> user can view activities for selected date*/}
-          {/* Date dropdown + Arrange button */}
-            {activities.length > 0 && (
+          {/*Date dropdown & Arrange*/}
+          {activities.length > 0 && (
             <div className="date-row">
-                <select
+              <select
                 className="date-filter-dropdown"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                >
+              >
                 {Array.from(new Set(activities.map((a) => a.date)))
-                    .sort()
-                    .map((d) => (
+                  .sort()
+                  .map((d) => (
                     <option key={d} value={d}>
-                        {new Date(d).toLocaleDateString("en-GB", {
+                      {new Date(d).toLocaleDateString("en-GB", {
                         weekday: "short",
                         day: "numeric",
                         month: "long",
-                        })}
+                      })}
                     </option>
-                    ))}
-                </select>
+                  ))}
+              </select>
 
-                {/* ⭐ Arrange button (no function needed) */}
-                <button className="arrange-btn">Arrange</button>
+              <button className="arrange-btn">Arrange</button>
             </div>
-            )}
-
+          )}
 
           {/*Activity section*/}
           <div className="activities-section">
@@ -130,35 +128,47 @@ function ItineraryPage() {
               <p>No activities for this day.</p>
             )}
 
-            {filteredActivities.map((act, index) => (
-              <div key={index} className="activity-card">
-                <h3>{act.name}</h3>
-                <p>
-                  <strong>{act.date}</strong>
-                </p>
-                <p>{act.location}</p>
-                {act.address && <p>{act.address}</p>}
+            {filteredActivities.map((act, index) => {
+              
+              const realIndex = activities.findIndex(
+                (a) =>
+                  a.name === act.name &&
+                  a.date === act.date &&
+                  a.location === act.location &&
+                  a.address === act.address
+              );
 
-                <div className="activity-actions">
-                  <button
-                    className="activity-edit-btn"
-                    onClick={() =>
-                      navigate(`/mytrips/trip/${tripId}/activity/edit/${index}`)
-                    }
-                  >
-                    Edit
-                  </button>
+              return (
+                <div key={realIndex} className="activity-card">
+                  <h3>{act.name}</h3>
+                  <p>
+                    <strong>{act.date}</strong>
+                  </p>
+                  <p>{act.location}</p>
+                  {act.address && <p>{act.address}</p>}
 
-                  {/*Delete button*/}
-                  <button
-                    className="activity-delete-btn"
-                    onClick={() => handleDeleteActivity(index)}
-                  >
-                    Delete
-                  </button>
+                  <div className="activity-actions">
+                    <button
+                      className="activity-edit-btn"
+                      onClick={() =>
+                        navigate(
+                          `/mytrips/trip/${tripId}/activity/edit/${realIndex}`
+                        )
+                      }
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      className="activity-delete-btn"
+                      onClick={() => handleDeleteActivity(realIndex)}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/*Add new activity*/}
