@@ -41,6 +41,7 @@ function ActivityFormPage() {
 
   //Start point checkbox
   const [isStartPoint, setIsStartPoint] = useState(false);
+  const [defaultStart, setDefaultStart] = useState(false);
 
   // Track if user manually toggled checkbox
   const [startPointTouched, setStartPointTouched] = useState(false);
@@ -94,6 +95,9 @@ function ActivityFormPage() {
     setLocationName(a[0].activity_location);
     setAddress(a[0].activity_address);
     setDate(a[0].activity_date);
+    setIsStartPoint(Number(a[0].activity_order === 0));
+    setDefaultStart(Number(a[0].activity_order === 0));
+    
   };
 
   //Auto-check if only one activity on that date (excluding self when editing)
@@ -247,14 +251,14 @@ function ActivityFormPage() {
     //Backend create and edit start here! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     if(editing) //edit
     {
-      axios.patch("http://localhost:8080/Itinerary/EditActivity", {a_id:index, aName: name, aLoc: locationName, aAddress: address, aDate: date}) //trip id is activityid here
+      axios.patch("http://localhost:8080/Itinerary/EditActivity", {a_id:index, aName: name, aLoc: locationName, aAddress: address, aDate: date, aOrder: isStartPoint}) //trip id is activityid here
       .then(response => {
         if(response.data === true) alert("Succesfully edit activity!")
       });
     }
     else //create
     {
-      await axios.post("http://localhost:8080/Itinerary/CreateActivity", {aName: name, aLoc: locationName, aAddress: address, aDate: date, i_id: tripId})
+      await axios.post("http://localhost:8080/Itinerary/CreateActivity", {aName: name, aLoc: locationName, aAddress: address, aDate: date, i_id: tripId, aOrder: isStartPoint})
       .then(res=>{
         if(res.data === true) alert("Successfully created activity!")
       })
@@ -290,6 +294,7 @@ function ActivityFormPage() {
                   setIsStartPoint(e.target.checked);
                   setStartPointTouched(true); // ⭐ NEW
                 }}
+                disabled={editing && defaultStart}
               />
               <span>This is my starting point</span>
             </div>

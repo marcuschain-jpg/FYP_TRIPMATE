@@ -224,13 +224,15 @@ router.delete("/DeleteActivity", async(req, res) => {
 
 //==================================================== ActivityFormPage ==========================
 router.post("/CreateActivity", async(req,res) => {
-  const {aName, aLoc, aAddress, aDate, i_id} = req.body;
+  const {aName, aLoc, aAddress, aDate, i_id, aOrder} = req.body;
   const aPlaceID = "abcabc" //dummy
+
+  const realOrder = (aOrder === true) ? 0 : null
 
   try{
     const data = await pool.query(
-      `INSERT INTO activity (activity_name, activity_location, activity_address, activity_date, gmaps_placeid, itinerary_id)
-       VALUES ($1, $2, $3, $4, $5, $6)`, [aName, aLoc, aAddress, aDate, aPlaceID, i_id]
+      `INSERT INTO activity (activity_name, activity_location, activity_address, activity_date, gmaps_placeid, itinerary_id, activity_order)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`, [aName, aLoc, aAddress, aDate, aPlaceID, i_id, realOrder]
     );
     if(data.rowCount === 1) //successfully insert
     {
@@ -244,14 +246,16 @@ router.post("/CreateActivity", async(req,res) => {
 });
 
 router.patch("/EditActivity", async(req, res) => {
-  const {a_id, aName, aLoc, aAddress, aDate} = req.body;
+  const {a_id, aName, aLoc, aAddress, aDate, aOrder} = req.body;
   const aPlaceID = "abcabc" //dummy
+
+  const realOrder = (aOrder === true) ? 0 : null
 
   try{
     const data = await pool.query(
       `UPDATE activity
-       SET activity_name = $2, activity_location = $3, activity_address = $4, activity_date = $5, gmaps_placeid = $6   
-       WHERE activity_id = $1`, [a_id, aName, aLoc, aAddress, aDate, aPlaceID]
+       SET activity_name = $2, activity_location = $3, activity_address = $4, activity_date = $5, gmaps_placeid = $6, activity_order = $7   
+       WHERE activity_id = $1`, [a_id, aName, aLoc, aAddress, aDate, aPlaceID, realOrder]
     );
     if(data.rowCount === 1) //successfully update
     {
@@ -267,7 +271,7 @@ router.get("/GetActivityToEdit", async(req, res) => {
   const a_id = req.query['a_id'];
   try{
     const data = await pool.query(
-      `SELECT activity_name, activity_location, activity_address,
+      `SELECT activity_name, activity_location, activity_address, activity_order,
        TO_CHAR(activity_date, 'YYYY-MM-DD') AS activity_date
        FROM activity
        WHERE activity_id = $1`,[a_id]
