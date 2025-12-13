@@ -22,7 +22,7 @@ function getTripKey() {
 }*/
 
 function ActivityFormPage() {
-  const { tripId, mode, index} = useParams(); 
+  const { tripId, mode, index } = useParams();
   const navigate = useNavigate();
   const mapData = useMapData();
 
@@ -37,6 +37,14 @@ function ActivityFormPage() {
   const [media, setMedia] = useState([]); //Newly uploaded files
   const [existingMedia, setExistingMedia] = useState([]); //Already-saved media for this activity
   const [originalMediaIds, setOriginalMediaIds] = useState([]); //For delete-sync
+
+  //Start point checkbox
+  const [isStartPoint, setIsStartPoint] = useState(false);
+
+  // Track if user manually toggled checkbox
+  const [startPointTouched, setStartPointTouched] = useState(false);
+
+  const [originalDate, setOriginalDate] = useState("");
 
   const editing = mode === "edit";
 
@@ -57,15 +65,57 @@ function ActivityFormPage() {
         setLocationName(act.location || "");
         setAddress(act.address || "");
         setDate(act.date || "");
+        setOriginalDate(act.date || "");
         setExistingMedia(act.media || []);
         setOriginalMediaIds((act.media || []).map((m) => m.id));
+        setIsStartPoint(!!act.isStartPoint);
+
+        // checkbox not manually touched yet
+        setStartPointTouched(false);
       }
     }
   }, [tripId, mode, index, editing]);*/
 
+  //Auto-check if only one activity on that date (excluding self when editing)
+  useEffect(() => {
+    if (!trip || !date) return;
+
+    const activitiesSameDate = (trip.activities || []).filter(
+      (a, idx) => a.date === date && (!editing || idx !== Number(index))
+    );
+
+    if (activitiesSameDate.length === 0) {
+      setIsStartPoint(true);
+    }
+  }, [date, trip, editing, index]);
+
+  useEffect(() => {
+    if (!trip || !editing) return;
+    if (!originalDate) return;
+    if (!date) return;
+
+    //Date unchanged → keep current checkbox value
+    if (date === originalDate) return;
+
+    //User manually chose → respect it return;
+
+    //If moving to a day that already has activities, default unchecked
+    const otherActsOnNewDate = (trip.activities || []).filter(
+      (a, idx) => idx !== Number(index) && a.date === date
+    );
+
+    if (otherActsOnNewDate.length === 0) {
+      //First activity for that day
+      setIsStartPoint(true);
+    } else {
+      //Day already has activities (and likely has start point) → don't steal start point
+      setIsStartPoint(false);
+    }
+  }, [date, originalDate, startPointTouched, trip, editing, index]);
+
   if (!trip && editing) return <p>Trip not found.</p>;
 
-  //Save activity 
+  //Save activity
   const handleSave = async() => {
     //Convert newly uploaded files from device to media objects using object URLs
     const newMediaObjects =
@@ -87,15 +137,15 @@ function ActivityFormPage() {
       address,
       date,
       media: finalMedia,
+      isStartPoint, // ⭐ saved value
     };
 
     const updatedTrips = trips.map((t) => {
       //if (t.id !== trip.id) return t;
 
-      //const existingActivities = t.activities || [];
+      //const let updatedActivities = [...(t.activities || [])];
 
       //Insert or replace activity
-      let updatedActivities = [...existingActivities];
       if (editing) {
         updatedActivities[Number(index)] = newActivity;
 
@@ -103,7 +153,50 @@ function ActivityFormPage() {
         updatedActivities.push(newActivity);
       }
 
-      //Syncing media--> sync any edits to media in timeline, media page, and activity 
+      //Only 1 start point per date if user checked this activity
+      if (isStartPoint) {
+        updatedActivities = updatedActivities.map((a, idx) => {
+          if (a.date === date) {
+            const isCurrent =
+              (editing && idx === Number(index)) ||
+              (!editing && idx === updatedActivities.length - 1);
+
+            return { ...a, isStartPoint: isCurrent };
+          }
+          return a;
+        });
+      }
+
+      //Ensure EACH DAY has a start point:
+      //If tjeres only 1 activity--> auto assined start point 
+      const byDate = {};
+      updatedActivities.forEach((a) => {
+        if (!byDate[a.date]) byDate[a.date] = [];
+        byDate[a.date].push(a);
+      });
+
+      Object.keys(byDate).forEach((day) => {
+        const dayActs = byDate[day];
+        const hasStart = dayActs.some((a) => a.isStartPoint);
+
+        if (!hasStart && dayActs.length > 0) {
+          const firstAct = dayActs[0];
+
+          updatedActivities = updatedActivities.map((a) => {
+            if (
+              a.date === day &&
+              a.name === firstAct.name &&
+              a.location === firstAct.location &&
+              a.address === firstAct.address
+            ) {
+              return { ...a, isStartPoint: true };
+            }
+            return a;
+          });
+        }
+      });
+
+      //Syncing media--> sync any edits to media in timeline, media page, and activity
       //Remove any media that the user removed from this activity
       const removedIds = originalMediaIds.filter(
         (oldId) => !finalMedia.some((m) => m.id === oldId)
@@ -126,6 +219,7 @@ function ActivityFormPage() {
     /*const tripKey = getTripKey();
     localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
     setTrips(updatedTrips);
+
     const updatedTrip = updatedTrips.find((t) => t.id === trip.id);
     setTrip(updatedTrip || null);*/
 
@@ -164,7 +258,22 @@ function ActivityFormPage() {
 
       <div className="activity-form-layout">
         <div className="activity-left-box">
-          <label className="form-label">Event Name</label>
+          {/*Activty and start point*/}
+          <div className="event-name-row">
+            <label className="form-label">Event Name</label>
+            <div className="start-point-checkbox">
+              <input
+                type="checkbox"
+                checked={isStartPoint}
+                onChange={(e) => {
+                  setIsStartPoint(e.target.checked);
+                  setStartPointTouched(true); // ⭐ NEW
+                }}
+              />
+              <span>This is my starting point</span>
+            </div>
+          </div>
+
           <input
             className="form-input"
             value={name}
@@ -238,6 +347,7 @@ function ActivityFormPage() {
                     <img
                       src={URL.createObjectURL(file)}
                       className="media-preview-img"
+                      alt=""
                     />
                   ) : (
                     <div className="media-file-icon">📄 {file.name}</div>
@@ -250,9 +360,7 @@ function ActivityFormPage() {
           <div className="form-button-row">
             <button
               className="cancel-btn"
-              onClick={() =>
-                navigate(`/mytrips/trip/itinerary/${tripId}`)
-              }
+              onClick={() => navigate(`/mytrips/trip/itinerary/${tripId}`)}
             >
               Cancel
             </button>
