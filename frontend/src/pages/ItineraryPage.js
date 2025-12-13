@@ -55,15 +55,9 @@ function ItineraryPage() {
     (a) => a.date === selectedDate
   );
 
-<<<<<<< HEAD
   //Delete activity from itinerary 
   const handleDeleteActivity = (realIndex) => {
     if (!window.confirm("Are you sure you want to delete this activity?")) {
-=======
-  //Delete actiity from itinerary
-  const handleDeleteActivity = (index) => {
-    if (!window.confirm("Are you sure you want to delete this activity?")) { //confirmation message for delete funciton
->>>>>>> parent of 7a38350 (Merge pull request #9 from marcuschain-jpg/marcus-test-branch)
       return;
     }
 
@@ -73,11 +67,7 @@ function ItineraryPage() {
 
     if (!thisTrip) return;
 
-<<<<<<< HEAD
     thisTrip.activities.splice(realIndex, 1);
-=======
-    thisTrip.activities.splice(index, 1);
->>>>>>> parent of 7a38350 (Merge pull request #9 from marcuschain-jpg/marcus-test-branch)
 
     localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
     setTrips(updatedTrips);
@@ -107,14 +97,8 @@ function ItineraryPage() {
         <div className="left-side">
           <h2>Activities</h2>
 
-<<<<<<< HEAD
           {/*Date dropdown & Arrange*/}
           {activities.length > 0 && (
-=======
-          {/*Date drop down bar--> user can view activities for selected date*/}
-          {/* Date dropdown + Arrange button */}
-            {activities.length > 0 && (
->>>>>>> parent of 7a38350 (Merge pull request #9 from marcuschain-jpg/marcus-test-branch)
             <div className="date-row">
               <select
                 className="date-filter-dropdown"
@@ -131,18 +115,8 @@ function ItineraryPage() {
                         month: "long",
                       })}
                     </option>
-<<<<<<< HEAD
                   ))}
               </select>
-=======
-                    ))}
-                </select>
-
-                {/* ⭐ Arrange button (no function needed) */}
-                <button className="arrange-btn">Arrange</button>
-            </div>
-            )}
->>>>>>> parent of 7a38350 (Merge pull request #9 from marcuschain-jpg/marcus-test-branch)
 
               <button className="arrange-btn">Arrange</button>
             </div>
@@ -154,7 +128,6 @@ function ItineraryPage() {
               <p>No activities for this day.</p>
             )}
 
-<<<<<<< HEAD
             {filteredActivities.map((act, index) => {
               
               const realIndex = activities.findIndex(
@@ -193,34 +166,6 @@ function ItineraryPage() {
                       Delete
                     </button>
                   </div>
-=======
-            {filteredActivities.map((act, index) => (
-              <div key={index} className="activity-card">
-                <h3>{act.name}</h3>
-                <p>
-                  <strong>{act.date}</strong>
-                </p>
-                <p>{act.location}</p>
-                {act.address && <p>{act.address}</p>}
-
-                <div className="activity-actions">
-                  <button
-                    className="activity-edit-btn"
-                    onClick={() =>
-                      navigate(`/mytrips/trip/${tripId}/activity/edit/${index}`)
-                    }
-                  >
-                    Edit
-                  </button>
-
-                  {/*Delete button*/}
-                  <button
-                    className="activity-delete-btn"
-                    onClick={() => handleDeleteActivity(index)}
-                  >
-                    Delete
-                  </button>
->>>>>>> parent of 7a38350 (Merge pull request #9 from marcuschain-jpg/marcus-test-branch)
                 </div>
               );
             })}

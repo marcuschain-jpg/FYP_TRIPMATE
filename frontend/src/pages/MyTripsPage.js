@@ -56,30 +56,8 @@ function MyTripsPage() {
 
   //Save trips on change (for THIS user only)
   useEffect(() => {
-<<<<<<< HEAD
     localStorage.setItem(tripKey, JSON.stringify(trips));
   }, [trips, tripKey]);
-=======
-    axios.get("http://localhost:8080/Itinerary/GetAllItineraries", {params:{userid: userID}})
-    .then(response => {
-      renderLoadTrip(response.data);
-      setLoading(false);
-    })
-  }, []);
-
-  const renderLoadTrip = (res) => {
-    const mapTrips = res.map(t => ({
-      id: t.itinerary_id,
-      name: t.itinerary_name,
-      destination: t.itinerary_dest,
-      start: t.start_date,
-      end: t.end_date,
-      status: t.completed
-    }));
-
-    setTrips(mapTrips);
-  };
->>>>>>> parent of 7a38350 (Merge pull request #9 from marcuschain-jpg/marcus-test-branch)
 
   //Create a new trip --> fill in details in required fields
   const handleSaveTrip = () => {

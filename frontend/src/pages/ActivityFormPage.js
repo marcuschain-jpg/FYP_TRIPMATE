@@ -20,11 +20,7 @@ function getTripKey() {
 }
 
 function ActivityFormPage() {
-<<<<<<< HEAD
   const { tripId, mode, index } = useParams();
-=======
-  const { tripId, mode, index } = useParams(); 
->>>>>>> parent of 7a38350 (Merge pull request #9 from marcuschain-jpg/marcus-test-branch)
   const navigate = useNavigate();
   const mapData = useMapData();
 
@@ -78,7 +74,6 @@ function ActivityFormPage() {
     }
   }, [tripId, mode, index, editing]);
 
-<<<<<<< HEAD
   //Auto-check if only one activity on that date (excluding self when editing)
   useEffect(() => {
     if (!trip || !date) return;
@@ -119,11 +114,6 @@ function ActivityFormPage() {
   if (!trip) return <p>Trip not found.</p>;
 
   //Save activity
-=======
-  if (!trip) return <p>Trip not found.</p>;
-
-  //Save activity 
->>>>>>> parent of 7a38350 (Merge pull request #9 from marcuschain-jpg/marcus-test-branch)
   const handleSave = () => {
     //Convert newly uploaded files from device to media objects using object URLs
     const newMediaObjects =
@@ -151,11 +141,7 @@ function ActivityFormPage() {
     const updatedTrips = trips.map((t) => {
       if (t.id !== trip.id) return t;
 
-<<<<<<< HEAD
       let updatedActivities = [...(t.activities || [])];
-=======
-      const existingActivities = t.activities || [];
->>>>>>> parent of 7a38350 (Merge pull request #9 from marcuschain-jpg/marcus-test-branch)
 
       //Insert or replace activity
       if (editing) {
@@ -354,13 +340,7 @@ function ActivityFormPage() {
           <div className="form-button-row">
             <button
               className="cancel-btn"
-<<<<<<< HEAD
               onClick={() => navigate(`/mytrips/trip/${tripId}/itinerary`)}
-=======
-              onClick={() =>
-                navigate(`/mytrips/trip/${tripId}/itinerary`)
-              }
->>>>>>> parent of 7a38350 (Merge pull request #9 from marcuschain-jpg/marcus-test-branch)
             >
               Cancel
             </button>
