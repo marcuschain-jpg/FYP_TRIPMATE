@@ -3,21 +3,7 @@ import { useState, useEffect } from "react";
 import InitMaps from "../components/InitMaps";
 import useMapData from "../hooks/FetchMapData";
 import "../styles/Itinerary.css";
-
-//Scope trips per logged-in user
-function getTripKey() {
-  const loggedStr = localStorage.getItem("loggedInUser");
-  if (loggedStr) {
-    try {
-      const user = JSON.parse(loggedStr);
-      const uniqueId = user.id || user.email;
-      if (uniqueId) {
-        return `trips_${uniqueId}`;
-      }
-    } catch (e) {}
-  }
-  return "trips_guest";
-}
+import axios from 'axios';
 
 function ItineraryPage() {
   const { tripId } = useParams();
@@ -25,53 +11,83 @@ function ItineraryPage() {
 
   const mapData = useMapData();
 
-  const [trips, setTrips] = useState([]);
+  const [trips, setTrips] = useState([]); // to delete
   const [trip, setTrip] = useState(null);
+  const [activities, setActivities] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
+  const [Loading, setLoading] = useState(true);
 
   //Load trip & activities
   useEffect(() => {
-    const tripKey = getTripKey();
-    const saved = JSON.parse(localStorage.getItem(tripKey) || "[]");
-    setTrips(saved);
+    axios.get("http://localhost:8080/Itinerary/GetAllActivities", {params:{i_id: tripId}})
+    .then(res => {
+      renderLoadTrip(res.data);
+      renderLoadActivities(res.data);
+      const data = res.data
 
-    const foundTrip = saved.find((t) => t.id === Number(tripId));
-    setTrip(foundTrip || null);
+      // load default earliest date
+      const uniqueDates = Array.from(new Set(data.map(a => a.activity_date))).sort();
+      if(uniqueDates.length > 0) setSelectedDate(uniqueDates[0]);
 
-    if (foundTrip) {
-      const allDates = Array.from(
-        new Set((foundTrip.activities || []).map((a) => a.date))
-      ).sort();
+      setLoading(false);
+    });
+  }, []);
 
-      setSelectedDate(allDates[0] || "");
-    }
-  }, [tripId]);
+  const renderLoadTrip = (res) => {
+    const mapTrips = {
+      id: tripId,
+      name: res[0].itinerary_name,
+      start: res[0].start_date,
+      end: res[0].end_date,
+    };
+
+    setTrip(mapTrips);
+  };
+
+  const renderLoadActivities = (res) => {
+    const mapAct = res.map(a => ({
+      id: a.activity_id,
+      name: a.activity_name,
+      date: a.activity_date,
+      address: a.activity_address,
+      location: a.activity_location,
+    }));
+
+    setActivities(mapAct);
+  };
+
 
   if (!trip) return <p className="loading-text">Trip not found.</p>;
 
-  const activities = trip.activities || [];
 
-  const filteredActivities = activities.filter(
+  let filteredActivities = activities.filter(
     (a) => a.date === selectedDate
   );
 
   //Delete actiity from itinerary
-  const handleDeleteActivity = (index) => {
+  const handleDeleteActivity = async(index) => {
     if (!window.confirm("Are you sure you want to delete this activity?")) { //confirmation message for delete funciton
       return;
     }
 
-    const tripKey = getTripKey();
+    /*const tripKey = getTripKey();
     const updatedTrips = [...trips];
-    const thisTrip = updatedTrips.find((t) => t.id === Number(tripId));
+    const thisTrip = updatedTrips.find((t) => t.id === Number(tripId));*/
 
-    if (!thisTrip) return;
+    //if (!thisTrip) return;
 
-    thisTrip.activities.splice(index, 1);
+    /*thisTrip.activities.splice(index, 1);
 
     localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
     setTrips(updatedTrips);
-    setTrip({ ...thisTrip });
+    setTrip({ ...thisTrip });*/
+    await axios.delete("http://localhost:8080/Itinerary/DeleteActivity", {data:{activityid:index}})
+    .then(response => {
+      if(response.data === true) 
+      {
+        setActivities((prev) => prev.filter((a) => a.id !== index));
+      }
+    });
     alert("Activity deleted successfully!");
   };
 
@@ -98,7 +114,7 @@ function ItineraryPage() {
 
           {/*Date drop down bar--> user can view activities for selected date*/}
           {/* Date dropdown + Arrange button */}
-            {activities.length > 0 && (
+            {!Loading && activities.length > 0 && (
             <div className="date-row">
                 <select
                 className="date-filter-dropdown"
@@ -117,7 +133,6 @@ function ItineraryPage() {
                     </option>
                     ))}
                 </select>
-
                 {/* ⭐ Arrange button (no function needed) */}
                 <button className="arrange-btn">Arrange</button>
             </div>
@@ -126,12 +141,13 @@ function ItineraryPage() {
 
           {/*Activity section*/}
           <div className="activities-section">
-            {filteredActivities.length === 0 && (
+            {Loading && <p>Loading..</p>}
+            {!Loading && filteredActivities.length === 0 && (
               <p>No activities for this day.</p>
             )}
 
-            {filteredActivities.map((act, index) => (
-              <div key={index} className="activity-card">
+            {!Loading && filteredActivities.map((act) => (
+              <div key={act.id} className="activity-card">
                 <h3>{act.name}</h3>
                 <p>
                   <strong>{act.date}</strong>
@@ -143,7 +159,7 @@ function ItineraryPage() {
                   <button
                     className="activity-edit-btn"
                     onClick={() =>
-                      navigate(`/mytrips/trip/${tripId}/activity/edit/${index}`)
+                      navigate(`/mytrips/trip/activity/edit/${tripId}/${act.id}`)
                     }
                   >
                     Edit
@@ -152,7 +168,7 @@ function ItineraryPage() {
                   {/*Delete button*/}
                   <button
                     className="activity-delete-btn"
-                    onClick={() => handleDeleteActivity(index)}
+                    onClick={() => handleDeleteActivity(act.id)}
                   >
                     Delete
                   </button>
@@ -165,7 +181,7 @@ function ItineraryPage() {
           <button
             className="add-activity-big"
             onClick={() =>
-              navigate(`/mytrips/trip/${tripId}/activity/create`)
+              navigate(`/mytrips/trip/activity/create/${trip.id}`)
             }
           >
             Add Activity +
