@@ -1,4 +1,4 @@
-Last update: 26/11/2025
+Last update: 12/12/2025
 
 # FYP_TRIPMATE
 FYP Group: FYP-25-S4-27
@@ -11,7 +11,7 @@ Guidelines:
 1. To work on our individual work from a branch, please create a sub branch
 2. To merge our work > main branch, need to merge each branch sequentially by 1 person
 
-After every pull/clone from main:
+============================= After every pull/clone from main: =======================================================
 
 
 Node modules are modules you or someone else installed to run libraries (npm install axios)
@@ -44,7 +44,7 @@ Run Application
 3. Open landing page in browser (if already not opened)
     - http://localhost:3000
 
-====================== How it works  ================= WORK IN PROGRESS
+====================== File Structure  =================
 
 Frontend:
 

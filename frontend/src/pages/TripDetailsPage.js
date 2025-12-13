@@ -81,7 +81,7 @@ function TripDetailsPage() {
             <p>View or edit itinerary here</p>
             <button
               className="view-btn"
-              onClick={() => navigate(`/mytrips/trip/${trip.id}/itinerary`)}
+              onClick={() => navigate(`/mytrips/trip/itinerary/${trip.id}`)}
             >
               View
             </button>

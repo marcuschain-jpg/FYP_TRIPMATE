@@ -3,12 +3,11 @@ const router = express.Router();
 const dotenv = require("dotenv");
 const axios = require("axios");
 // --- DB stuff ---
-const supabase = require("../helper/db.js")
+const pool = require("../helper/db.js");
 // --- geo tag lib ---
 const {exiftool} = require("exiftool-vendored"); //photo geotag
 const path = require("path") //photo path
 const multer = require("multer");
-const postgres = require("postgres");
 // --- end geo tag lib ---
 
 // Load custom env file
@@ -93,25 +92,180 @@ router.post("/upload", upload.single("photo"), async (req, res) => {
     }
 });
 
-router.post("/test", async(req, res) => {
-  const {activity} = req.body;
-  
-  const {data,error} = await supabase
-  .from("messages")
-  .insert([{content: activity}]);
+// ================================== Prototype Functions ===================================
 
-  if(error) return res.status(500).send("failed :(");
-  res.send("insert 成功! :D");
+// ================================== MyTripsPage============================================
+router.get("/GetAllItineraries", async(req, res) => {
+  const userid = req.query["userid"];
+
+  try{
+    const data = await pool.query(
+      'SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date, completed FROM itinerary WHERE user_host_id = $1', [userid]
+    );
+    res.json(data.rows);
+  }
+
+  catch(err){ //error running sql
+    res.status(500).send('View all itineraries failed');
+  }
 });
 
-router.get("/testLoad", async(req, res) => {
-  
-  const {data,error} = await supabase
-  .from("messages")
-  .select("*");
+router.post("/CreateItinerary", async(req, res) => {
+  const {iName, iDest, start, end, userid} = req.body;
 
-  if(error) return res.status(500).send("failed :(");
-  res.send(data);
+  try{
+    const data = await pool.query(
+      `INSERT INTO itinerary (itinerary_name, itinerary_dest, start_date, end_date, user_host_id)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING itinerary_id`, [iName, iDest,start,end,userid]
+    );
+    res.json(data.rows);
+  }
+  catch(err){
+    res.status(500).send("Create itinerary failed");
+  }
 });
+
+router.delete("/DeleteItinerary", async(req, res) =>{
+  const {itineraryid} = req.body;
+
+  try{
+    const data = await pool.query(
+      `DELETE FROM itinerary
+       WHERE itinerary_id = $1`, [itineraryid]
+    );
+    if(data.rowCount === 1) //successfully delete
+    {
+      res.send(true);
+    }
+  }
+  catch(err){
+    res.status(500).send("Create itinerary failed");
+  }
+});
+
+// ================================== TripDetailsPage ============================================
+router.get("/GetItinerary", async(req, res) => {
+  const i_id = req.query["i_id"];
+
+  try{
+    const data = await pool.query(
+      `SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date, completed
+       FROM itinerary WHERE itinerary_id = $1`, [i_id]
+    );
+    res.json(data.rows);
+  }
+  catch(err){ //error running sql
+    res.status(500).send('Load itinerary failed');
+  }
+});
+
+router.patch("/UpdateItineraryComplete", async(req, res) => {
+  const {i_id, completed} = req.body;
+
+  try{
+    const data = await pool.query(
+      `UPDATE itinerary
+       SET completed = $2
+       WHERE itinerary_id = $1`, [i_id, completed]
+    );
+    if(data.rowCount === 1) //successfully update
+    {
+      res.send(true);
+    }
+  }
+  catch(err){
+    res.status(500).send("UpdateCompleteFailed");
+  }
+});
+
+// ================================== ItineraryPage ============================================
+router.get("/GetAllActivities", async(req, res) => {
+  const i_id = req.query['i_id'];
+
+  try{
+    const data = await pool.query(
+      `SELECT a.activity_id, a.activity_name, a.activity_address, i.itinerary_name, a.activity_location, 
+       TO_CHAR(i.start_date, 'DD/MM/YYYY') AS start_date,
+       TO_CHAR(i.end_date, 'DD/MM/YYYY') AS end_date,
+       TO_CHAR(a.activity_date, 'YYYY-MM-DD') AS activity_date
+       FROM itinerary i
+       LEFT JOIN activity a
+       ON i.itinerary_id = a.itinerary_id
+       WHERE i.itinerary_id = $1
+       ORDER BY activity_date ASC, a.activity_order ASC`, [i_id]
+    );
+    res.json(data.rows);
+  }
+  catch(err)
+  {
+    res.status(500).send("GetAllActivities failed");
+  }
+});
+
+router.delete("/DeleteActivity", async(req, res) => {
+  const {activityid} = req.body;
+  
+  try{
+    const data = await pool.query(
+      `DELETE FROM activity
+       WHERE activity_id = $1`, [activityid]
+    );
+    if(data.rowCount === 1) //successfully delete
+    {
+      res.send(true);
+    }
+  }
+  catch(err){
+    res.status(500).send("DeleteActivity failed")
+  }
+  
+});
+
+//==================================================== ActivityFormPage ==========================
+router.post("/CreateActivity", async(req,res) => {
+  const {aName, aLoc, aAddress, aDate, i_id} = req.body;
+  const aPlaceID = "abcabc" //dummy
+
+  try{
+    const data = await pool.query(
+      `INSERT INTO activity (activity_name, activity_location, activity_address, activity_date, gmaps_placeid, itinerary_id)
+       VALUES ($1, $2, $3, $4, $5, $6)`, [aName, aLoc, aAddress, aDate, aPlaceID, i_id]
+    );
+    if(data.rowCount === 1) //successfully insert
+    {
+      res.send(true);
+    }
+  }
+  catch(err){
+    console.log(err);
+    res.status(500).send("CreateActivity Failed");
+  }
+});
+
+router.patch("/EditActivity", async(req, res) => {
+  const {a_id, aName, aLoc, aAddress, aDate} = req.body;
+  const aPlaceID = "abcabc" //dummy
+
+  try{
+    const data = await pool.query(
+      `UPDATE activity
+       SET activity_name = $2, activity_location = $3, activity_address = $4, activity_date = $5, gmaps_placeid = $6   
+       WHERE activity_id = $1`, [a_id, aName, aLoc, aAddress, aDate, aPlaceID]
+    );
+    if(data.rowCount === 1) //successfully update
+    {
+      res.send(true);
+    }
+  }
+  catch(err){
+    res.status(500).send("UpdateCompleteFailed");
+  }
+});
+
+
+
+
+
 
 module.exports = router;
