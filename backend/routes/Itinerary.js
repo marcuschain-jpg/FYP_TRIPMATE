@@ -263,6 +263,23 @@ router.patch("/EditActivity", async(req, res) => {
   }
 });
 
+router.get("/GetActivityToEdit", async(req, res) => {
+  const a_id = req.query['a_id'];
+  try{
+    const data = await pool.query(
+      `SELECT activity_name, activity_location, activity_address,
+       TO_CHAR(activity_date, 'YYYY-MM-DD') AS activity_date
+       FROM activity
+       WHERE activity_id = $1`,[a_id]
+    );
+    res.json(data.rows);
+  }
+  catch(err)
+  {
+    res.status(500).send("GetActivityToEdit failed");
+  }
+});
+
 
 
 

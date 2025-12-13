@@ -156,25 +156,15 @@ function ItineraryPage() {
                 {act.address && <p>{act.address}</p>}
 
                 <div className="activity-actions">
-                  <button
-                    className="activity-edit-btn"
-                    onClick={() =>
-                      navigate(`/mytrips/trip/activity/edit/${tripId}/${act.id}`)
-                    }
-                  >
+                  <button className="activity-edit-btn" onClick={() => navigate(`/mytrips/trip/activity/edit/${tripId}/${act.id}`)}>
                     Edit
                   </button>
 
                   {/*Delete button*/}
-                  <button
-                    className="activity-delete-btn"
-                    onClick={() => handleDeleteActivity(act.id)}
-                  >
-                    Delete
-                  </button>
+                  <button className="activity-delete-btn" onClick={() => handleDeleteActivity(act.id)}> Delete </button>
                 </div>
-              );
-            })}
+          </div>
+          ))}
           </div>
 
           {/*Add new activity*/}

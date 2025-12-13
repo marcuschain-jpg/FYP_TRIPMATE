@@ -28,6 +28,7 @@ function ActivityFormPage() {
 
   const [trips, setTrips] = useState([]);
   const [trip, setTrip] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   //Form fields
   const [name, setName] = useState("");
@@ -76,6 +77,25 @@ function ActivityFormPage() {
     }
   }, [tripId, mode, index, editing]);*/
 
+  useEffect(() => {
+    if (editing)
+    {
+      axios.get("http://localhost:8080/Itinerary/GetActivityToEdit", {params:{a_id: index}})
+      .then(response => {
+        renderLoadActivity(response.data);
+        setLoading(false);
+    })
+    }
+  }, []);
+
+  const renderLoadActivity = (a) => {
+    console.log(a);
+    setName(a[0].activity_name);
+    setLocationName(a[0].activity_location);
+    setAddress(a[0].activity_address);
+    setDate(a[0].activity_date);
+  };
+
   //Auto-check if only one activity on that date (excluding self when editing)
   useEffect(() => {
     if (!trip || !date) return;
@@ -113,7 +133,8 @@ function ActivityFormPage() {
     }
   }, [date, originalDate, startPointTouched, trip, editing, index]);
 
-  if (!trip && editing) return <p>Trip not found.</p>;
+  //if (!trip && editing) return <p>Trip not found.</p>;
+  if (loading && editing) return <p>Loading..</p>
 
   //Save activity
   const handleSave = async() => {
@@ -226,7 +247,7 @@ function ActivityFormPage() {
     //Backend create and edit start here! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     if(editing) //edit
     {
-      axios.patch("http://localhost:8080/Itinerary/UpdateItineraryComplete", {a_id:index, aName: name, aLoc: locationName, aAddress: address, aDate: date}) //trip id is activityid here
+      axios.patch("http://localhost:8080/Itinerary/EditActivity", {a_id:index, aName: name, aLoc: locationName, aAddress: address, aDate: date}) //trip id is activityid here
       .then(response => {
         if(response.data === true) alert("Succesfully edit activity!")
       });
@@ -247,7 +268,7 @@ function ActivityFormPage() {
     <div className="activity-form-page">
       <button
         className="back-btn"
-        onClick={() => navigate(`/mytrips/trip/${tripId}/itinerary`)}
+        onClick={() => navigate(`/mytrips/trip/itinerary/${tripId}`)}
       >
         ← Back
       </button>
