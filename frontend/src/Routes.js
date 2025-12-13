@@ -49,21 +49,20 @@ function AppRoutes() {
           <Route path="/home" element={<HomePage />} />   {/* 👈 ADDED */}
 
           {/* Trips */}
-          <Route path="/mytrips/:userID" element={<MyTripsPage />} />
+          <Route path="/mytrips" element={<MyTripsPage />} />
           <Route path="/mytrips/trip/:tripId" element={<TripDetailsPage />} />
           <Route
-            path="/mytrips/trip/itinerary/:tripId"
+            path="/mytrips/trip/:tripId/itinerary"
             element={<ItineraryPage />}
           />
 
           {/* Activity Form */}
           <Route
-            path="/mytrips/trip/activity/:mode/:tripId"
+            path="/mytrips/trip/:tripId/activity/:mode"
             element={<ActivityFormPage />}
           />
-          
           <Route
-            path="/mytrips/trip/activity/:mode/:tripId/:index"
+            path="/mytrips/trip/:tripId/activity/:mode/:index"
             element={<ActivityFormPage />}
           />
 
