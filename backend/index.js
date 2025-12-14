@@ -5,11 +5,11 @@ const { Server } = require("socket.io");
 //Import routes
 const landingRouter = require("./routes/Landing")
 const itineraryRouter = require("./routes/Itinerary");
-const InitRealtime = require("./helper/Realtime")
+//const InitRealtime = require("./helper/Realtime")
 
 const app = express();
 const server = http.createServer(app);
-//const io = new Server(server, {cors: {origin: "http://localhost:3000"}})
+const io = new Server(server, {cors: {origin: "http://localhost:3000"}})
 
 //Middleware
 app.use( cors({ origin: "http://localhost:3000",}));
@@ -21,6 +21,15 @@ app.use("/Itinerary", itineraryRouter);
 
 //Realtime update
 //InitRealtime(io);
+app.set("io", io);
+io.on("connection", (socket) => {
+  console.log("Client connected:", socket.id);
+
+  socket.on("joinTrip", (room) => {
+    socket.join(room);
+    console.log(`${socket.id} joined room ${room}`);
+  });
+});
 
 
 server.listen(8080, () => {

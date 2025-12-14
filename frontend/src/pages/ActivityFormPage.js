@@ -265,7 +265,7 @@ function ActivityFormPage() {
     }
 
 
-    navigate(`/mytrips/trip/itinerary/${tripId}`);
+    navigate(`/mytrips/trip/itinerary/${tripId}/${date}`);
   };
 
   return (

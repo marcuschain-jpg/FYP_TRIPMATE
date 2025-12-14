@@ -4,9 +4,12 @@ import InitMaps from "../components/InitMaps";
 import useMapData from "../hooks/FetchMapData";
 import "../styles/Itinerary.css";
 import axios from 'axios';
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:8080")
 
 function ItineraryPage() {
-  const { tripId } = useParams();
+  const { tripId, firstdate } = useParams();
   const navigate = useNavigate();
 
   const mapData = useMapData();
@@ -16,6 +19,7 @@ function ItineraryPage() {
   const [activities, setActivities] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
   const [Loading, setLoading] = useState(true);
+  const [isArranging, setIsArranging] = useState(false); 
 
   //Load trip & activities
   useEffect(() => {
@@ -26,11 +30,46 @@ function ItineraryPage() {
       const data = res.data
 
       // load default earliest date
-      const uniqueDates = Array.from(new Set(data.map(a => a.activity_date))).sort();
-      if(uniqueDates.length > 0) setSelectedDate(uniqueDates[0]);
-
-      setLoading(false);
+      if(firstdate === "default")
+      {
+        const uniqueDates = Array.from(new Set(data.map(a => a.activity_date))).sort();
+        if(uniqueDates.length > 0) setSelectedDate(uniqueDates[0]);
+        setLoading(false);
+      }
+      else{
+        setSelectedDate(firstdate);
+        setLoading(false);
+      }
     });
+  }, []);
+
+  // Change arrange button state
+  useEffect(() => {
+    //join room for trip
+    if(!socket) return;
+    socket.emit("joinTrip", `trip_${tripId}`);
+    
+    //listen for arranging event
+    socket.on("Arranging", (data) => {
+      if(data.running) {
+        setIsArranging(true);
+      }
+    });
+
+    //listen for arranged event
+    socket.on("Arranged", (data) => {
+      if(!data.running) {
+        console.log("Arranged event received", data);
+        setIsArranging(false);
+        //send data here too?
+        //if(data.updatedItinerary) {}
+      }
+    });
+
+    return () => {
+      socket.off("Arranging");
+      socket.off("Arranged");
+    };
   }, []);
 
   const renderLoadTrip = (res) => {
@@ -91,6 +130,17 @@ function ItineraryPage() {
     alert("Activity deleted successfully!");
   };
 
+  const arrangeItinerary = async() => {
+    // 5 second countdown then arrange if not reset timer
+    await axios.get("http://localhost:8080/Itinerary/ArrangeItinerary", {params:{i_id:tripId}})
+    .then(res => {
+      if(res.data === true) 
+      {
+        console.log("function runned");
+      }
+    });
+  }
+
   return (
     <div className="itinerary-view">
       <button
@@ -135,7 +185,7 @@ function ItineraryPage() {
                   ))}
               </select>
 
-              <button className="arrange-btn">Arrange</button>
+              <button className="arrange-btn" onClick={() => arrangeItinerary()} disabled={isArranging}>{isArranging ? "Arranging..." : "Arrange"}</button>
             </div>
           )}
 
