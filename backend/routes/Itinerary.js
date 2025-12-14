@@ -241,7 +241,7 @@ router.get("/ArrangeItinerary", (req, res) => {
     );
     const dates = data.rows.map(row => row.date);
     console.log(dates);
-    const transitMode = "TRANSIT"
+    const transitMode = "DRIVE";
 
     // reorder all activities
     await pool.query(`SELECT reorder_all_activities()`);
