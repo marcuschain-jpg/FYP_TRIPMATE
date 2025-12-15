@@ -74,7 +74,7 @@ function TripDetailsPage() {
     });
   };
 
-  if (!trip) return <p>Trip not found.</p>;
+  if(!trip) return <p>Trip not found.</p>;
 
   return (
     <div className="tripdetails-page">

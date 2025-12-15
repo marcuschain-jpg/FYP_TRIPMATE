@@ -263,6 +263,7 @@ router.get("/ArrangeItinerary", (req, res) => {
         // update order in db
         newOrderActID = await OrderActID.slice(1);
         const orderUpdate = await newOrderActID.map((id, idx) =>`WHEN ${id} THEN ${idx+1}`).join(' ');
+        console.log(orderUpdate);
         const a_idUpdate = await newOrderActID.join(', ');
 
         await pool.query(
