@@ -1,23 +1,24 @@
-const supabase = require("./db.js");
+const pool = require("./db.js");
 const dotenv = require("dotenv");
 dotenv.config({ path: "keys.env" });
 
-function InitRealtime(io) {
-    console.log("realtime initialised")
+const arrangeTimers = {}; 
 
-    supabase.channel("public:messages")
-    .on("postgres_changes", {event:'INSERT', schema:'public', table:'messages'}, 
-        (payload) => { //output from tracking
-            console.log("new insert", payload.new);
-            io.emit("newMessage", payload.new); //broadcast
-        }
-    )
-    .subscribe();
+function InitRealtime(io, i_id, runAlgo) {
+    // reset timer if arrange is run for that itinerary
+    if(arrangeTimers[i_id]){
+        clearTimeout(arrangeTimers[i_id]);
+    }
 
-    io.on("connection", (socket)=>{
-        console.log("Client Connected", socket.id);
-        socket.on("disconnect", () => console.log("Client disconnected:", socket.id));
-    });
-};
+    arrangeTimers[i_id] = setTimeout(async() => {
+        console.log(`Arranging trip: ${i_id}`);
+        io.to(`trip_${i_id}`).emit("Arranging", { running: true });
+
+        await runAlgo(i_id);
+        io.to(`trip_${i_id}`).emit("Arranged", { running: false });
+        
+        delete arrangeTimers[i_id];
+    }, 5000);
+}
 
 module.exports = InitRealtime;

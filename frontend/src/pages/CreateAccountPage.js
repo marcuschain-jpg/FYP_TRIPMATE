@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/CreateAccount.css";
+import axios from 'axios';
 
 export default function CreateAccountPage() {
   const navigate = useNavigate();
@@ -17,26 +18,38 @@ export default function CreateAccountPage() {
     setTimeout(() => setToast(null), 2500);
   };
 
-  const handleRegister = () => {
+  const handleRegister = async() => {
     if (!email || !password || !firstName || !lastName) {
       showToast("Please fill in all fields.", "error");
       return;
     }
 
-    //Get existing accounts
+    /*//Get existing accounts
     const users = JSON.parse(localStorage.getItem("users") || "[]");
 
     //Check for duplicate email--> show error message if account already exists
-    const exists = users.some((u) => u.email === email);
+    const exists = users.some((u) => u.email === email);*/
 
-    if (exists) {
-      showToast("❌ This email is already registered!", "error");
-      return;
-    }
+    await axios.post("http://localhost:8080/AuthService/CreateAccount", {email:email, password:password, firstname:firstName, lastname:lastName})
+    .then(res=>{
+      if(res.data === true)
+      {
+        showToast("🎉 Account created successfully!", "success");
+        setTimeout(() => {navigate("/login");}, 2000);
+      }
+      else{
+        showToast("❌ This email is already registered!", "error");
+        return;
+      }
+    });
+
+    /*if (exists) {
+      
+    }*/
 
     //Save new user and create account
     // 🔥 ADD UNIQUE USER ID HERE
-    const newUser = { 
+    /*const newUser = { 
       id: Date.now(),  // ← UNIQUE ID FOR THIS USER
       email, 
       password, 
@@ -45,13 +58,7 @@ export default function CreateAccountPage() {
     };
 
     users.push(newUser);
-    localStorage.setItem("users", JSON.stringify(users));
-
-    showToast("🎉 Account created successfully!", "success");
-
-    setTimeout(() => {
-      navigate("/login");
-    }, 2000);
+    localStorage.setItem("users", JSON.stringify(users));*/
   };
 
   return (

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Login.css";
+import axios from "axios";
 
 //Import background picture
 import LoginBG from "../Assets/Login.jpg";
@@ -18,14 +19,14 @@ export default function LoginPage() {
     setTimeout(() => setToast(null), 2500);
   };
 
-  const handleLogin = () => {
+  const handleLogin = async() => {
     if (!email || !password || !role) {
       showToast("Please fill in all fields.", "error");
       return;
     }
 
     //Load stored users
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    /*const users = JSON.parse(localStorage.getItem("users") || "[]");
 
 
     //User login
@@ -39,10 +40,22 @@ export default function LoginPage() {
     }
 
     //Store logged-in user for HomePage greeting--> for the welcome message on homepage
-    localStorage.setItem("loggedInUser", JSON.stringify(user));
+    localStorage.setItem("loggedInUser", JSON.stringify(user));*/
 
-    showToast("Login successful! Redirecting...", "success");
-    setTimeout(() => navigate("/home"), 1200);
+    await axios.get("http://localhost:8080/AuthService/Login", {params:{email:email, password:password, role:role}})
+    .then(res => {
+      if(res.data.check === false)
+      {
+        showToast(res.data.message, "error");
+        return;
+      }
+      else if(res.data.check === true)
+      {
+        const userid = res.data.userid;
+        showToast("Login successful! Redirecting...", "success");
+        setTimeout(() => navigate(`/home/${userid}`), 1200);
+      }
+    })
   };
 
   return (

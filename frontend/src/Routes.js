@@ -46,15 +46,12 @@ function AppRoutes() {
         {/* ================ LOGGED-IN USER ROUTES ================ */}
         <Route element={<UserNavbar />}>
           {/* Home after login */}
-          <Route path="/home" element={<HomePage />} />   {/* 👈 ADDED */}
+          <Route path="/home/:userID" element={<HomePage />} />   {/* 👈 ADDED */}
 
           {/* Trips */}
           <Route path="/mytrips/:userID" element={<MyTripsPage />} />
           <Route path="/mytrips/trip/:tripId" element={<TripDetailsPage />} />
-          <Route
-            path="/mytrips/trip/itinerary/:tripId"
-            element={<ItineraryPage />}
-          />
+          <Route path="/mytrips/trip/itinerary/:tripId/:firstdate" element={<ItineraryPage />}/>
 
           {/* Activity Form */}
           <Route

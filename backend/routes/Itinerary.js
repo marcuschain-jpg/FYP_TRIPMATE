@@ -8,10 +8,11 @@ const pool = require("../helper/db.js");
 const {exiftool} = require("exiftool-vendored"); //photo geotag
 const path = require("path") //photo path
 const multer = require("multer");
-// --- end geo tag lib ---
-
 // Load custom env file
 dotenv.config({ path: "keys.env" });
+// --- Call other functions ---
+const InitRealtime = require("../helper/Realtime.js");
+const TSPAlgo = require("../helper/TSPAlgo.js");
 
 
 const storage = multer.diskStorage({
@@ -222,6 +223,65 @@ router.delete("/DeleteActivity", async(req, res) => {
   
 });
 
+router.get("/ArrangeItinerary", (req, res) => {
+  const i_id = req.query['i_id'];
+  console.log('id: ', i_id);
+  res.send(true);
+
+  const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms)); //delay
+
+  InitRealtime(req.app.get("io"), i_id, async (i_id) => {
+    console.log("Start algo for: ", i_id);
+    runtimeStart = performance.now();
+
+    // get all dates in array
+    let data = await pool.query(
+        `SELECT DISTINCT(TO_CHAR(activity_date, 'YYYY-MM-DD')) AS date
+         FROM activity`
+    );
+    const dates = data.rows.map(row => row.date);
+    const transitMode = "DRIVE";
+
+    // reorder all activities
+    await pool.query(`SELECT reorder_all_activities()`);
+    
+    await Promise.all(
+      dates.map(async (date) =>{
+        // extract data from db
+
+        console.log(date);
+        data = await pool.query(
+          `SELECT activity_id, gmaps_placeid
+           FROM activity
+           WHERE activity_date = $1`, [date]
+        );
+        const aID = data.rows.map(row => row.activity_id);
+        const aPlaceID = data.rows.map(row => row.gmaps_placeid);
+        //extract route matrix & run algo
+        OrderActID = await TSPAlgo(aID, aPlaceID, transitMode);
+        
+        // update order in db
+        newOrderActID = await OrderActID.slice(1);
+        const orderUpdate = await newOrderActID.map((id, idx) =>`WHEN ${id} THEN ${idx+1}`).join(' ');
+        const a_idUpdate = await newOrderActID.join(', ');
+
+        await pool.query(
+          `UPDATE activity
+           SET activity_order = CASE activity_id
+           ${orderUpdate}
+           END
+           WHERE activity_id IN (${a_idUpdate});`
+        );
+      })
+    );
+    
+    runtimeEnd = performance.now();
+    const duration = (runtimeEnd-runtimeStart)/1000;
+    console.log("Time took: ", duration);
+    console.log("Finished algo for: ", i_id);
+  });
+});
+
 //==================================================== ActivityFormPage ==========================
 router.post("/CreateActivity", async(req,res) => {
   const {aName, aLoc, aAddress, aDate, i_id, aOrder} = req.body;
@@ -283,6 +343,8 @@ router.get("/GetActivityToEdit", async(req, res) => {
     res.status(500).send("GetActivityToEdit failed");
   }
 });
+
+
 
 
 

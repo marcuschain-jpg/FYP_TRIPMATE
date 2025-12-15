@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";   
+import { useNavigate, useParams } from "react-router-dom";   
 import "../styles/Home.css";
 
 import HomeMainPhoto from "../Assets/HomeMainPhoto.jpg";
@@ -8,6 +8,7 @@ import HomeSmall2 from "../Assets/HomeSmall2.jpg";
 
 export default function HomePage() {
   const navigate = useNavigate();  
+  const { userID } = useParams();
 
   const [username, setUsername] = useState("");
 
@@ -55,7 +56,7 @@ export default function HomePage() {
           <p className="home-card-desc">
             Looking for a getaway from all the hustle and bustle? Plan your next trip now!
           </p>
-          <button className="home-card-btn" onClick={() => navigate("/mytrips")}>
+          <button className="home-card-btn" onClick={() => navigate(`/mytrips/${userID}`)}>
             View
           </button>
         </div>

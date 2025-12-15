@@ -1,14 +1,18 @@
-import { Outlet, Link, useNavigate } from "react-router-dom";
+import { Outlet, Link, useNavigate, useParams } from "react-router-dom";
 import React, { useState } from "react";
+
 
 function UserNavbar() {
     const [showMenu, setShowMenu] = useState(false);
     const navigate = useNavigate();
+    const { userID } = useParams();
 
     const handleLogout = () => {
         localStorage.removeItem("user");
         navigate("/"); //send user to landing page (marketing page)
     };
+
+    if (!userID) return null
 
     return (
         <>
@@ -98,8 +102,8 @@ function UserNavbar() {
                     </div>
 
                     <div className="nav-center">
-                        <Link to="/home" className="nav-link">Home</Link>
-                        <Link to="/mytrips" className="nav-link">My Trips</Link>
+                        <Link to={`/home/${userID}`} className="nav-link">Home</Link>
+                        <Link to={`/mytrips/${userID}`} className="nav-link">My Trips</Link>
                         <Link to="/feed" className="nav-link">Feed</Link>
                         <Link to="/join" className="nav-link">Join A Trip</Link>
                         

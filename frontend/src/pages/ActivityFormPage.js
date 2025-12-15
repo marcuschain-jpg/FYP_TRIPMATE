@@ -265,14 +265,14 @@ function ActivityFormPage() {
     }
 
 
-    navigate(`/mytrips/trip/itinerary/${tripId}`);
+    navigate(`/mytrips/trip/itinerary/${tripId}/${date}`);
   };
 
   return (
     <div className="activity-form-page">
       <button
         className="back-btn"
-        onClick={() => navigate(`/mytrips/trip/itinerary/${tripId}`)}
+        onClick={() => navigate(-1)}
       >
         ← Back
       </button>
