@@ -23,6 +23,7 @@ function ItineraryPage() {
 
   //Load trip & activities
   useEffect(() => {
+    setLoading(true);
     axios.get("http://localhost:8080/Itinerary/GetAllActivities", {params:{i_id: tripId}})
     .then(res => {
       renderLoadTrip(res.data);
@@ -41,7 +42,7 @@ function ItineraryPage() {
         setLoading(false);
       }
     });
-  }, []);
+  }, [isArranging]);
 
   // Change arrange button state
   useEffect(() => {

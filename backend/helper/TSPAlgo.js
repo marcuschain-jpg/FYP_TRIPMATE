@@ -3,13 +3,9 @@ dotenv.config({ path: "keys.env" });
 const axios = require("axios");
 const comb = require("js-combinatorics");
 
-async function TSPAlgo (activities, placeid, order, travelMode){ //order by activity_id instead of name
+async function TSPAlgo (activities, placeid, travelMode){ // by activity_id instead of name
     let origins = [];
     let destinations = [];
-    console.log(activities);
-    console.log(placeid);
-    console.log(order);
-    console.log(travelMode);
     try{
         // Get Array of location
 
@@ -97,7 +93,7 @@ async function TSPAlgo (activities, placeid, order, travelMode){ //order by acti
         tspDistMatrix[item.originIndex][item.destinationIndex] = length;
     });
 
-    console.log({distMatrix: tspDistMatrix});
+    //console.log({distMatrix: tspDistMatrix});
 
     // run brute-TSP algo (<=9 loc + 1 start), test threshold max load time <5 seconds>
     if(activities.length <= 10)
@@ -146,9 +142,9 @@ async function TSPAlgo (activities, placeid, order, travelMode){ //order by acti
         {
             newOrderActivities[i] = activities[shortestRoute[i]];
         }
-        console.log("Mode of travel: ", travelMode);
-        console.log("Shortest Route: ", newOrderActivities);
-        console.log("Min Dist: ", minDist);
+        //console.log("Shortest Route: ", newOrderActivities);
+        //console.log("Min Dist: ", minDist);
+        return newOrderActivities;
     }
     else
     {
@@ -193,15 +189,14 @@ async function TSPAlgo (activities, placeid, order, travelMode){ //order by acti
             defaultRoute[i] = i;
         }
         const {route, minDist} = twoOpt(defaultRoute, tspDistMatrix);
-        console.log(route);
         const newOrderActivities = [];
         for(let i=0;i < activities.length;i++)
         {
             newOrderActivities[i] = activities[route[i]];
         }
-        console.log("Mode of travel: ", travelMode);
-        console.log("Shortest Route: ", newOrderActivities);
-        console.log("Min Dist: ", minDist);
+        //console.log("Shortest Route: ", newOrderActivities);
+        //console.log("Min Dist: ", minDist);
+        return newOrderActivities;
     }
 }
 

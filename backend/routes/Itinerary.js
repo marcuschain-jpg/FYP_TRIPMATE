@@ -240,7 +240,6 @@ router.get("/ArrangeItinerary", (req, res) => {
          FROM activity`
     );
     const dates = data.rows.map(row => row.date);
-    console.log(dates);
     const transitMode = "DRIVE";
 
     // reorder all activities
@@ -249,17 +248,30 @@ router.get("/ArrangeItinerary", (req, res) => {
     await Promise.all(
       dates.map(async (date) =>{
         // extract data from db
+
         console.log(date);
         data = await pool.query(
-          `SELECT activity_name, gmaps_placeid, activity_order
+          `SELECT activity_id, gmaps_placeid
            FROM activity
            WHERE activity_date = $1`, [date]
         );
-        const aName = data.rows.map(row => row.activity_name);
+        const aID = data.rows.map(row => row.activity_id);
         const aPlaceID = data.rows.map(row => row.gmaps_placeid);
-        const aOrder = data.rows.map(row => row.activity_order);
-        //extract route matrix & run algo and update order in db
-        TSPAlgo(aName, aPlaceID, aOrder, transitMode);
+        //extract route matrix & run algo
+        OrderActID = await TSPAlgo(aID, aPlaceID, transitMode);
+        
+        // update order in db
+        newOrderActID = await OrderActID.slice(1);
+        const orderUpdate = await newOrderActID.map((id, idx) =>`WHEN ${id} THEN ${idx+1}`).join(' ');
+        const a_idUpdate = await newOrderActID.join(', ');
+
+        await pool.query(
+          `UPDATE activity
+           SET activity_order = CASE activity_id
+           ${orderUpdate}
+           END
+           WHERE activity_id IN (${a_idUpdate});`
+        );
       })
     );
     

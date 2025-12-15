@@ -5,7 +5,8 @@ const { Server } = require("socket.io");
 //Import routes
 const landingRouter = require("./routes/Landing")
 const itineraryRouter = require("./routes/Itinerary");
-//const InitRealtime = require("./helper/Realtime")
+const authServiceRouter = require("./routes/AuthService");
+
 
 const app = express();
 const server = http.createServer(app);
@@ -18,9 +19,9 @@ app.use(express.json());
 //Use route
 app.use("/Landing", landingRouter);
 app.use("/Itinerary", itineraryRouter);
+app.use("/AuthService", authServiceRouter);
 
-//Realtime update
-//InitRealtime(io);
+//Realtime stuff for itinerary page
 app.set("io", io);
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);

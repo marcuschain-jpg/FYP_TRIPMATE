@@ -99,7 +99,7 @@ function UserNavbar() {
 
                     <div className="nav-center">
                         <Link to="/home" className="nav-link">Home</Link>
-                        <Link to="/mytrips" className="nav-link">My Trips</Link>
+                        <Link to='/mytrips' className="nav-link">My Trips</Link>
                         <Link to="/feed" className="nav-link">Feed</Link>
                         <Link to="/join" className="nav-link">Join A Trip</Link>
                         
