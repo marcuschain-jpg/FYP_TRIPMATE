@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../helper/db.js");
+const jwt = require('jsonwebtoken');
+const dotenv = require("dotenv");
+dotenv.config({ path: "keys.env" });
 
 
 router.get('/Login', async (req, res) => {
@@ -17,7 +20,7 @@ router.get('/Login', async (req, res) => {
          WHERE email = $1`, [email]
         );
         
-        if(userData.rowCount === 0) 
+        if(userData.rowCount === 0) // no acc in db
         { 
             res.send({check: false, message: "No Account with entered email found"});
         }
@@ -34,13 +37,24 @@ router.get('/Login', async (req, res) => {
                     FROM users
                     WHERE email = $1 AND password = $2`, [email, password]
                 );
-                if(data.rowCount === 0) 
+                if(data.rowCount === 0) // wrong pw
                 {
                     res.send({check: false, message: "Wrong Password"});
                 }
-                else if(data.rowCount === 1 && chkRole)
+                else if(data.rowCount === 1 && chkRole) // success
                 {
-                    res.send({check: true, userid: userData.rows[0].userid});
+                    userid = userData.rows[0].userid;
+                    const jwtSecret = process.env.JWT_SECRET;
+                    const token = jwt.sign({userid}, jwtSecret);
+
+                    res.cookie('token', token, {
+                        maxAge: 60*60*24*10*1000, // 10 days in ms
+                        secure: false, // change only when https
+                        httpOnly: true,
+                        sameSite: 'Strict'
+                    });
+
+                    res.send({check: true, userid: userData.rows[0].userid, token});
                 }
             }
         }
@@ -52,6 +66,7 @@ router.get('/Login', async (req, res) => {
 
 router.post('/CreateAccount', async(req, res) =>{
     const {email, password, firstname, lastname} = req.body;
+    //eventually to hash password
 
     try{
         data = await pool.query(
@@ -65,5 +80,14 @@ router.post('/CreateAccount', async(req, res) =>{
         res.send(false)
     }
 });
+
+router.post("/Logout", (req, res) => {
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: false, // set to true only when https
+        sameSite: "Strict"
+    })
+    res.send({ success: true});
+})
 
 module.exports = router;

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";   
 import "../styles/Home.css";
+import axios from 'axios';
 
 import HomeMainPhoto from "../Assets/HomeMainPhoto.jpg";
 import HomeSmall1 from "../Assets/HomeSmall1.jpg";
@@ -10,10 +11,10 @@ export default function HomePage() {
   const navigate = useNavigate();  
   const { userID } = useParams();
 
-  const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    /*const user = JSON.parse(localStorage.getItem("loggedInUser"));
     if (user) {
       setUsername(
         user.name ||
@@ -22,7 +23,12 @@ export default function HomePage() {
         user.firstName ||
         user.email
       );
-    }
+    }*/
+    axios.get("http://localhost:8080/Landing/GetHome", {withCredentials: true})
+    .then(res=>{
+      console.log(res);
+      setName(res.data[0].first_name);
+    })
   }, []);
 
   return (
@@ -31,7 +37,7 @@ export default function HomePage() {
       {/*Banner on top of page*/}
       <div className="home-banner">
         <img src={HomeMainPhoto} alt="Main" className="home-banner-img" />
-        <h1 className="home-banner-text">Welcome Back,<br />{username}</h1>
+        <h1 className="home-banner-text">Welcome Back,<br />{name}</h1>
       </div>
 
       {/*2 Cards*/}
@@ -56,7 +62,7 @@ export default function HomePage() {
           <p className="home-card-desc">
             Looking for a getaway from all the hustle and bustle? Plan your next trip now!
           </p>
-          <button className="home-card-btn" onClick={() => navigate(`/mytrips/${userID}`)}>
+          <button className="home-card-btn" onClick={() => navigate(`/mytrips`)}>
             View
           </button>
         </div>

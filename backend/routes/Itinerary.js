@@ -13,6 +13,8 @@ dotenv.config({ path: "keys.env" });
 // --- Call other functions ---
 const InitRealtime = require("../helper/Realtime.js");
 const TSPAlgo = require("../helper/TSPAlgo.js");
+// --- Authenticate ---
+const RequireAuth = require("../middlewares/RequireAuths.js");
 
 
 const storage = multer.diskStorage({
@@ -96,8 +98,8 @@ router.post("/upload", upload.single("photo"), async (req, res) => {
 // ================================== Prototype Functions ===================================
 
 // ================================== MyTripsPage============================================
-router.get("/GetAllItineraries", async(req, res) => {
-  const userid = req.query["userid"];
+router.get("/GetAllItineraries", RequireAuth, async(req, res) => {
+  const userid = req.userid;
 
   try{
     const data = await pool.query(

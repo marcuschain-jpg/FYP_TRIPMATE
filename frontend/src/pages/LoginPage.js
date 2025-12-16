@@ -52,8 +52,11 @@ export default function LoginPage() {
       else if(res.data.check === true)
       {
         const userid = res.data.userid;
+        const token = res.data.token;
+        document.cookie = "token=" + token;
+        console.log(res, document.cookie);
         showToast("Login successful! Redirecting...", "success");
-        setTimeout(() => navigate(`/home/${userid}`), 1200);
+        setTimeout(() => navigate(`/home`), 1200);
       }
     })
   };
