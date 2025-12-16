@@ -106,3 +106,33 @@
   padding: 6px 14px;
   border-radius: 6px;
 }
+
+/*Delete collaborator button*/
+.delete-btn {
+  margin-left: auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background-color: #fdecea;
+  color: #d93025;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: all 0.2s ease;
+}
+
+.delete-btn:hover {
+  background-color: #f8d7da;
+  transform: scale(1.1);
+}
+
+.delete-btn:active {
+  transform: scale(0.95);
+}
+

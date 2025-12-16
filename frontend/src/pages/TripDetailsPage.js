@@ -25,14 +25,13 @@ function TripDetailsPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
 
-  const [trips, setTrips] = useState([]);
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
 
   //State to control collaborator modal
   const [showCollaborators, setShowCollaborators] = useState(false);
 
-  //Dummy collaborators 
+  //Dummy collaborators (UI only)
   const [collaborators, setCollaborators] = useState([
     "Williwonka",
     "Chris Pratt",
@@ -55,7 +54,7 @@ function TripDetailsPage() {
   }, []);
 
   const renderLoadTrip = (res) => {
-    //Format date from timestamp to dd/mm/yyyy
+    // format date from timestamp to dd/mm/yyyy
     const tempSDate = res[0].start_date.split("T")[0];
     const dateObj = new Date(tempSDate);
     const formattedSDate = dateObj.toLocaleDateString("en-GB");
@@ -94,14 +93,24 @@ function TripDetailsPage() {
   const handleAddCollaborator = () => {
     if (newCollaborator.trim() === "") return;
 
-    //prevent duplicates--> case-insensitive
-    const exists = collaborators.some(
-      (c) => c.toLowerCase() === newCollaborator.toLowerCase()
-    );
-    if (exists) return;
+    //Prevent duplicates
+    if (collaborators.includes(newCollaborator)) return;
 
     setCollaborators([...collaborators, newCollaborator]);
     setNewCollaborator("");
+  };
+
+  //Delete collaborator with confirmation
+  const handleDeleteCollaborator = (name) => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to remove ${name} as a collaborator?`
+    );
+
+    if (confirmDelete) {
+      setCollaborators(
+        collaborators.filter((member) => member !== name)
+      );
+    }
   };
 
   if (!trip) return <p>Trip not found.</p>;
@@ -118,12 +127,12 @@ function TripDetailsPage() {
           {trip.start} — {trip.end}
         </p>
 
-        {/*Collaborate button (UI only for now)*/}
+        {/*Collaborate button*/}
         <div className="trip-actions">
           <button
             className="collaborate-btn"
             onClick={() => setShowCollaborators(true)}
-            title="Collaborate"
+            title="Collaborators"
           >
             👥
           </button>
@@ -148,9 +157,7 @@ function TripDetailsPage() {
             <button
               className="view-btn"
               onClick={() =>
-                navigate(
-                  `/mytrips/trip/itinerary/${trip.id}/${"default"}`
-                )
+                navigate(`/mytrips/trip/itinerary/${trip.id}/default`)
               }
             >
               View
@@ -225,7 +232,17 @@ function TripDetailsPage() {
                   <div className="avatar">
                     {name.charAt(0).toUpperCase()}
                   </div>
-                  <span>{name}</span>
+
+                  <span className="member-name">{name}</span>
+
+                  <button
+                    className="delete-btn"
+                    onClick={() => handleDeleteCollaborator(name)}
+                    title="Remove collaborator"
+                  >
+                    ✕
+                  </button>
+
                 </div>
               ))}
             </div>

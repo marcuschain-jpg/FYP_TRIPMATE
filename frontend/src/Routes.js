@@ -1,11 +1,11 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-// Navbars
+//Navbars
 import UserNavbar from "./navs/UserNavbar";
 import UnregisteredUserNavbar from "./navs/UnregisteredUserNavBar";
 
-// Pages
+//Pages
 import Landing from "./pages/Landing";
 import QuizPage from "./pages/QuizPage";
 import LoginPage from "./pages/LoginPage";
@@ -20,8 +20,9 @@ import CreateAccountPage from "./pages/CreateAccountPage";
 import PricingPage from "./pages/PricingPage";
 import HomePage from "./pages/HomePage";
 import ChatbotPage from "./pages/ChatbotPage";
+import GroupTripsPage from "./pages/GroupTripsPage"; 
 
-// Temporary placeholder component
+//Temporary placeholder component
 function Placeholder({ title }) {
   return (
     <div style={{ padding: "40px" }}>
@@ -35,6 +36,7 @@ function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
+
         {/* ================= PUBLIC ROUTES ================= */}
         <Route element={<UnregisteredUserNavbar />}>
           <Route path="/" element={<Landing />} />
@@ -42,54 +44,59 @@ function AppRoutes() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/quiz" element={<QuizPage />} />
           <Route path="/pricing" element={<PricingPage />} />
+          
         </Route>
 
         {/* ================ LOGGED-IN USER ROUTES ================ */}
         <Route element={<UserNavbar />}>
-          {/* Home after login */}
-          <Route path="/home" element={<HomePage />} />   {/* 👈 ADDED */}
+          <Route path="/home" element={<HomePage />} />
 
-          {/* Trips */}
+          {/*Trips*/}
           <Route path="/mytrips" element={<MyTripsPage />} />
           <Route path="/mytrips/trip/:tripId" element={<TripDetailsPage />} />
-          <Route path="/mytrips/trip/itinerary/:tripId/:firstdate" element={<ItineraryPage />}/>
+          <Route
+            path="/mytrips/trip/itinerary/:tripId/:firstdate"
+            element={<ItineraryPage />}
+          />
 
-          {/* Activity Form */}
+          {/*Activity Form*/}
           <Route
             path="/mytrips/trip/activity/:mode/:tripId"
             element={<ActivityFormPage />}
           />
-          
           <Route
             path="/mytrips/trip/activity/:mode/:tripId/:index"
             element={<ActivityFormPage />}
           />
 
-          {/* Media */}
+          {/*Media*/}
           <Route
             path="/mytrips/trip/:tripId/media"
             element={<MediaPage />}
           />
 
-          {/* Timeline */}
+          {/*Timeline*/}
           <Route
             path="/mytrips/trip/:tripId/timeline"
             element={<TimelinePage />}
           />
 
-          {/* Saved Timelines */}
+          {/*Saved Timelines*/}
           <Route
             path="/mytrips/trip/:tripId/saved-timelines"
             element={<SavedTimelinesPage />}
           />
 
-          {/* Placeholders */}
+          {/*Feed*/}
           <Route path="/feed" element={<Placeholder title="Feed" />} />
-          <Route path="/join" element={<Placeholder title="Join A Trip" />} />
 
           {/*Chatbot*/}
           <Route path="/chatbot" element={<ChatbotPage />} />
+
+          {/*Group trip page*/}
+          <Route path="/join-trip" element={<GroupTripsPage />} /> 
         </Route>
+
       </Routes>
     </BrowserRouter>
   );
