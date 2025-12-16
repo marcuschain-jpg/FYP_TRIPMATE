@@ -11,8 +11,6 @@ function UserNavbar() {
         navigate("/"); //send user to landing page (marketing page)
     };
 
-    //if (!userID) return null
-
     return (
         <>
             {/*Styling for registered user navbar--> shows up when user is logged in*/}
