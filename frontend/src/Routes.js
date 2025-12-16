@@ -18,7 +18,9 @@ import TimelinePage from "./pages/TimelinePage";
 import SavedTimelinesPage from "./pages/SavedTimelinesPage";
 import CreateAccountPage from "./pages/CreateAccountPage";
 import PricingPage from "./pages/PricingPage";
-import HomePage from "./pages/HomePage";   // 👈 ADDED
+import HomePage from "./pages/HomePage";   
+import ChatbotPage from "./pages/ChatbotPage";
+
 
 // Temporary placeholder component
 function Placeholder({ title }) {
@@ -45,8 +47,8 @@ function AppRoutes() {
 
         {/* ================ LOGGED-IN USER ROUTES ================ */}
         <Route element={<UserNavbar />}>
-          {/* Home after login */}
-          <Route path="/home" element={<HomePage />} />   {/* 👈 ADDED */}
+          {/*Home after login*/}
+          <Route path="/home" element={<HomePage />} />   {/*ADDED*/}
 
           {/* Trips */}
           <Route path="/mytrips" element={<MyTripsPage />} />
@@ -56,7 +58,7 @@ function AppRoutes() {
             element={<ItineraryPage />}
           />
 
-          {/* Activity Form */}
+          {/*Activity Form*/}
           <Route
             path="/mytrips/trip/:tripId/activity/:mode"
             element={<ActivityFormPage />}
@@ -66,27 +68,35 @@ function AppRoutes() {
             element={<ActivityFormPage />}
           />
 
-          {/* Media */}
+          {/*Media*/}
           <Route
             path="/mytrips/trip/:tripId/media"
             element={<MediaPage />}
           />
 
-          {/* Timeline */}
+          {/*Timeline*/}
           <Route
             path="/mytrips/trip/:tripId/timeline"
             element={<TimelinePage />}
           />
 
-          {/* Saved Timelines */}
+          {/*Saved Timelines*/}
           <Route
             path="/mytrips/trip/:tripId/saved-timelines"
             element={<SavedTimelinesPage />}
           />
 
-          {/* Placeholders */}
+          {/*Placeholders*/}
           <Route path="/feed" element={<Placeholder title="Feed" />} />
           <Route path="/join" element={<Placeholder title="Join A Trip" />} />
+
+          {/*Chatbot*/}
+          <Route path="/chatbot" element={<ChatbotPage />} />
+
+
+          {/*Chatbot*/}
+          <Route path="/chatbot" element={<ChatbotPage />} />
+
         </Route>
       </Routes>
     </BrowserRouter>

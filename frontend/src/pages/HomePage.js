@@ -30,7 +30,9 @@ export default function HomePage() {
       {/*Banner on top of page*/}
       <div className="home-banner">
         <img src={HomeMainPhoto} alt="Main" className="home-banner-img" />
-        <h1 className="home-banner-text">Welcome Back,<br />{username}</h1>
+        <h1 className="home-banner-text">
+          Welcome Back,<br />{username}
+        </h1>
       </div>
 
       {/*2 Cards*/}
@@ -38,29 +40,45 @@ export default function HomePage() {
 
         {/*Browse feed card*/}
         <div className="home-card">
-          <img src={HomeSmall1} className="home-card-img" />
+          <img src={HomeSmall1} className="home-card-img" alt="" />
           <h2 className="home-card-title">Browse Feed</h2>
           <p className="home-card-desc">
             Browse itineraries from fellow travellers and discover unique experiences.
           </p>
-          <button className="home-card-btn" onClick={() => navigate("/feed")}>
+          <button
+            className="home-card-btn"
+            onClick={() => navigate("/feed")}
+          >
             View
           </button>
         </div>
 
         {/*My trips card*/}
         <div className="home-card">
-          <img src={HomeSmall2} className="home-card-img" />
+          <img src={HomeSmall2} className="home-card-img" alt="" />
           <h2 className="home-card-title">My Trips</h2>
           <p className="home-card-desc">
             Looking for a getaway from all the hustle and bustle? Plan your next trip now!
           </p>
-          <button className="home-card-btn" onClick={() => navigate("/mytrips")}>
+          <button
+            className="home-card-btn"
+            onClick={() => navigate("/mytrips")}
+          >
             View
           </button>
         </div>
 
       </div>
+
+      {/* 🤖 Floating Chatbot Button */}
+      <button
+        className="chatbot-fab"
+        onClick={() => navigate("/chatbot")}
+        aria-label="Open Chatbot"
+      >
+        🤖
+      </button>
+
     </div>
   );
 }

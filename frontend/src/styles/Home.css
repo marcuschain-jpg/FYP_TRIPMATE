@@ -86,3 +86,33 @@
     background: #004b99;
   }
   
+  /* Floating Chatbot Button */
+.chatbot-fab {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+  
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+  
+    background-color: #0b5d8a; /* TripMate blue */
+    color: white;
+    font-size: 26px;
+  
+    border: none;
+    cursor: pointer;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+    z-index: 999;
+  }
+  
+  .chatbot-fab:hover {
+    background-color: #094a6d;
+    transform: scale(1.05);
+  }
+  
