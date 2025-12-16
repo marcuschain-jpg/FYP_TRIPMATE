@@ -18,7 +18,8 @@ import TimelinePage from "./pages/TimelinePage";
 import SavedTimelinesPage from "./pages/SavedTimelinesPage";
 import CreateAccountPage from "./pages/CreateAccountPage";
 import PricingPage from "./pages/PricingPage";
-import HomePage from "./pages/HomePage";   // 👈 ADDED
+import HomePage from "./pages/HomePage";
+import ChatbotPage from "./pages/ChatbotPage";
 
 // Temporary placeholder component
 function Placeholder({ title }) {
@@ -85,6 +86,9 @@ function AppRoutes() {
           {/* Placeholders */}
           <Route path="/feed" element={<Placeholder title="Feed" />} />
           <Route path="/join" element={<Placeholder title="Join A Trip" />} />
+
+          {/*Chatbot*/}
+          <Route path="/chatbot" element={<ChatbotPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
