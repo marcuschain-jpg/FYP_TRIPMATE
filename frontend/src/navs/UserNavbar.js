@@ -1,13 +1,19 @@
 import { Outlet, Link, useNavigate, useParams } from "react-router-dom";
 import React, { useState } from "react";
+import axios from 'axios';
 
 
 function UserNavbar() {
     const [showMenu, setShowMenu] = useState(false);
     const navigate = useNavigate();
 
-    const handleLogout = () => {
+    const handleLogout = async() => {
         localStorage.removeItem("user");
+        await axios.post("http://localhost:8080/AuthService/Logout", {}, {withCredentials: true})
+        .then((res) => {
+            if(res.data.success) alert("Successfully Logged Out!")
+        })
+        .catch(err => console.error(err));
         navigate("/"); //send user to landing page (marketing page)
     };
 

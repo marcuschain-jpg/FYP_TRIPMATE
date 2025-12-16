@@ -41,7 +41,7 @@ function MyTripsPage() {
   useEffect(() => {
     /*localStorage.setItem(tripKey, JSON.stringify(trips));
   }, [trips, tripKey]);*/
-    axios.get("http://localhost:8080/Itinerary/GetAllItineraries", {params:{userid: userID}})
+    axios.get("http://localhost:8080/Itinerary/GetAllItineraries", {params:{userid: userID}, withCredentials: true})
     .then(response => {
       renderLoadTrip(response.data);
       setLoading(false);

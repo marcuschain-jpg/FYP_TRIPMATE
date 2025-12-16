@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const http = require("http");
-const { Server } = require("socket.io");
+const { Server } = require("socket.io"); // real time websocket
+const cookieParser = require("cookie-parser"); // store cookies on website
 //Import routes
 const landingRouter = require("./routes/Landing")
 const itineraryRouter = require("./routes/Itinerary");
@@ -13,8 +14,9 @@ const server = http.createServer(app);
 const io = new Server(server, {cors: {origin: "http://localhost:3000"}})
 
 //Middleware
-app.use( cors({ origin: "http://localhost:3000",}));
+app.use( cors({ origin: "http://localhost:3000", credentials: true}));
 app.use(express.json());
+app.use(cookieParser());
 
 //Use route
 app.use("/Landing", landingRouter);
