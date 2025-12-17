@@ -93,9 +93,9 @@ function AppRoutes() {
           {/*Chatbot*/}
           <Route path="/chatbot" element={<ChatbotPage />} />
 
-          {/*Group trip page
+          {/*Group trip page*/}
           <Route path="/join-trip" element={<GroupTripsPage />} /> 
-          */}
+          
         </Route>
 
       </Routes>
