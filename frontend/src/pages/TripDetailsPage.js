@@ -6,6 +6,7 @@ import "../styles/Collab.css";
 import link from "../Assets/link.png"
 import whatsapp from "../Assets/Whatsapp.png"
 import telegram from "../Assets/Telegram.png"
+import ItineraryChat from "../components/ItineraryChat";
 
 //Ensures that trips created by each user are only visible by that user
 function getTripKey() {
@@ -43,6 +44,9 @@ function TripDetailsPage() {
 
   //Input value
   const [newCollaborator, setNewCollaborator] = useState("");
+
+  //Chat modal
+  const[showChat, setShowChat] = useState(false);
 
   //Load trips and set current trip
   useEffect(() => {
@@ -121,7 +125,7 @@ function TripDetailsPage() {
   return (
     <div className="tripdetails-page">
       <div className="tripdetails-inner">
-        <button className="back-btn" onClick={() => navigate(-1)}>
+        <button className="back-btn" onClick={() => navigate(`/mytrips`)}>
           ← Back to My Trips
         </button>
 
@@ -138,6 +142,14 @@ function TripDetailsPage() {
             title="Collaborators"
           >
             👥
+          </button>
+
+          <button
+            className="collaborate-btn"
+            onClick={() => setShowChat(true)}
+            title="Chat"
+          >
+            Chat
           </button>
         </div>
 
@@ -274,6 +286,8 @@ function TripDetailsPage() {
           </div>
         </div>
       )}
+
+      {showChat && ( <ItineraryChat onClose={() => setShowChat(false)}/> )}
     </div>
   );
 }

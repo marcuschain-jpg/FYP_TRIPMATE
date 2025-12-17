@@ -5,6 +5,7 @@ import useMapData from "../hooks/FetchMapData";
 import "../styles/Itinerary.css";
 import axios from 'axios';
 import { io } from "socket.io-client";
+import ItineraryChat from "../components/ItineraryChat";
 
 const socket = io("http://localhost:8080")
 
@@ -20,6 +21,7 @@ function ItineraryPage() {
   const [selectedDate, setSelectedDate] = useState("");
   const [Loading, setLoading] = useState(true);
   const [isArranging, setIsArranging] = useState(false); 
+  const[showChat, setShowChat] = useState(false); // for chat component
 
   //Load trip & activities
   useEffect(() => {
@@ -187,6 +189,7 @@ function ItineraryPage() {
               </select>
 
               <button className="arrange-btn" onClick={() => arrangeItinerary()} disabled={isArranging}>{isArranging ? "Arranging..." : "Arrange"}</button>
+              <button className="arrange-btn" onClick={() => setShowChat(true)}>Chat</button>
             </div>
           )}
 
@@ -236,8 +239,10 @@ function ItineraryPage() {
           ) : (
             <p className="map-loading-text">Loading map…</p>
           )}
+
         </div>
       </div>
+      {showChat && ( <ItineraryChat onClose={() => setShowChat(false)}/> )}
     </div>
   );
 }
