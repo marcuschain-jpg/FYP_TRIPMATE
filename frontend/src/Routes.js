@@ -71,7 +71,7 @@ function AppRoutes() {
 
           {/*Media*/}
           <Route
-            path="/mytrips/trip/:tripId/media"
+            path="/mytrips/trip/media/:tripId"
             element={<MediaPage />}
           />
 

@@ -196,7 +196,7 @@ function TripDetailsPage() {
             <button
               className="view-btn"
               onClick={() =>
-                navigate(`/mytrips/trip/${trip.id}/media`)
+                navigate(`/mytrips/trip/media/${trip.id}`)
               }
             >
               View

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import "../styles/Itinerary.css";
 
 //Ensures that media uploaded by each user are only visible by that user
+/*
 function getTripKey() {
   const loggedStr = localStorage.getItem("loggedInUser");
   if (loggedStr) {
@@ -15,7 +16,7 @@ function getTripKey() {
     } catch (e) {}
   }
   return "trips_guest";
-}
+}*/
 
 function MediaPage() {
   const { tripId } = useParams();
@@ -23,7 +24,26 @@ function MediaPage() {
 
   const [trips, setTrips] = useState([]);
   const [trip, setTrip] = useState(null);
-  const [gallery, setGallery] = useState([]);
+  const [gallery, setGallery] = useState([
+    {
+      id: 1,
+      url:"http://localhost:8080/images/me_beach.jpg",
+      name: "me on a beach",
+      date: 2025-12-12
+    },
+    {
+      id: 2,
+      url:"http://localhost:8080/images/image.jpg",
+      name: "resevoir picture 2",
+      date: 12/12/2025
+    },
+    {
+      id: 1,
+      url:"http://localhost:8080/images/download.jpg",
+      name: "resevoir picture 3",
+      date: 12/12/2025
+    }
+  ]);
 
   //Modal state
   const [showEditModal, setShowEditModal] = useState(false);
@@ -32,7 +52,7 @@ function MediaPage() {
   const [editDate, setEditDate] = useState("");
 
   //Load trip & media from local storage
-  useEffect(() => {
+  /*useEffect(() => {
     const tripKey = getTripKey();
     const saved = JSON.parse(localStorage.getItem(tripKey) || "[]");
     setTrips(saved);
@@ -42,19 +62,19 @@ function MediaPage() {
       setTrip(foundTrip);
       setGallery(foundTrip.mediaGallery || []);
     }
-  }, [tripId]);
+  }, [tripId]);*/
 
-  if (!trip) return <p>Trip not found.</p>;
+  //if (!trip) return <p>Trip not found.</p>;
 
   //Update media gallery for the trip
   const updateTripMedia = (updatedGallery) => {
-    const tripKey = getTripKey();
+    //const tripKey = getTripKey();
 
     const updatedTrips = trips.map((t) =>
       t.id === trip.id ? { ...t, mediaGallery: updatedGallery } : t
     );
 
-    localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
+    //localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
     setTrips(updatedTrips);
 
     const updatedTrip = updatedTrips.find((t) => t.id === trip.id);
@@ -88,7 +108,7 @@ function MediaPage() {
 
   //Edit media title--> sync name across activities, media page, timeline page 
   const saveEditChanges = () => {
-    const tripKey = getTripKey();
+    //const tripKey = getTripKey();
 
     const updatedTrips = trips.map((t) => {
       if (t.id !== trip.id) return t;
@@ -111,7 +131,7 @@ function MediaPage() {
       };
     });
 
-    localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
+    //localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
     setTrips(updatedTrips);
 
     const updatedTrip = updatedTrips.find((t) => t.id === trip.id);
@@ -125,7 +145,7 @@ function MediaPage() {
   const handleDelete = (item) => {
     if (!window.confirm("Delete this media everywhere?")) return;
 
-    const tripKey = getTripKey();
+    //const tripKey = getTripKey();
 
     const updatedTrips = trips.map((t) => {
       if (t.id !== trip.id) return t;
@@ -146,7 +166,7 @@ function MediaPage() {
       };
     });
 
-    localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
+    //localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
     setTrips(updatedTrips);
     const updatedTrip = updatedTrips.find((t) => t.id === trip.id);
     setTrip(updatedTrip || null);
@@ -162,7 +182,7 @@ function MediaPage() {
         ← Back
       </button>
 
-      <h1 className="media-title">{trip.name} — Media</h1>
+      <h1 className="media-title">To Singapore! — Media</h1>
 
       <div className="media-layout">
         <div className="media-sidebar">
