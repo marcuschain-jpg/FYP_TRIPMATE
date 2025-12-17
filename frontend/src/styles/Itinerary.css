@@ -720,7 +720,26 @@
     margin-bottom: 15px;
     width: 100%;
 }
-
+/*collab button*/
+.trip-actions {
+    display: flex;
+    justify-content: flex-end; 
+    margin: -40px 0 20px; 
+  }
+  
+  .collaborate-btn {
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    padding: 6px 10px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+  }
+  
+  .collaborate-btn:hover {
+    background-color: #f0f0f0;
+  }
+  
 /*Checkbox to mark start point of itinerary*/
 .startpoint-checkbox-row {
     width: 100%;
