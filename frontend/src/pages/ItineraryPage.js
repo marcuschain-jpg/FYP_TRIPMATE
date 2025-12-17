@@ -189,7 +189,6 @@ function ItineraryPage() {
               </select>
 
               <button className="arrange-btn" onClick={() => arrangeItinerary()} disabled={isArranging}>{isArranging ? "Arranging..." : "Arrange"}</button>
-              <button className="arrange-btn" onClick={() => setShowChat(true)}>Chat</button>
             </div>
           )}
 
@@ -242,6 +241,9 @@ function ItineraryPage() {
 
         </div>
       </div>
+      <button className="floating-chat-btn" onClick={() => setShowChat(true)} title="Chat">
+        Chat
+      </button>
       {showChat && ( <ItineraryChat onClose={() => setShowChat(false)}/> )}
     </div>
   );

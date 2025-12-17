@@ -1179,6 +1179,20 @@
   }
   
 /*Chat modal -----------------------*/
+.floating-chat-btn {
+    position: fixed;
+    bottom: 5%;
+    right: 3%;
+    width: 3%;
+    height: 6%;
+    background: #0b6fa4;
+    color: white;  
+    border-radius: 50%;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    z-index: 3000;
+    cursor: pointer;
+    font-weight: bold;
+  }
 .chat-modal {
     position: fixed;
     bottom: 5%;

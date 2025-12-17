@@ -143,14 +143,6 @@ function TripDetailsPage() {
           >
             👥
           </button>
-
-          <button
-            className="collaborate-btn"
-            onClick={() => setShowChat(true)}
-            title="Chat"
-          >
-            Chat
-          </button>
         </div>
 
         <label className="completed-label">
@@ -212,6 +204,10 @@ function TripDetailsPage() {
           </div>
         </div>
       </div>
+
+      <button className="floating-chat-btn" onClick={() => setShowChat(true)} title="Chat">
+        Chat
+      </button>
 
       {/*Collaborators modal*/}
       {showCollaborators && (
