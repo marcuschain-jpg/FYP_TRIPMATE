@@ -3,6 +3,9 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import "../styles/Itinerary.css";
 import "../styles/Collab.css";
+import link from "../Assets/link.png"
+import whatsapp from "../Assets/Whatsapp.png"
+import telegram from "../Assets/Telegram.png"
 
 //Ensures that trips created by each user are only visible by that user
 function getTripKey() {
@@ -245,6 +248,12 @@ function TripDetailsPage() {
 
                 </div>
               ))}
+              <p className="members-title">Share</p>
+              <div className="share-icons">
+                <img src={link} alt="link.img" className="collab-img" />
+                <img src={whatsapp} alt="whatsapp.img" className="collab-img2" />
+                <img src={telegram} alt="tele.img" className="collab-img2" />
+              </div>
             </div>
 
             {/*Actions*/}

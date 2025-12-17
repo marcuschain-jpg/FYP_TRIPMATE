@@ -20,7 +20,7 @@ import CreateAccountPage from "./pages/CreateAccountPage";
 import PricingPage from "./pages/PricingPage";
 import HomePage from "./pages/HomePage";
 import ChatbotPage from "./pages/ChatbotPage";
-import GroupTripsPage from "./pages/GroupTripsPage"; 
+//import GroupTripsPage from "./pages/GroupTripsPage"; 
 
 //Temporary placeholder component
 function Placeholder({ title }) {
@@ -93,8 +93,9 @@ function AppRoutes() {
           {/*Chatbot*/}
           <Route path="/chatbot" element={<ChatbotPage />} />
 
-          {/*Group trip page*/}
+          {/*Group trip page
           <Route path="/join-trip" element={<GroupTripsPage />} /> 
+          */}
         </Route>
 
       </Routes>
