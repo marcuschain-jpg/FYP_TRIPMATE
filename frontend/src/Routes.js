@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-// Navbars
+//Navbars
 import UserNavbar from "./navs/UserNavbar";
 import UnregisteredUserNavbar from "./navs/UnregisteredUserNavBar";
 
-// Pages
+//Pages
 import Landing from "./pages/Landing";
 import QuizPage from "./pages/QuizPage";
 import LoginPage from "./pages/LoginPage";
@@ -23,7 +23,7 @@ import ChatbotPage from "./pages/ChatbotPage";
 import GroupTripsPage from "./pages/GroupTripsPage";
 import GroupChatPage from "./pages/GroupChatPage";
 
-// Placeholder
+//Placeholder
 function Placeholder({ title }) {
   return (
     <div style={{ padding: "40px" }}>
@@ -34,7 +34,7 @@ function Placeholder({ title }) {
 }
 
 function AppRoutes() {
-  // ================= SHARED STATE (DUMMY ONLY) =================
+  //Shared state (dummy)
   const [groupTrips, setGroupTrips] = useState([
     {
       id: 1,
@@ -73,13 +73,11 @@ function AppRoutes() {
 
   const [groupChats, setGroupChats] = useState({});
 
-  // ================= ACTIONS =================
-
-  // CREATE GROUP TRIP → appears in Join Trip + My Trips + (optional) chat
+//Create group trip
   const createTrip = (trip) => {
     setGroupTrips((prev) => [trip, ...prev]);
 
-    // creator is auto joined
+    //Creator = auto joined
     setMyTrips((prev) => {
       if (prev.find((t) => t.id === trip.id)) return prev;
       return [...prev, trip];
@@ -91,7 +89,7 @@ function AppRoutes() {
     }));
   };
 
-  // JOIN TRIP → add to My Trips + increment joined
+  //Join trip/add to My trips page
   const joinTrip = (trip) => {
     setMyTrips((prev) => {
       if (prev.find((t) => t.id === trip.id)) return prev;
@@ -110,7 +108,7 @@ function AppRoutes() {
     }));
   };
 
-  // EXIT TRIP → remove from My Trips + decrement joined
+  //Exit remove from My Trips 
   const exitTrip = (tripId) => {
     setMyTrips((prev) => prev.filter((t) => t.id !== tripId));
 
@@ -121,12 +119,10 @@ function AppRoutes() {
     );
   };
 
-  // REMOVE FROM JOIN PAGE (you asked: after exiting, remove from this page)
   const removeTripFromJoinPage = (tripId) => {
     setGroupTrips((prev) => prev.filter((t) => t.id !== tripId));
   };
 
-  // CHAT MESSAGE (DUMMY)
   const sendMessage = (tripId, message) => {
     setGroupChats((prev) => ({
       ...prev,

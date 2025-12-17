@@ -1,8 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useOutletContext } from "react-router-dom"; // ✅ ADDED
 import "../styles/GroupTrip.css";
 
 function GroupTripsPage() {
-  // ================= DUMMY GROUP TRIPS DATA =================
+
+  //Shared state from Routes.js
+  const { myTrips, joinTrip, exitTrip } = useOutletContext();
+
+  //Dummy data
   const [groupTrips, setGroupTrips] = useState([
     {
       id: 1,
@@ -36,44 +41,57 @@ function GroupTripsPage() {
     },
   ]);
 
-  // ================= SEARCH STATE =================
+  //Sync join state
+  useEffect(() => {
+    setGroupTrips((prev) =>
+      prev.map((trip) => ({
+        ...trip,
+        joinedByYou: myTrips.some((t) => t.id === trip.id),
+      }))
+    );
+  }, [myTrips]);
+
   const [searchTerm, setSearchTerm] = useState("");
 
-  // ================= MODAL STATE =================
+  //Mpdal state
   const [showModal, setShowModal] = useState(false);
 
-  // ================= FORM STATE (DUMMY) =================
+  //form state (dummy)
   const [tripName, setTripName] = useState("");
   const [pax, setPax] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [description, setDescription] = useState("");
 
-  // ================= JOIN HANDLER =================
-  const handleJoin = (tripId) => {
+  //joine handler
+  const handleJoin = (trip) => {
+    // local UI update (your original logic)
     setGroupTrips((prev) =>
-      prev.map((trip) =>
-        trip.id === tripId
-          ? { ...trip, joinedByYou: true }
-          : trip
+      prev.map((t) =>
+        t.id === trip.id ? { ...t, joinedByYou: true } : t
       )
     );
+
+    
+    joinTrip(trip);
   };
 
-  // ================= EXIT HANDLER =================
+  //Exit handler
   const handleExit = (tripId) => {
     const confirmExit = window.confirm(
       "Are you sure you want to exit this trip?"
     );
     if (!confirmExit) return;
 
-    // remove trip from Join page
+   
     setGroupTrips((prev) =>
       prev.filter((trip) => trip.id !== tripId)
     );
+
+    exitTrip(tripId);
   };
 
-  // ================= UPLOAD HANDLER =================
+  //Upload handler
   const handleUpload = () => {
     if (!tripName || !pax || !startDate || !endDate) {
       alert("Please fill in all required fields");
@@ -87,10 +105,12 @@ function GroupTripsPage() {
       date: `${startDate} – ${endDate}`,
       capacity: `${pax} Pax`,
       description,
-      joinedByYou: true, // creator auto-joined
+      joinedByYou: true,
     };
 
     setGroupTrips([newTrip, ...groupTrips]);
+
+    joinTrip(newTrip);
 
     setTripName("");
     setPax("");
@@ -104,7 +124,7 @@ function GroupTripsPage() {
     <div className="group-trips-page">
       <div className="group-trips-container">
 
-        {/* ================= SEARCH + CREATE ================= */}
+        {/*Search & create*/}
         <div className="group-trips-header">
           <input
             className="group-search"
@@ -121,7 +141,7 @@ function GroupTripsPage() {
           </button>
         </div>
 
-        {/* ================= TRIP CARDS ================= */}
+        {/*Trip cards*/}
         {groupTrips
           .filter((trip) =>
             trip.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -142,7 +162,7 @@ function GroupTripsPage() {
                 <p className="trip-desc">{trip.description}</p>
               </div>
 
-              {/* ================= JOIN / EXIT BUTTON ================= */}
+              {/*Join or exit group tips*/}
               <div className="group-trip-right">
                 {trip.joinedByYou ? (
                   <button
@@ -154,7 +174,7 @@ function GroupTripsPage() {
                 ) : (
                   <button
                     className="join-btn-text"
-                    onClick={() => handleJoin(trip.id)}
+                    onClick={() => handleJoin(trip)}
                   >
                     Join
                   </button>
@@ -164,11 +184,9 @@ function GroupTripsPage() {
           ))}
       </div>
 
-      {/* ================= CREATE TRIP MODAL ================= */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-card">
-
             <h2>Create New Group Trip</h2>
 
             <div className="modal-row">
@@ -177,7 +195,6 @@ function GroupTripsPage() {
                 <input
                   value={tripName}
                   onChange={(e) => setTripName(e.target.value)}
-                  placeholder="Enter Trip name"
                 />
               </div>
 
@@ -186,7 +203,6 @@ function GroupTripsPage() {
                 <input
                   value={pax}
                   onChange={(e) => setPax(e.target.value)}
-                  placeholder="Enter no. of pax"
                 />
               </div>
             </div>
@@ -197,7 +213,6 @@ function GroupTripsPage() {
                 <input
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  placeholder="Enter Start Date"
                 />
               </div>
 
@@ -206,7 +221,6 @@ function GroupTripsPage() {
                 <input
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  placeholder="Enter End Date"
                 />
               </div>
             </div>
@@ -216,7 +230,6 @@ function GroupTripsPage() {
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter Description"
               />
             </div>
 
