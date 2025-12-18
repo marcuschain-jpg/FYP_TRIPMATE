@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../styles/Itinerary.css";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from 'axios';
+import ItineraryChat from "../components/ItineraryChat";
 
 
 function MyTripsPage() {
@@ -36,6 +37,10 @@ function MyTripsPage() {
   //Delete confirmation message
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [tripToDelete, setTripToDelete] = useState(null);
+
+  //Chat modal
+  const[showChat, setShowChat] = useState(false);
+  
 
   //Save trips on change (for THIS user only)
   useEffect(() => {
@@ -141,6 +146,7 @@ function MyTripsPage() {
       }
     });
   }
+
 
   //Apply filters to search for trips in list
   const filteredTrips = trips.filter((t) => {
@@ -278,7 +284,10 @@ function MyTripsPage() {
             </div>
 
             <div className="actions">
-              <button className="chat-btn">Chat</button>
+              <button 
+                className="chat-btn"
+                onClick={() => setShowChat(true)}
+              >Chat</button>
 
               <button
                 className="view-btn"
@@ -394,6 +403,8 @@ function MyTripsPage() {
           </div>
         </div>
       )}
+
+      {showChat && ( <ItineraryChat onClose={() => setShowChat(false)}/> )}
 
       {successMsg && <div className="success-popup">{successMsg}</div>}
     </div>

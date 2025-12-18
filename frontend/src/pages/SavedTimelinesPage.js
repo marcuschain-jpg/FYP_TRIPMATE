@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import "../styles/Timeline.css";
 
 //Ensures that timelines saved by each user are only visible by that user
-function getTripKey() {
+/*function getTripKey() {
   const loggedStr = localStorage.getItem("loggedInUser");
   if (loggedStr) {
     try {
@@ -15,7 +15,7 @@ function getTripKey() {
     } catch (e) {}
   }
   return "trips_guest";
-}
+}*/
 
 function SavedTimelinesPage() {
   const { tripId } = useParams();
@@ -23,31 +23,97 @@ function SavedTimelinesPage() {
 
   const [trip, setTrip] = useState(null);
   const [activeTimeline, setActiveTimeline] = useState(null);
+  const [timeline, setTimeline] = useState([
+    {
+      createdAt: "2025-12-18T04:24:15.817Z",
+      id: 1,
+      name: "new timeline!",
+      nodes:
+      [
+        {
+        date: "2025-12-12",
+        mediaid: 1,
+        name: "me on a beach",
+        url: "http://localhost:8080/images/me_beach.jpg",
+        x: 10,
+        y: 10
+        },
+        {
+          date: "2025-12-24",
+          mediaid: 2,
+          name: "resevoir picture 2",
+          url: "http://localhost:8080/images/image.jpg",
+          x: 50,
+          y: 65
+        },
+        {
+          date: "2025-12-25",
+          mediaid: 3,
+          name: "resevoir picture 3",
+          url: "http://localhost:8080/images/download.jpg",
+          x: 90,
+          y: 20
+        }
+      ]
+    },
+    {
+      createdAt: "2025-12-18T04:24:15.817Z",
+      id: 2,
+      name: "another timeline!",
+      nodes:
+      [
+        {
+        date: "2025-12-12",
+        mediaid: 1,
+        name: "me on a beach",
+        url: "http://localhost:8080/images/me_beach.jpg",
+        x: 10,
+        y: 10
+        },
+        {
+          date: "2025-12-24",
+          mediaid: 2,
+          name: "resevoir picture 2",
+          url: "http://localhost:8080/images/image.jpg",
+          x: 50,
+          y: 65
+        },
+        {
+          date: "2025-12-25",
+          mediaid: 3,
+          name: "resevoir picture 3",
+          url: "http://localhost:8080/images/download.jpg",
+          x: 90,
+          y: 20
+        }
+      ]
+    }
+  ]);
 
   //Load saved timelines
-  useEffect(() => {
+  /*useEffect(() => {
     const tripKey = getTripKey();
     const trips = JSON.parse(localStorage.getItem(tripKey) || "[]");
     const found = trips.find((t) => t.id === Number(tripId));
     if (found) setTrip(found);
-  }, [tripId]);
+  }, [tripId]);*/
 
-  if (!trip) return <p>Trip not found.</p>;
+  //if (!trip) return <p>Trip not found.</p>;
 
-  const timelines = trip.savedTimelines || [];
+  const timelines = timeline || [];
 
   //Delete saved timeline
   const handleDelete = (id) => {
-    const timeline = timelines.find((tl) => tl.id === id);
-
+    //const timeline = timelines.find((tl) => tl.id === id);
+    const selectedTimeline = timeline.filter(i => i.id === id)
     //Confirmation popup message
     const ok = window.confirm(
-      `Are you sure you want to delete the timeline "${timeline?.name}"?`
+      `Are you sure you want to delete the timeline "${selectedTimeline[0].name}"?`
     );
 
     if (!ok) return; 
 
-    const tripKey = getTripKey();
+    /*const tripKey = getTripKey();
     const trips = JSON.parse(localStorage.getItem(tripKey) || "[]");
 
     const updatedTrips = trips.map((t) => {
@@ -60,9 +126,12 @@ function SavedTimelinesPage() {
     });
 
     localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
-    setTrip(updatedTrips.find((t) => t.id === trip.id));
+    setTrip(updatedTrips.find((t) => t.id === trip.id));*/
 
     //Success popup message 
+
+    const updatedTimelines = timeline.filter(i => i.id !== id)
+    setTimeline(updatedTimelines);
     alert("Timeline deleted successfully.");
   };
 

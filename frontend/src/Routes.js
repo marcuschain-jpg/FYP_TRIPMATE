@@ -71,19 +71,19 @@ function AppRoutes() {
 
           {/*Media*/}
           <Route
-            path="/mytrips/trip/:tripId/media"
+            path="/mytrips/trip/media/:tripId"
             element={<MediaPage />}
           />
 
           {/*Timeline*/}
           <Route
-            path="/mytrips/trip/:tripId/timeline"
+            path="/mytrips/trip/timeline/:tripId"
             element={<TimelinePage />}
           />
 
           {/*Saved Timelines*/}
           <Route
-            path="/mytrips/trip/:tripId/saved-timelines"
+            path="/mytrips/trip/saved-timelines/:tripId"
             element={<SavedTimelinesPage />}
           />
 
