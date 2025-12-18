@@ -38,6 +38,8 @@ function ActivityFormPage() {
   const [media, setMedia] = useState([]); //Newly uploaded files
   const [existingMedia, setExistingMedia] = useState([]); //Already-saved media for this activity
   const [originalMediaIds, setOriginalMediaIds] = useState([]); //For delete-sync
+  const [firstLoad, setFirstLoad] = useState(true);
+  const [searchResult, setSearchResult] = useState([]); // store search results from api, drop down bar
 
   //Start point checkbox
   const [isStartPoint, setIsStartPoint] = useState(false);
@@ -136,6 +138,42 @@ function ActivityFormPage() {
       setIsStartPoint(false);
     }
   }, [date, originalDate, startPointTouched, trip, editing, index]);
+
+  
+  useEffect(() => {
+    if(!locationName) return;
+    if(firstLoad) 
+      {
+        setFirstLoad(false);
+        return;
+      }
+    const locTimer = setTimeout(async() => {
+      console.log("Send to backend", locationName);
+      await axios.post("http://localhost:8080/Itinerary/LocSearch", {input:locationName})
+      .then(res=>{
+        renderLoadSearchResult(res.data);
+        
+      })
+    }, 2000);
+
+    //open selection modal below loc textbox
+    //trigger once click, dont run use effect again, until another type
+    return () => {
+      clearTimeout(locTimer);
+    };
+  }, [locationName])
+
+  const renderLoadSearchResult = (res) => {
+    const mapResults = res.map(t => ({
+      placeid: t.id,
+      name: t.name,
+      address: t.address,
+      lat: t.lat,
+      lng: t.lng,
+    }));
+
+    setSearchResult(mapResults);
+  };
 
   //if (!trip && editing) return <p>Trip not found.</p>;
   if (loading && editing) return <p>Loading..</p>
@@ -268,6 +306,8 @@ function ActivityFormPage() {
     navigate(`/mytrips/trip/itinerary/${tripId}/${date}`);
   };
 
+  
+
   return (
     <div className="activity-form-page">
       <button
@@ -292,7 +332,7 @@ function ActivityFormPage() {
                 checked={isStartPoint}
                 onChange={(e) => {
                   setIsStartPoint(e.target.checked);
-                  setStartPointTouched(true); // ⭐ NEW
+                  setStartPointTouched(true); 
                 }}
                 disabled={editing && defaultStart}
               />

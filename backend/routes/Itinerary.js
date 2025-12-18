@@ -350,7 +350,49 @@ router.get("/GetActivityToEdit", async(req, res) => {
   }
 });
 
+router.post("/LocSearch", async(req, res) => {
+  const {input} = req.body;
 
+  try {
+    const response = await axios.post(
+      "https://places.googleapis.com/v1/places:searchText",
+      {
+        textQuery: input,  // matches curl example
+        pageSize: 5,       // limit results
+        locationBias: {    // triangulate location to city now its singapore
+        circle: {
+          center: {
+            latitude: 1.352083,
+            longitude:103.819836
+            },
+          radius: 500.0
+          }
+        }
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "X-Goog-Api-Key": process.env.gMapsApiKey,
+          "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location"
+        },
+      }
+    );
+    // response.data.results contains the search results
+    const predictions = response.data.places.map((r) => ({
+      id: r.id,
+      name: r.displayName.text,
+      address: r.formattedAddress,
+      lat: r.location.latitude,
+      lng: r.location.longitude,
+    }));
+
+    console.log(predictions)
+    res.json(predictions);
+  } catch (err) {
+    console.error("Places Text Search error:", err.response?.data || err.message);
+    res.status(500).json({ error: "Failed to fetch autocomplete" });
+  }
+});
 
 
 
