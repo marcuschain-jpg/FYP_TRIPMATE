@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Itinerary.css";
 import { useParams, useNavigate, useOutletContext } from "react-router-dom";
-import axios from "axios";
+import axios from 'axios';
+import ItineraryChat from "../components/ItineraryChat";
+
 
 function MyTripsPage() {
   const navigate = useNavigate();
@@ -35,6 +37,7 @@ function MyTripsPage() {
   //Delete confirmation message
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [tripToDelete, setTripToDelete] = useState(null);
+  const[showChat, setShowChat] = useState(false);
 
   // ✅ helper to convert a group trip into MyTrips format
   const mapGroupTripToMyTrip = (t) => ({
@@ -47,6 +50,7 @@ function MyTripsPage() {
     isGroupTrip: true,
     type: "Group",
   });
+  
 
   //Load from backend (private trips)
   useEffect(() => {
@@ -487,6 +491,8 @@ function MyTripsPage() {
           </div>
         </div>
       )}
+
+      {showChat && ( <ItineraryChat onClose={() => setShowChat(false)}/> )}
 
       {successMsg && <div className="success-popup">{successMsg}</div>}
     </div>

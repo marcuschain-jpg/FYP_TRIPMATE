@@ -176,13 +176,17 @@ function AppRoutes() {
             path="/mytrips/trip/activity/:mode/:tripId/:index"
             element={<ActivityFormPage />}
           />
-          <Route path="/mytrips/trip/:tripId/media" element={<MediaPage />} />
+
+          {/*Media*/}
+          <Route path="/mytrips/trip/media/:tripId" element={<MediaPage />} />
+
+          {/*Timeline*/}
           <Route
-            path="/mytrips/trip/:tripId/timeline"
+            path="/mytrips/trip/timeline/:tripId"
             element={<TimelinePage />}
           />
           <Route
-            path="/mytrips/trip/:tripId/saved-timelines"
+            path="/mytrips/trip/saved-timelines/:tripId"
             element={<SavedTimelinesPage />}
           />
           {/*Feed*/}

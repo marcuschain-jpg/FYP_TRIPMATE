@@ -103,7 +103,10 @@ router.get("/GetAllItineraries", RequireAuth, async(req, res) => {
 
   try{
     const data = await pool.query(
-      'SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date, completed FROM itinerary WHERE user_host_id = $1', [userid]
+      `SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date, completed
+       FROM itinerary
+       WHERE user_host_id = $1
+       ORDER BY completed ASC`, [userid]
     );
     res.json(data.rows);
   }
