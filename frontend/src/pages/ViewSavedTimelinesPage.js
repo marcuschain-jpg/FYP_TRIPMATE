@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import "../styles/Timeline.css";
 
 //Ensures that saved timelines can only be viewed by user who saved them
-function getTripKey() {
+/*function getTripKey() {
   const loggedStr = localStorage.getItem("loggedInUser");
   if (loggedStr) {
     try {
@@ -15,17 +15,50 @@ function getTripKey() {
     } catch (e) {}
   }
   return "trips_guest";
-}
+}*/
 
 function SavedTimelineViewPage() {
   const { tripId, timelineId } = useParams();
   const navigate = useNavigate();
 
   const [trip, setTrip] = useState(null);
-  const [timeline, setTimeline] = useState(null);
+  const [timeline, setTimeline] = useState([
+    {
+      createdAt: "2025-12-18T04:24:15.817Z",
+      id: 1,
+      name: "new timeline!",
+      nodes:
+      [
+        {
+        date: "2025-12-12",
+        mediaid: 1,
+        name: "me on a beach",
+        url: "http://localhost:8080/images/me_beach.jpg",
+        x: 10,
+        y: 10
+        },
+        {
+          date: "2025-12-24",
+          mediaid: 2,
+          name: "resevoir picture 2",
+          url: "http://localhost:8080/images/image.jpg",
+          x: 50,
+          y: 65
+        },
+        {
+          date: "2025-12-25",
+          mediaid: 3,
+          name: "resevoir picture 3",
+          url: "http://localhost:8080/images/download.jpg",
+          x: 90,
+          y: 20
+        }
+      ]
+    }
+  ]);
 
   //Load the saved timeline from localStorage
-  useEffect(() => {
+  /*useEffect(() => {
     const tripKey = getTripKey();
     const trips = JSON.parse(localStorage.getItem(tripKey) || "[]");
     const found = trips.find((t) => t.id === Number(tripId));
@@ -41,9 +74,9 @@ function SavedTimelineViewPage() {
     if (savedTimeline) {
       setTimeline(savedTimeline.nodes);
     }
-  }, [tripId, timelineId]);
+  }, [tripId, timelineId]);*/
 
-  if (!trip) return <p>Trip not found.</p>;
+  //if (!trip) return <p>Trip not found.</p>;
   if (!timeline) return <p>Timeline not found.</p>;
 
   return (

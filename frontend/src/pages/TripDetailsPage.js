@@ -180,7 +180,7 @@ function TripDetailsPage() {
             <button
               className="view-btn"
               onClick={() =>
-                navigate(`/mytrips/trip/${trip.id}/timeline`)
+                navigate(`/mytrips/trip/timeline/${trip.id}`)
               }
             >
               View

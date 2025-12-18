@@ -29,19 +29,19 @@ function MediaPage() {
       id: 1,
       url:"http://localhost:8080/images/me_beach.jpg",
       name: "me on a beach",
-      date: 2025-12-12
+      date: "2025-12-12"
     },
     {
       id: 2,
       url:"http://localhost:8080/images/image.jpg",
       name: "resevoir picture 2",
-      date: 12/12/2025
+      date: "2025-12-24"
     },
     {
-      id: 1,
+      id: 3,
       url:"http://localhost:8080/images/download.jpg",
       name: "resevoir picture 3",
-      date: 12/12/2025
+      date: "2025-12-25"
     }
   ]);
 
@@ -70,7 +70,7 @@ function MediaPage() {
   const updateTripMedia = (updatedGallery) => {
     //const tripKey = getTripKey();
 
-    const updatedTrips = trips.map((t) =>
+    /*const updatedTrips = trips.map((t) =>
       t.id === trip.id ? { ...t, mediaGallery: updatedGallery } : t
     );
 
@@ -78,24 +78,28 @@ function MediaPage() {
     setTrips(updatedTrips);
 
     const updatedTrip = updatedTrips.find((t) => t.id === trip.id);
-    setTrip(updatedTrip || null);
-    setGallery(updatedTrip?.mediaGallery || []);
+    setTrip(updatedTrip || null);*/
+    //setGallery(updatedTrip?.mediaGallery || []);
   };
 
   //Upload new media 
   const handleUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    const id = Date.now();
+    const ext = file.name.split(".").pop();
+    const updatedFileName = `${id}.${ext}`;
 
     const newMedia = {
-      id: Date.now() + Math.random(),
+      id,
+      url: `http://localhost:8080/images/${updatedFileName}`,
       name: file.name,
-      type: file.type,
-      url: URL.createObjectURL(file),
-      date: "" //Optional date field
+      date: "2025-12-12" //Optional date field > maybe can select which activity to add to
     };
 
-    updateTripMedia([...gallery, newMedia]);
+    console.log(newMedia);
+    setGallery(prev => [...prev, newMedia]);
+    //updateTripMedia([...gallery, newMedia]);
   };
 
   
@@ -110,7 +114,7 @@ function MediaPage() {
   const saveEditChanges = () => {
     //const tripKey = getTripKey();
 
-    const updatedTrips = trips.map((t) => {
+    /*const updatedTrips = trips.map((t) => {
       if (t.id !== trip.id) return t;
 
       const updatedGallery = (t.mediaGallery || []).map((m) =>
@@ -131,21 +135,26 @@ function MediaPage() {
       };
     });
 
-    //localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
+    //localStorage.setItem(tripKey, JSON.stringify(updatedTrips))
     setTrips(updatedTrips);
 
     const updatedTrip = updatedTrips.find((t) => t.id === trip.id);
     setTrip(updatedTrip || null);
-    setGallery(updatedTrip?.mediaGallery || []);
+    setGallery(updatedTrip?.mediaGallery || []);*/
+    setGallery(prev => prev.map(s => s.id === editItem.id ? {...s, 
+      name: editTitle,
+      date: editDate
+    }: s))
+
 
     setShowEditModal(false);
   };
 
   //Delete media--> sync across activities, media page, timeline page 
-  const handleDelete = (item) => {
+  const handleDelete = (photo_id) => {
     if (!window.confirm("Delete this media everywhere?")) return;
 
-    //const tripKey = getTripKey();
+    /*const tripKey = getTripKey();
 
     const updatedTrips = trips.map((t) => {
       if (t.id !== trip.id) return t;
@@ -164,13 +173,16 @@ function MediaPage() {
         mediaGallery: updatedGallery,
         activities: updatedActivities,
       };
-    });
+    });*/
 
     //localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
-    setTrips(updatedTrips);
+    /*setTrips(updatedTrips);
     const updatedTrip = updatedTrips.find((t) => t.id === trip.id);
     setTrip(updatedTrip || null);
-    setGallery(updatedTrip?.mediaGallery || []);
+    setGallery(updatedTrip?.mediaGallery || []);*/
+
+    const updatedGallery = gallery.filter(gallery => gallery.id !== photo_id)
+    setGallery(updatedGallery);
   };
 
   return (
@@ -224,7 +236,7 @@ function MediaPage() {
 
                     {item.date && (
                       <p className="media-date-text">
-                        <strong>Date:</strong> {item.date}
+                        <strong>Date:</strong> {item.date.split("-").reverse().join("/")}
                       </p>
                     )}
 
@@ -238,7 +250,7 @@ function MediaPage() {
 
                       <button
                         className="media-delete-btn"
-                        onClick={() => handleDelete(item)}
+                        onClick={() => handleDelete(item.id)}
                       >
                         Delete
                       </button>
