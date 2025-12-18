@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import "../styles/Itinerary.css";
 
 //Ensures that media uploaded by each user are only visible by that user
+/*
 function getTripKey() {
   const loggedStr = localStorage.getItem("loggedInUser");
   if (loggedStr) {
@@ -15,7 +16,7 @@ function getTripKey() {
     } catch (e) {}
   }
   return "trips_guest";
-}
+}*/
 
 function MediaPage() {
   const { tripId } = useParams();
@@ -23,7 +24,26 @@ function MediaPage() {
 
   const [trips, setTrips] = useState([]);
   const [trip, setTrip] = useState(null);
-  const [gallery, setGallery] = useState([]);
+  const [gallery, setGallery] = useState([
+    {
+      id: 1,
+      url:"http://localhost:8080/images/me_beach.jpg",
+      name: "me on a beach",
+      date: "2025-12-12"
+    },
+    {
+      id: 2,
+      url:"http://localhost:8080/images/image.jpg",
+      name: "resevoir picture 2",
+      date: "2025-12-24"
+    },
+    {
+      id: 3,
+      url:"http://localhost:8080/images/download.jpg",
+      name: "resevoir picture 3",
+      date: "2025-12-25"
+    }
+  ]);
 
   //Modal state
   const [showEditModal, setShowEditModal] = useState(false);
@@ -32,7 +52,7 @@ function MediaPage() {
   const [editDate, setEditDate] = useState("");
 
   //Load trip & media from local storage
-  useEffect(() => {
+  /*useEffect(() => {
     const tripKey = getTripKey();
     const saved = JSON.parse(localStorage.getItem(tripKey) || "[]");
     setTrips(saved);
@@ -42,40 +62,44 @@ function MediaPage() {
       setTrip(foundTrip);
       setGallery(foundTrip.mediaGallery || []);
     }
-  }, [tripId]);
+  }, [tripId]);*/
 
-  if (!trip) return <p>Trip not found.</p>;
+  //if (!trip) return <p>Trip not found.</p>;
 
   //Update media gallery for the trip
   const updateTripMedia = (updatedGallery) => {
-    const tripKey = getTripKey();
+    //const tripKey = getTripKey();
 
-    const updatedTrips = trips.map((t) =>
+    /*const updatedTrips = trips.map((t) =>
       t.id === trip.id ? { ...t, mediaGallery: updatedGallery } : t
     );
 
-    localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
+    //localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
     setTrips(updatedTrips);
 
     const updatedTrip = updatedTrips.find((t) => t.id === trip.id);
-    setTrip(updatedTrip || null);
-    setGallery(updatedTrip?.mediaGallery || []);
+    setTrip(updatedTrip || null);*/
+    //setGallery(updatedTrip?.mediaGallery || []);
   };
 
   //Upload new media 
   const handleUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    const id = Date.now();
+    const ext = file.name.split(".").pop();
+    const updatedFileName = `${id}.${ext}`;
 
     const newMedia = {
-      id: Date.now() + Math.random(),
+      id,
+      url: `http://localhost:8080/images/${updatedFileName}`,
       name: file.name,
-      type: file.type,
-      url: URL.createObjectURL(file),
-      date: "" //Optional date field
+      date: "2025-12-12" //Optional date field > maybe can select which activity to add to
     };
 
-    updateTripMedia([...gallery, newMedia]);
+    console.log(newMedia);
+    setGallery(prev => [...prev, newMedia]);
+    //updateTripMedia([...gallery, newMedia]);
   };
 
   
@@ -88,9 +112,9 @@ function MediaPage() {
 
   //Edit media title--> sync name across activities, media page, timeline page 
   const saveEditChanges = () => {
-    const tripKey = getTripKey();
+    //const tripKey = getTripKey();
 
-    const updatedTrips = trips.map((t) => {
+    /*const updatedTrips = trips.map((t) => {
       if (t.id !== trip.id) return t;
 
       const updatedGallery = (t.mediaGallery || []).map((m) =>
@@ -111,21 +135,26 @@ function MediaPage() {
       };
     });
 
-    localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
+    //localStorage.setItem(tripKey, JSON.stringify(updatedTrips))
     setTrips(updatedTrips);
 
     const updatedTrip = updatedTrips.find((t) => t.id === trip.id);
     setTrip(updatedTrip || null);
-    setGallery(updatedTrip?.mediaGallery || []);
+    setGallery(updatedTrip?.mediaGallery || []);*/
+    setGallery(prev => prev.map(s => s.id === editItem.id ? {...s, 
+      name: editTitle,
+      date: editDate
+    }: s))
+
 
     setShowEditModal(false);
   };
 
   //Delete media--> sync across activities, media page, timeline page 
-  const handleDelete = (item) => {
+  const handleDelete = (photo_id) => {
     if (!window.confirm("Delete this media everywhere?")) return;
 
-    const tripKey = getTripKey();
+    /*const tripKey = getTripKey();
 
     const updatedTrips = trips.map((t) => {
       if (t.id !== trip.id) return t;
@@ -144,13 +173,16 @@ function MediaPage() {
         mediaGallery: updatedGallery,
         activities: updatedActivities,
       };
-    });
+    });*/
 
-    localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
-    setTrips(updatedTrips);
+    //localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
+    /*setTrips(updatedTrips);
     const updatedTrip = updatedTrips.find((t) => t.id === trip.id);
     setTrip(updatedTrip || null);
-    setGallery(updatedTrip?.mediaGallery || []);
+    setGallery(updatedTrip?.mediaGallery || []);*/
+
+    const updatedGallery = gallery.filter(gallery => gallery.id !== photo_id)
+    setGallery(updatedGallery);
   };
 
   return (
@@ -162,7 +194,7 @@ function MediaPage() {
         ← Back
       </button>
 
-      <h1 className="media-title">{trip.name} — Media</h1>
+      <h1 className="media-title">To Singapore! — Media</h1>
 
       <div className="media-layout">
         <div className="media-sidebar">
@@ -204,7 +236,7 @@ function MediaPage() {
 
                     {item.date && (
                       <p className="media-date-text">
-                        <strong>Date:</strong> {item.date}
+                        <strong>Date:</strong> {item.date.split("-").reverse().join("/")}
                       </p>
                     )}
 
@@ -218,7 +250,7 @@ function MediaPage() {
 
                       <button
                         className="media-delete-btn"
-                        onClick={() => handleDelete(item)}
+                        onClick={() => handleDelete(item.id)}
                       >
                         Delete
                       </button>
