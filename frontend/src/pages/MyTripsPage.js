@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Itinerary.css";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import axios from 'axios';
 import ItineraryChat from "../components/ItineraryChat";
 
@@ -9,8 +9,9 @@ function MyTripsPage() {
   const navigate = useNavigate();
   const { userID } = useParams();
 
+  const { myTrips: joinedGroupTrips } = useOutletContext();
 
-  //Load all existing trips  (for THIS user only)
+  //Load all existing trips  
   const [trips, setTrips] = useState([]);
   const [Loading, setLoading] = useState(true);
 
@@ -26,7 +27,6 @@ function MyTripsPage() {
   const [invalidFields, setInvalidFields] = useState([]);
 
   //Filters
-  //Filter by trip type & status (completed/inprogress)
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
@@ -37,89 +37,143 @@ function MyTripsPage() {
   //Delete confirmation message
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [tripToDelete, setTripToDelete] = useState(null);
-
-  //Chat modal
   const[showChat, setShowChat] = useState(false);
+
+  // ✅ helper to convert a group trip into MyTrips format
+  const mapGroupTripToMyTrip = (t) => ({
+    id: t.id,
+    name: t.title,
+    destination: "Group Trip",
+    start: "",
+    end: "",
+    status: false,
+    isGroupTrip: true,
+    type: "Group",
+  });
   
 
-  //Save trips on change (for THIS user only)
+  //Load from backend (private trips)
   useEffect(() => {
-    /*localStorage.setItem(tripKey, JSON.stringify(trips));
-  }, [trips, tripKey]);*/
-    axios.get("http://localhost:8080/Itinerary/GetAllItineraries", {params:{userid: userID}, withCredentials: true})
-    .then(response => {
-      renderLoadTrip(response.data);
-      setLoading(false);
-    })
-  }, []);
+    axios
+      .get("http://localhost:8080/Itinerary/GetAllItineraries", {
+        params: { userid: userID },
+        withCredentials: true,
+      })
+      .then((response) => {
+        renderLoadTrip(response.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, [userID]);
 
   const renderLoadTrip = (res) => {
-    const mapTrips = res.map(t => ({
+    const mapTrips = res.map((t) => ({
       id: t.itinerary_id,
       name: t.itinerary_name,
       destination: t.itinerary_dest,
       start: t.start_date,
       end: t.end_date,
       status: t.completed,
+      isGroupTrip: false,
+      type: "Private",
     }));
 
-    setTrips(mapTrips);
+    setTrips((prev) => {
+      //keep any group trips already in state
+      const existingGroupTrips = prev.filter((x) => x.isGroupTrip === true);
+
+      //add joined group trips from shared state too
+      const sharedGroupTrips = (joinedGroupTrips || []).map(mapGroupTripToMyTrip);
+
+      //Merge group trips without duplicates
+      const allGroupTrips = [...existingGroupTrips, ...sharedGroupTrips].filter(
+        (trip, index, arr) => arr.findIndex((x) => x.id === trip.id) === index
+      );
+
+      //Ensure no id clash with private trips
+      const finalGroupTrips = allGroupTrips.filter(
+        (g) => !mapTrips.some((p) => p.id === g.id)
+      );
+
+      return [...mapTrips, ...finalGroupTrips];
+    });
   };
 
-  //Create a new trip --> fill in details in required fields
-  const handleSaveTrip = async() => {
+  //Whenever joined trips changes-->keep them in My rips list
+  useEffect(() => {
+    if (!joinedGroupTrips) return;
+
+    setTrips((prev) => {
+      const privateTrips = prev.filter((t) => t.isGroupTrip !== true);
+      const newGroupTrips = joinedGroupTrips.map(mapGroupTripToMyTrip);
+
+      const merged = [...privateTrips, ...newGroupTrips].filter(
+        (trip, index, arr) => arr.findIndex((x) => x.id === trip.id) === index
+      );
+
+      return merged;
+    });
+  }, [joinedGroupTrips]);
+
+  //Create a new trip
+  const handleSaveTrip = async () => {
     const missing = [];
     if (!newTripName) missing.push("tripName");
     if (!newDestination) missing.push("destination");
     if (!newStart) missing.push("start");
     if (!newEnd) missing.push("end");
 
-    setInvalidFields(missing); 
+    setInvalidFields(missing);
 
     if (missing.length > 0) {
-      setErrorMsg("Please fill in all fields.");//All fields required --> error message if any field missing 
+      setErrorMsg("Please fill in all fields.");
       return;
     }
 
-    //insert trip here if successful then setTrips
-    let newTripID;
-    await axios.post("http://localhost:8080/Itinerary/CreateItinerary", {iName:newTripName, iDest:newDestination, start:newStart, end:newEnd, userid:userID})
-    .then(response => {
-      newTripID = response.data[0].itinerary_id;
-    })
+    try {
+      let newTripID;
 
-    if(newTripID > 0)
-    {
-      const newTrip = {
-      id: newTripID,
-      name: newTripName, 
-      destination: newDestination,
-      start: newStart,
-      end: newEnd,
-      };
+      const response = await axios.post("http://localhost:8080/Itinerary/CreateItinerary", {
+        iName: newTripName,
+        iDest: newDestination,
+        start: newStart,
+        end: newEnd,
+        userid: userID,
+      });
 
-      setTrips((prev) => [...prev, newTrip]);
-      setSuccessMsg("Trip successfully created!");
+      newTripID = response.data?.[0]?.itinerary_id;
 
-      //Reset form
-      setNewTripName("");
-      setNewDestination("");
-      setNewStart("");
-      setNewEnd("");
-      setErrorMsg("");
-      setTimeout(() => setShowAddTripModal(false), 300);
-    }
+      if (newTripID > 0) {
+        const newTrip = {
+          id: newTripID,
+          name: newTripName,
+          destination: newDestination,
+          start: newStart,
+          end: newEnd,
+          status: false,
+          isGroupTrip: false,
+          type: "Private",
+        };
 
-    else
-    {
+        setTrips((prev) => [...prev, newTrip]);
+        setSuccessMsg("Trip successfully created!");
+
+        setNewTripName("");
+        setNewDestination("");
+        setNewStart("");
+        setNewEnd("");
+        setErrorMsg("");
+        setTimeout(() => setShowAddTripModal(false), 300);
+      } else {
+        setErrorMsg("Insert Failed");
+      }
+    } catch (err) {
+      console.error(err);
       setErrorMsg("Insert Failed");
-      setNewTripName("");
-      setNewDestination("");
-      setNewStart("");
-      setNewEnd("");
-      return;
     }
-
   };
 
   //Confirmation popup
@@ -129,30 +183,59 @@ function MyTripsPage() {
     setShowDeleteConfirm(true);
   };
 
-  //Final delete after confirmation
-  const deleteTripConfirmed = async() => {
+  const deleteTripConfirmed = async () => {
     if (!tripToDelete) return;
 
-    await axios.delete("http://localhost:8080/Itinerary/DeleteItinerary", {data:{itineraryid:tripToDelete.id}})
-    .then(response => {
-      if(response.data === true) 
-      {
+    if (tripToDelete.isGroupTrip === true) {
+      setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
+      setShowDeleteConfirm(false);
+      setTripToDelete(null);
+
+      setSuccessMsg("Left group trip successfully!");
+      setTimeout(() => setSuccessMsg(""), 1500);
+      return;
+    }
+
+    try {
+      const response = await axios.delete(
+        "http://localhost:8080/Itinerary/DeleteItinerary",
+        {
+          data: { itineraryid: tripToDelete.id },
+          withCredentials: true,
+        }
+      );
+
+      if (response.data === true) {
         setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
         setShowDeleteConfirm(false);
         setTripToDelete(null);
 
         setSuccessMsg("Trip deleted successfully!");
         setTimeout(() => setSuccessMsg(""), 1500);
+      } else {
+        setErrorMsg("Delete failed.");
+        setShowDeleteConfirm(false);
       }
-    });
-  }
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Delete failed (server error).");
+      setShowDeleteConfirm(false);
+    }
+  };
 
-
-  //Apply filters to search for trips in list
+  //Apply filters
   const filteredTrips = trips.filter((t) => {
     const matchSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchType = filterType === "All" || t.type === filterType;
-    const matchStatus = filterStatus === "All" || t.status === filterStatus;
+
+    const matchType =
+      filterType === "All" ||
+      (filterType === "Group" && t.isGroupTrip === true) ||
+      (filterType === "Private" && t.isGroupTrip !== true);
+
+    const matchStatus =
+      filterStatus === "All" ||
+      (filterStatus === "Completed" && t.status === true) ||
+      (filterStatus === "In Progress" && t.status === false);
 
     return matchSearch && matchType && matchStatus;
   });
@@ -161,10 +244,8 @@ function MyTripsPage() {
     <div className="mytrips-page">
       <h1 className="title">My Trips</h1>
 
-      {/*Search, filter, add button*/}
+      {/*Search/filter/add button*/}
       <div className="top-controls">
-
-        {/*Search bar*/}
         <input
           className="search-bar"
           placeholder="Search Trip Name"
@@ -172,7 +253,6 @@ function MyTripsPage() {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
 
-        {/*Filter trip dropdown bar--> positioned beside search bar*/}
         <div className="filter-dropdown-wrapper">
           <button
             className="filter-toggle"
@@ -181,7 +261,6 @@ function MyTripsPage() {
             Filter ▾
           </button>
 
-          {/*Filter options*/}
           {showFilters && (
             <div className="filter-panel">
               <div className="filter-section">
@@ -249,7 +328,6 @@ function MyTripsPage() {
           )}
         </div>
 
-        {/*Add new trip button*/}
         <button
           className="add-trip-btn"
           onClick={() => {
@@ -262,49 +340,52 @@ function MyTripsPage() {
         </button>
       </div>
 
-      {/*Trip cards*/}
       <div className="trip-list">
         {!Loading && filteredTrips.length === 0 && <p>No trips found.</p>}
-        
         {Loading && <p>Loading..</p>}
 
-        {!Loading && filteredTrips.map((trip) => (
-          <div key={trip.id} className="trip-card">
-            <div>
-              <h2 className="trip-name">{trip.name}</h2>
+        {!Loading &&
+          filteredTrips.map((trip) => (
+            <div key={trip.id} className="trip-card">
+              <div>
+                <h2 className="trip-name">{trip.name}</h2>
 
-              <div
-                className={`trip-status ${
-                  trip.status === true ? "completed" : "inprogress"
-                }`}
-              >
-                {trip.status && "Completed"}
-                {!trip.status && "In Progress"}
+                <div
+                  className={`trip-status ${
+                    trip.status === true ? "completed" : "inprogress"
+                  }`}
+                >
+                  {trip.status && "Completed"}
+                  {!trip.status && "In Progress"}
+                </div>
+              </div>
+
+              <div className="actions">
+                {trip.isGroupTrip === true && (
+                  <button
+                    className="chat-btn"
+                    onClick={() => navigate(`/group-chat/${trip.id}`)}
+                  >
+                    Chat
+                  </button>
+                )}
+
+                <button
+                  className="view-btn"
+                  onClick={() => navigate(`/mytrips/trip/${trip.id}`)}
+                >
+                  View
+                </button>
+
+                <button
+                  className="delete-btn"
+                  onClick={() => requestDeleteTrip(trip.id)}
+                >
+                  Delete
+                </button>
               </div>
             </div>
-
-            <div className="actions">
-              <button 
-                className="chat-btn"
-                onClick={() => setShowChat(true)}
-              >Chat</button>
-
-              <button
-                className="view-btn"
-                onClick={() => navigate(`/mytrips/trip/${trip.id}`)}
-              >
-                View
-              </button>
-
-              <button
-                className="delete-btn"
-                onClick={() => requestDeleteTrip(trip.id)}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
+          ))}
       </div>
 
       {/*Add new trip modal*/}
@@ -385,8 +466,15 @@ function MyTripsPage() {
       {showDeleteConfirm && (
         <div className="modal-overlay">
           <div className="modal-box small">
-            <h2 className="modal-title">Confirm Delete</h2>
-            <p>Are you sure you want to delete this trip?</p>
+            <h2 className="modal-title">
+              {tripToDelete?.isGroupTrip ? "Leave Group Trip" : "Confirm Delete"}
+            </h2>
+
+            <p>
+              {tripToDelete?.isGroupTrip
+                ? "Are you sure you want to leave this group trip?"
+                : "Are you sure you want to delete this trip?"}
+            </p>
 
             <div className="modal-actions">
               <button
@@ -397,7 +485,7 @@ function MyTripsPage() {
               </button>
 
               <button className="modal-delete" onClick={deleteTripConfirmed}>
-                Delete
+                {tripToDelete?.isGroupTrip ? "Leave" : "Delete"}
               </button>
             </div>
           </div>

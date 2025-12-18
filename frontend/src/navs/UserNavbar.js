@@ -1,19 +1,24 @@
-import { Outlet, Link, useNavigate, useParams } from "react-router-dom";
+import { Outlet, Link, useNavigate } from "react-router-dom";
 import React, { useState } from "react";
-import axios from 'axios';
+import axios from "axios";
 
-
-function UserNavbar() {
+function UserNavbar({ outletContext }) {
     const [showMenu, setShowMenu] = useState(false);
     const navigate = useNavigate();
 
-    const handleLogout = async() => {
+    const handleLogout = async () => {
         localStorage.removeItem("user");
-        await axios.post("http://localhost:8080/AuthService/Logout", {}, {withCredentials: true})
-        .then((res) => {
-            if(res.data.success) alert("Successfully Logged Out!")
-        })
-        .catch(err => console.error(err));
+        await axios
+            .post(
+                "http://localhost:8080/AuthService/Logout",
+                {},
+                { withCredentials: true }
+            )
+            .then((res) => {
+                if (res.data.success) alert("Successfully Logged Out!");
+            })
+            .catch((err) => console.error(err));
+
         navigate("/"); //send user to landing page (marketing page)
     };
 
@@ -99,18 +104,25 @@ function UserNavbar() {
 
             <nav className="main-navbar">
                 <div className="nav-container">
-
                     <div className="nav-left">
-                        <Link to="/mytrips" className="nav-logo">TripMate.com</Link>
+                        <Link to="/mytrips" className="nav-logo">
+                            TripMate.com
+                        </Link>
                     </div>
 
                     <div className="nav-center">
-                        <Link to='/home' className="nav-link">Home</Link>
-                        <Link to='/mytrips' className="nav-link">My Trips</Link>
-                        <Link to="/feed" className="nav-link">Feed</Link>
-                        <Link to="/join" className="nav-link">Join A Trip</Link>
-                        
-                        
+                        <Link to="/home" className="nav-link">
+                            Home
+                        </Link>
+                        <Link to="/mytrips" className="nav-link">
+                            My Trips
+                        </Link>
+                        <Link to="/feed" className="nav-link">
+                            Feed
+                        </Link>
+                        <Link to="/join-trip" className="nav-link">
+                            Join A Trip
+                        </Link>
                     </div>
 
                     <div className="nav-right">
@@ -133,11 +145,11 @@ function UserNavbar() {
                             </div>
                         )}
                     </div>
-
                 </div>
             </nav>
 
-            <Outlet />
+            {/* 🔑 THIS IS THE IMPORTANT PART */}
+            <Outlet context={outletContext} />
         </>
     );
 }
