@@ -1,49 +1,110 @@
-
 /*Landing page*/
 .landing-container {
-    width: 100%;
-    height: 100vh;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    padding-left: 80px;
-    position: relative;
-  }
-  
-  
-  .hero-section {
-    color: white;
-    max-width: 650px;
-    text-shadow: 0 4px 8px rgba(0,0,0,0.4);
-  }
-  
-  .hero-title {
-    font-size: 48px;
-    font-weight: 800;
-    margin-bottom: 15px;
-  }
-  
-  .hero-subtitle {
-    font-size: 22px;
-    margin-bottom: 25px;
-  }
-  
-  .hero-btn {
-    background: white;
-    color: #0077b6;
-    border: 2px solid white;
-    padding: 12px 28px;
-    font-size: 18px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: 0.2s ease;
-  }
-  
-  .hero-btn:hover {
-    background: #e8f4ff;
-  }
-  
+  width: 100%;
+  height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  justify-content: center; /*Prevent extreme left/right skew*/
+  align-items: center;
+  position: relative;
+}
+
+/*Inner wrapper to keep content visually centered*/
+.landing-content {
+  width: 100%;
+  max-width: 1200px; /*How far content spreads*/
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 60px;
+}
+
+.hero-section {
+  color: white;
+  max-width: 650px;
+  text-shadow: 0 4px 8px rgba(0,0,0,0.4);
+}
+
+.hero-title {
+  font-size: 48px;
+  font-weight: 800;
+  margin-bottom: 15px;
+}
+
+.hero-subtitle {
+  font-size: 22px;
+  margin-bottom: 25px;
+}
+
+.hero-btn {
+  background: white;
+  color: #0077b6;
+  border: 2px solid white;
+  padding: 12px 28px;
+  font-size: 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.hero-btn:hover {
+  background: #e8f4ff;
+}
+
+/*Reviews section*/
+.reviews-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 360px;
+}
+
+/*Individual review card*/
+.review-card {
+  background: white;
+  border-radius: 14px;
+  padding: 12px 14px; 
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+
+/*Review header*/
+.review-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.avatar {
+  width: 38px;
+  height: 38px;
+  background: #0077b6;
+  color: white;
+  font-weight: 700;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.review-name {
+  font-weight: 700;
+  font-size: 14px;
+  margin: 0;
+}
+
+.review-stars {
+  color: #f4c430;
+  font-size: 13px;
+  margin: 0;
+}
+
+.review-text {
+  font-size: 13px;
+  color: #444;
+  line-height: 1.4;
+}

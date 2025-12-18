@@ -22,6 +22,8 @@ import HomePage from "./pages/HomePage";
 import ChatbotPage from "./pages/ChatbotPage";
 import GroupTripsPage from "./pages/GroupTripsPage";
 import GroupChatPage from "./pages/GroupChatPage";
+import ItineraryFeedPage from "./pages/ItineraryFeedPage";
+
 
 //Placeholder
 function Placeholder({ title }) {
@@ -183,13 +185,15 @@ function AppRoutes() {
             path="/mytrips/trip/:tripId/saved-timelines"
             element={<SavedTimelinesPage />}
           />
-          <Route path="/feed" element={<Placeholder title="Feed" />} />
+          {/*Feed*/}
+          <Route path="/feed" element={<ItineraryFeedPage />} />
+
           <Route path="/chatbot" element={<ChatbotPage />} />
 
-          {/* Join A Trip */}
+          {/*Join a trip*/}
           <Route path="/join-trip" element={<GroupTripsPage />} />
 
-          {/* Group Chat */}
+         
           <Route path="/group-chat/:tripId" element={<GroupChatPage />} />
         </Route>
       </Routes>
