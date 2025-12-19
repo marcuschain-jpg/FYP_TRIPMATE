@@ -39,11 +39,7 @@ function Landing() {
       text: "TripMate actually makes travel planning exciting. The interface is clean and the AI is smart.",
       rating: 5,
     },
-    {
-      name: "Jennie Kim",
-      text: "I used to juggle multiple apps. TripMate simplified everything — planning and reflecting on trips feels effortless now.",
-      rating: 5,
-    },
+    
   ];
 
   return (

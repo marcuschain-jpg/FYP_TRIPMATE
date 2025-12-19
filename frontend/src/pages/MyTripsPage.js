@@ -364,7 +364,7 @@ function MyTripsPage() {
                 {trip.isGroupTrip === true && (
                   <button
                     className="chat-btn"
-                    onClick={() => navigate(`/group-chat/${trip.id}`)}
+                    onClick={() => setShowChat(true)}
                   >
                     Chat
                   </button>
