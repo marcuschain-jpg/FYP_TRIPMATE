@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const http = require("http");
+const path = require("path");
 const { Server } = require("socket.io"); // real time websocket
 const cookieParser = require("cookie-parser"); // store cookies on website
 //Import routes
@@ -22,6 +23,9 @@ app.use(cookieParser());
 app.use("/Landing", landingRouter);
 app.use("/Itinerary", itineraryRouter);
 app.use("/AuthService", authServiceRouter);
+
+//add access images with backend path
+app.use("/images", express.static(path.join(__dirname, "../storage")));
 
 //Realtime stuff for itinerary page
 app.set("io", io);

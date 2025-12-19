@@ -1,0 +1,212 @@
+.group-trips-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0a3d62, #1e90ff);
+    padding: 100px 0;
+  }
+  
+  .group-trips-container {
+    width: 90%;
+    max-width: 1100px;
+    margin: auto;
+  }
+  
+
+  .group-trips-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+  }
+  
+  .group-search {
+    width: 60%;
+    padding: 12px;
+    border-radius: 25px;
+    border: none;
+    outline: none;
+  }
+  
+  .create-trip-btn {
+    padding: 12px 18px;
+    border-radius: 20px;
+    border: none;
+    background: white;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  
+  .create-trip-btn:hover {
+    background: #f0f0f0;
+  }
+  
+  /*Trip cards*/
+  .group-trip-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .group-trip-left {
+    max-width: 75%;
+  }
+  
+  /*Trip owner row*/
+  .trip-owner-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  
+  .owner-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #0a3d62;
+    color: white;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .trip-owner {
+    font-size: 14px;
+    color: #555;
+  }
+  
+  .trip-desc {
+    margin-top: 8px;
+    color: #444;
+  }
+  
+  .group-trip-right {
+    display: flex;
+    align-items: center;
+  }
+  
+  /*Join/exit buttons*/
+  .join-btn-text {
+    padding: 10px 24px;
+    background: #0a3d62;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  
+  .join-btn-text:hover {
+    background: #08406a;
+  }
+  
+  .exit-btn {
+    padding: 10px 24px;
+    background: white;
+    color: #c0392b;
+    border: 2px solid #c0392b;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  
+  .exit-btn:hover {
+    background: #ffecec;
+  }
+  
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+  }
+  
+  .modal-card {
+    background: white;
+    width: 700px;
+    max-width: 90%;
+    border-radius: 14px;
+    padding: 30px;
+  }
+  
+  .modal-card h2 {
+    margin-bottom: 20px;
+    color: #0a3d62;
+  }
+  
+  /*Create new group trip form*/
+  .modal-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
+  }
+  
+  .modal-field {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+  
+  .modal-field label {
+    font-size: 14px;
+    margin-bottom: 6px;
+    color: #333;
+  }
+  
+  .modal-field input,
+  .modal-field textarea {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+  }
+  
+  .modal-field textarea {
+    resize: none;
+    height: 100px;
+  }
+  
+  .full-width {
+    margin-top: 10px;
+  }
+  
+  .modal-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 25px;
+  }
+  
+  .upload-btn {
+    background: #0b6fa4;
+    color: white;
+    border: none;
+    padding: 12px 35px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  
+  .upload-btn:hover {
+    background: #095a87;
+  }
+  
+  .cancel-btn {
+    background: white;
+    border: 1px solid #ccc;
+    padding: 12px 35px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  
+  .cancel-btn:hover {
+    background: #f2f2f2;
+  }
+  
