@@ -35,9 +35,15 @@ function ActivityFormPage() {
   const [locationName, setLocationName] = useState("");
   const [address, setAddress] = useState("");
   const [date, setDate] = useState("");
+  const [placeid, setPlaceID] = useState("");
   const [media, setMedia] = useState([]); //Newly uploaded files
   const [existingMedia, setExistingMedia] = useState([]); //Already-saved media for this activity
   const [originalMediaIds, setOriginalMediaIds] = useState([]); //For delete-sync
+  const [firstLoad, setFirstLoad] = useState(true);
+  const [searchResult, setSearchResult] = useState([]); // store search results from api, drop down bar
+
+  // Search bar modal pop out
+  const [showLocSearch, setShowLocSearch] = useState(false);
 
   //Start point checkbox
   const [isStartPoint, setIsStartPoint] = useState(false);
@@ -95,6 +101,7 @@ function ActivityFormPage() {
     setLocationName(a[0].activity_location);
     setAddress(a[0].activity_address);
     setDate(a[0].activity_date);
+    setPlaceID(a[0].gmaps_placeid)
     setIsStartPoint(Number(a[0].activity_order === 0));
     setDefaultStart(Number(a[0].activity_order === 0));
     
@@ -136,6 +143,52 @@ function ActivityFormPage() {
       setIsStartPoint(false);
     }
   }, [date, originalDate, startPointTouched, trip, editing, index]);
+
+  
+  useEffect(() => {
+    if(!locationName) return;
+    if(firstLoad) 
+      {
+        setFirstLoad(false);
+        return;
+      }
+    const locTimer = setTimeout(async() => {
+      console.log("Send to backend", locationName);
+      await axios.post("http://localhost:8080/Itinerary/LocSearch", {input:locationName})
+      .then(res=>{
+        renderLoadSearchResult(res.data);
+      })
+      .catch(err => {console.log(err);});
+
+    }, 1000);
+    
+    
+    //open selection modal below loc textbox
+    //trigger once click, dont run use effect again, until another type
+    return () => {
+      clearTimeout(locTimer);
+    };
+  }, [locationName])
+
+  useEffect(() => {
+    if(searchResult.length > 0)
+      {
+        console.log(searchResult);
+        setShowLocSearch(true);
+      }
+  }, [searchResult])
+
+  const renderLoadSearchResult = (res) => {
+    const mapResults = res.map(t => ({
+      placeid: t.id,
+      name: t.name,
+      address: t.address,
+      lat: t.lat,
+      lng: t.lng,
+    }));
+
+    setSearchResult(mapResults);
+  };
 
   //if (!trip && editing) return <p>Trip not found.</p>;
   if (loading && editing) return <p>Loading..</p>
@@ -251,14 +304,14 @@ function ActivityFormPage() {
     //Backend create and edit start here! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     if(editing) //edit
     {
-      axios.patch("http://localhost:8080/Itinerary/EditActivity", {a_id:index, aName: name, aLoc: locationName, aAddress: address, aDate: date, aOrder: isStartPoint}) //trip id is activityid here
+      axios.patch("http://localhost:8080/Itinerary/EditActivity", {a_id:index, aName: name, aLoc: locationName, aAddress: address, aDate: date, aOrder: isStartPoint, aPlaceID:placeid}) //trip id is activityid here
       .then(response => {
         if(response.data === true) alert("Succesfully edit activity!")
       });
     }
     else //create
     {
-      await axios.post("http://localhost:8080/Itinerary/CreateActivity", {aName: name, aLoc: locationName, aAddress: address, aDate: date, i_id: tripId, aOrder: isStartPoint})
+      await axios.post("http://localhost:8080/Itinerary/CreateActivity", {aName: name, aLoc: locationName, aAddress: address, aDate: date, i_id: tripId, aOrder: isStartPoint, aPlaceID:placeid})
       .then(res=>{
         if(res.data === true) alert("Successfully created activity!")
       })
@@ -267,6 +320,16 @@ function ActivityFormPage() {
 
     navigate(`/mytrips/trip/itinerary/${tripId}/${date}`);
   };
+
+  const updateFormBasedOnLoc = (res) => {
+    setLocationName(res.name);
+    setAddress(res.address);
+    setPlaceID(res.placeid);
+    setFirstLoad(true);
+    setShowLocSearch(false);
+  };
+
+  
 
   return (
     <div className="activity-form-page">
@@ -292,7 +355,7 @@ function ActivityFormPage() {
                 checked={isStartPoint}
                 onChange={(e) => {
                   setIsStartPoint(e.target.checked);
-                  setStartPointTouched(true); // ⭐ NEW
+                  setStartPointTouched(true); 
                 }}
                 disabled={editing && defaultStart}
               />
@@ -310,8 +373,21 @@ function ActivityFormPage() {
           <input
             className="form-input"
             value={locationName}
-            onChange={(e) => setLocationName(e.target.value)}
+            onChange={(e) => 
+              {
+                setLocationName(e.target.value)
+                setShowLocSearch(false)
+              }}
           />
+          { showLocSearch && (
+            <div className="form-input-search">
+              {searchResult.map(res => (
+                <div key={res.placeid} className="form-input-search-res" onClick={() => updateFormBasedOnLoc(res)}>
+                  {res.name} - {res.address}
+                </div>
+              ))}
+            </div>
+          )}
 
           <label className="form-label">Address</label>
           <input

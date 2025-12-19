@@ -290,8 +290,7 @@ router.get("/ArrangeItinerary", (req, res) => {
 
 //==================================================== ActivityFormPage ==========================
 router.post("/CreateActivity", async(req,res) => {
-  const {aName, aLoc, aAddress, aDate, i_id, aOrder} = req.body;
-  const aPlaceID = "abcabc" //dummy
+  const {aName, aLoc, aAddress, aDate, i_id, aOrder, aPlaceID} = req.body;
 
   const realOrder = (aOrder === true) ? 0 : null
 
@@ -312,8 +311,8 @@ router.post("/CreateActivity", async(req,res) => {
 });
 
 router.patch("/EditActivity", async(req, res) => {
-  const {a_id, aName, aLoc, aAddress, aDate, aOrder} = req.body;
-  const aPlaceID = "abcabc" //dummy
+  const {a_id, aName, aLoc, aAddress, aDate, aOrder, aPlaceID} = req.body;
+  console.log(aPlaceID);
 
   const realOrder = (aOrder === true) ? 0 : null
 
@@ -337,7 +336,7 @@ router.get("/GetActivityToEdit", async(req, res) => {
   const a_id = req.query['a_id'];
   try{
     const data = await pool.query(
-      `SELECT activity_name, activity_location, activity_address, activity_order,
+      `SELECT activity_name, activity_location, activity_address, activity_order, gmaps_placeid,
        TO_CHAR(activity_date, 'YYYY-MM-DD') AS activity_date
        FROM activity
        WHERE activity_id = $1`,[a_id]
@@ -350,7 +349,49 @@ router.get("/GetActivityToEdit", async(req, res) => {
   }
 });
 
+router.post("/LocSearch", async(req, res) => {
+  const {input} = req.body;
 
+  try {
+    const response = await axios.post(
+      "https://places.googleapis.com/v1/places:searchText",
+      {
+        textQuery: input,  // matches curl example
+        pageSize: 5,       // limit results
+        locationBias: {    // triangulate location to city now its singapore
+        circle: {
+          center: {
+            latitude: 1.352083,
+            longitude:103.819836
+            },
+          radius: 500.0
+          }
+        }
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "X-Goog-Api-Key": process.env.gMapsApiKey,
+          "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location"
+        },
+      }
+    );
+    // response.data.results contains the search results
+    const predictions = response.data.places.map((r) => ({
+      id: r.id,
+      name: r.displayName.text,
+      address: r.formattedAddress,
+      lat: r.location.latitude,
+      lng: r.location.longitude,
+    }));
+
+    console.log(predictions)
+    res.json(predictions);
+  } catch (err) {
+    console.error("Places Text Search error:", err.response?.data || err.message);
+    res.status(500).json({ error: "Failed to fetch autocomplete" });
+  }
+});
 
 
 
