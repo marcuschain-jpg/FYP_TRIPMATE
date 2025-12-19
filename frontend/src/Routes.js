@@ -1,9 +1,10 @@
-import React, { useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 //Navbars
 import UserNavbar from "./navs/UserNavbar";
 import UnregisteredUserNavbar from "./navs/UnregisteredUserNavBar";
+import AdminNavbar from "./navs/AdminNavbar";
 
 //Pages
 import Landing from "./pages/Landing";
@@ -23,6 +24,13 @@ import ChatbotPage from "./pages/ChatbotPage";
 import GroupTripsPage from "./pages/GroupTripsPage";
 import GroupChatPage from "./pages/GroupChatPage";
 import ItineraryFeedPage from "./pages/ItineraryFeedPage";
+
+//import admin pages
+import Overview from "./pages/Overview";
+import Users from "./pages/Users";
+import UserProfile from "./pages/UserProfile";
+import Content from "./pages/Content";
+import Support from "./pages/Support";
 
 
 //Placeholder
@@ -199,6 +207,17 @@ function AppRoutes() {
 
          
           <Route path="/group-chat/:tripId" element={<GroupChatPage />} />
+        </Route>
+        
+        {/* ================= ADMIN ROUTES ================= */}
+        <Route path="/admin" element={<AdminNavbar />}>
+          <Route index element={<Navigate to="overview" replace />} />
+          <Route path="overview" element={<Overview />} />
+          <Route path="users" element={<Users />} />
+          <Route path="users/:id" element={<UserProfile />} />
+          <Route path="content" element={<Content />} />
+          <Route path="support" element={<Support />} />
+          <Route path="*" element={<Navigate to="overview" replace />} />
         </Route>
       </Routes>
     </BrowserRouter>
