@@ -35,11 +35,15 @@ function ActivityFormPage() {
   const [locationName, setLocationName] = useState("");
   const [address, setAddress] = useState("");
   const [date, setDate] = useState("");
+  const [placeid, setPlaceID] = useState("");
   const [media, setMedia] = useState([]); //Newly uploaded files
   const [existingMedia, setExistingMedia] = useState([]); //Already-saved media for this activity
   const [originalMediaIds, setOriginalMediaIds] = useState([]); //For delete-sync
   const [firstLoad, setFirstLoad] = useState(true);
   const [searchResult, setSearchResult] = useState([]); // store search results from api, drop down bar
+
+  // Search bar modal pop out
+  const [showLocSearch, setShowLocSearch] = useState(false);
 
   //Start point checkbox
   const [isStartPoint, setIsStartPoint] = useState(false);
@@ -152,16 +156,26 @@ function ActivityFormPage() {
       await axios.post("http://localhost:8080/Itinerary/LocSearch", {input:locationName})
       .then(res=>{
         renderLoadSearchResult(res.data);
-        
       })
-    }, 2000);
+      .catch(err => {console.log(err);});
 
+    }, 1000);
+    
+    
     //open selection modal below loc textbox
     //trigger once click, dont run use effect again, until another type
     return () => {
       clearTimeout(locTimer);
     };
   }, [locationName])
+
+  useEffect(() => {
+    if(searchResult.length > 0)
+      {
+        console.log(searchResult);
+        setShowLocSearch(true);
+      }
+  }, [searchResult])
 
   const renderLoadSearchResult = (res) => {
     const mapResults = res.map(t => ({
@@ -306,6 +320,14 @@ function ActivityFormPage() {
     navigate(`/mytrips/trip/itinerary/${tripId}/${date}`);
   };
 
+  const updateFormBasedOnLoc = (res) => {
+    setLocationName(res.name);
+    setAddress(res.address);
+    setPlaceID(res.placeID);
+    setFirstLoad(true);
+    setShowLocSearch(false);
+  };
+
   
 
   return (
@@ -350,8 +372,21 @@ function ActivityFormPage() {
           <input
             className="form-input"
             value={locationName}
-            onChange={(e) => setLocationName(e.target.value)}
+            onChange={(e) => 
+              {
+                setLocationName(e.target.value)
+                setShowLocSearch(false)
+              }}
           />
+          { showLocSearch && (
+            <div className="form-input-search">
+              {searchResult.map(res => (
+                <div key={res.placeid} className="form-input-search-res" onClick={() => updateFormBasedOnLoc(res)}>
+                  {res.name} - {res.address}
+                </div>
+              ))}
+            </div>
+          )}
 
           <label className="form-label">Address</label>
           <input
