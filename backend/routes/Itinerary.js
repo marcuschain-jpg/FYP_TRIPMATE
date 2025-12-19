@@ -290,8 +290,7 @@ router.get("/ArrangeItinerary", (req, res) => {
 
 //==================================================== ActivityFormPage ==========================
 router.post("/CreateActivity", async(req,res) => {
-  const {aName, aLoc, aAddress, aDate, i_id, aOrder} = req.body;
-  const aPlaceID = "abcabc" //dummy
+  const {aName, aLoc, aAddress, aDate, i_id, aOrder, aPlaceID} = req.body;
 
   const realOrder = (aOrder === true) ? 0 : null
 
@@ -312,8 +311,8 @@ router.post("/CreateActivity", async(req,res) => {
 });
 
 router.patch("/EditActivity", async(req, res) => {
-  const {a_id, aName, aLoc, aAddress, aDate, aOrder} = req.body;
-  const aPlaceID = "abcabc" //dummy
+  const {a_id, aName, aLoc, aAddress, aDate, aOrder, aPlaceID} = req.body;
+  console.log(aPlaceID);
 
   const realOrder = (aOrder === true) ? 0 : null
 
@@ -337,7 +336,7 @@ router.get("/GetActivityToEdit", async(req, res) => {
   const a_id = req.query['a_id'];
   try{
     const data = await pool.query(
-      `SELECT activity_name, activity_location, activity_address, activity_order,
+      `SELECT activity_name, activity_location, activity_address, activity_order, gmaps_placeid,
        TO_CHAR(activity_date, 'YYYY-MM-DD') AS activity_date
        FROM activity
        WHERE activity_id = $1`,[a_id]

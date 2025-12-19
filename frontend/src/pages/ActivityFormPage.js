@@ -101,6 +101,7 @@ function ActivityFormPage() {
     setLocationName(a[0].activity_location);
     setAddress(a[0].activity_address);
     setDate(a[0].activity_date);
+    setPlaceID(a[0].gmaps_placeid)
     setIsStartPoint(Number(a[0].activity_order === 0));
     setDefaultStart(Number(a[0].activity_order === 0));
     
@@ -303,14 +304,14 @@ function ActivityFormPage() {
     //Backend create and edit start here! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     if(editing) //edit
     {
-      axios.patch("http://localhost:8080/Itinerary/EditActivity", {a_id:index, aName: name, aLoc: locationName, aAddress: address, aDate: date, aOrder: isStartPoint}) //trip id is activityid here
+      axios.patch("http://localhost:8080/Itinerary/EditActivity", {a_id:index, aName: name, aLoc: locationName, aAddress: address, aDate: date, aOrder: isStartPoint, aPlaceID:placeid}) //trip id is activityid here
       .then(response => {
         if(response.data === true) alert("Succesfully edit activity!")
       });
     }
     else //create
     {
-      await axios.post("http://localhost:8080/Itinerary/CreateActivity", {aName: name, aLoc: locationName, aAddress: address, aDate: date, i_id: tripId, aOrder: isStartPoint})
+      await axios.post("http://localhost:8080/Itinerary/CreateActivity", {aName: name, aLoc: locationName, aAddress: address, aDate: date, i_id: tripId, aOrder: isStartPoint, aPlaceID:placeid})
       .then(res=>{
         if(res.data === true) alert("Successfully created activity!")
       })
@@ -323,7 +324,7 @@ function ActivityFormPage() {
   const updateFormBasedOnLoc = (res) => {
     setLocationName(res.name);
     setAddress(res.address);
-    setPlaceID(res.placeID);
+    setPlaceID(res.placeid);
     setFirstLoad(true);
     setShowLocSearch(false);
   };
