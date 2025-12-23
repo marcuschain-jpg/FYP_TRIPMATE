@@ -9,7 +9,7 @@ const RequireAuths = (req, res, next) => {
 
     // Check if token is present
     if(!token) {
-        return res.status(404).send({error: "Must be logged in"});
+        return res.status(404).send({message: "You must first be logged in"});
     }
     
     try{
@@ -22,7 +22,7 @@ const RequireAuths = (req, res, next) => {
         }
     }
     catch(err){
-        return res.status(403).json({error: "invalid token"});
+        return res.status(403).json({message: "invalid token"});
     }
 };
 

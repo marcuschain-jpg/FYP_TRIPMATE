@@ -8,23 +8,6 @@ import whatsapp from "../Assets/Whatsapp.png"
 import telegram from "../Assets/Telegram.png"
 import ItineraryChat from "../components/ItineraryChat";
 
-//Ensures that trips created by each user are only visible by that user
-function getTripKey() {
-  const loggedStr = localStorage.getItem("loggedInUser");
-  if (loggedStr) {
-    try {
-      const user = JSON.parse(loggedStr);
-      const uniqueId = user.id || user.email; //Use id/email
-      if (uniqueId) {
-        return `trips_${uniqueId}`;
-      }
-    } catch (e) {
-      //Ignore JSON parse errors and fall back
-    }
-  }
-  return "trips_guest";
-}
-
 function TripDetailsPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
@@ -53,11 +36,20 @@ function TripDetailsPage() {
     axios
       .get("http://localhost:8080/Itinerary/GetItinerary", {
         params: { i_id: tripId },
+        withCredentials: true
       })
       .then((response) => {
         renderLoadTrip(response.data);
         setLoading(false);
-      });
+      })
+      .catch(err =>{
+        if(err.response.status === 404)
+          {
+            const errData = err.response;
+            const errorMsg = errData.status + ": " + errData.data.message;
+            navigate(`/login/${errorMsg}`);
+          }         
+      })      
   }, []);
 
   const renderLoadTrip = (res) => {
@@ -88,7 +80,7 @@ function TripDetailsPage() {
       .patch("http://localhost:8080/Itinerary/UpdateItineraryComplete", {
         i_id: tripId,
         completed: status,
-      })
+      }, {withCredentials:true})
       .then((response) => {
         if (response.data === true) {
           setTrip({ ...trip, status });

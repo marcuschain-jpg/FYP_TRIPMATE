@@ -87,11 +87,31 @@ function ActivityFormPage() {
   useEffect(() => {
     if (editing)
     {
-      axios.get("http://localhost:8080/Itinerary/GetActivityToEdit", {params:{a_id: index}})
+      axios.get("http://localhost:8080/Itinerary/GetActivityToEdit", {params:{a_id: index}, withCredentials:true})
       .then(response => {
         renderLoadActivity(response.data);
         setLoading(false);
-    })
+      })
+      .catch(err => {
+        if(err.response.status === 404){
+          const errData = err.response;
+          const errorMsg = errData.status + ": " + errData.data.message;
+          navigate(`/login/${errorMsg}`);
+        }
+      })
+    }
+    else{
+      axios.post("http://localhost:8080/AuthOnly", {}, {withCredentials:true})
+      .then(res => {
+        console.log("Authenticated: ", res.data.authenticated);
+      })
+      .catch(err => {
+        if(err.response.status === 404){
+          const errData = err.response;
+          const errorMsg = errData.status + ": " + errData.data.message;
+          navigate(`/login/${errorMsg}`);
+        }
+      });
     }
   }, []);
 
@@ -154,7 +174,7 @@ function ActivityFormPage() {
       }
     const locTimer = setTimeout(async() => {
       console.log("Send to backend", locationName);
-      await axios.post("http://localhost:8080/Itinerary/LocSearch", {input:locationName})
+      await axios.post("http://localhost:8080/Itinerary/LocSearch", {input:locationName}, {withCredentials:true})
       .then(res=>{
         renderLoadSearchResult(res.data);
       })
@@ -304,14 +324,19 @@ function ActivityFormPage() {
     //Backend create and edit start here! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     if(editing) //edit
     {
-      axios.patch("http://localhost:8080/Itinerary/EditActivity", {a_id:index, aName: name, aLoc: locationName, aAddress: address, aDate: date, aOrder: isStartPoint, aPlaceID:placeid}) //trip id is activityid here
+      axios.patch("http://localhost:8080/Itinerary/EditActivity",
+        {a_id:index, aName: name, aLoc: locationName, aAddress: address, aDate: date, aOrder: isStartPoint, aPlaceID:placeid},
+        {withCredentials:true}
+      ) //trip id is activityid here
       .then(response => {
         if(response.data === true) alert("Succesfully edit activity!")
       });
     }
     else //create
     {
-      await axios.post("http://localhost:8080/Itinerary/CreateActivity", {aName: name, aLoc: locationName, aAddress: address, aDate: date, i_id: tripId, aOrder: isStartPoint, aPlaceID:placeid})
+      await axios.post("http://localhost:8080/Itinerary/CreateActivity",
+        {aName: name, aLoc: locationName, aAddress: address, aDate: date, i_id: tripId, aOrder: isStartPoint, aPlaceID:placeid},
+        {withCredentials:true})
       .then(res=>{
         if(res.data === true) alert("Successfully created activity!")
       })

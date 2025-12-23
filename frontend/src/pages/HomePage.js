@@ -29,6 +29,13 @@ export default function HomePage() {
       console.log(res);
       setName(res.data[0].first_name);
     })
+    .catch(err => {
+      if(err.response.status === 404){
+        const errData = err.response;
+        const errorMsg = errData.status + ": " + errData.data.message;
+        navigate(`/login/${errorMsg}`);
+      }
+    });
   }, []);
 
   return (

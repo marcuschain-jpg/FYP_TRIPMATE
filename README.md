@@ -102,6 +102,18 @@ Inner workings of events(btn click, page render..)
 - FE files + main function + BE files + Primary Routes> CapitalizeEveryWord (to reduce typescript error)
 - Frontend internal functions + Secondary Routes > Use camelCasing
     - example: const activitySelect = ['a','b','c']..
+- Frontend > Backend AXIOS http calls:
+    Use withCredentials to authenticate first > then call backend function
+    - axios.get("http://..", {params:{id:Act_id..}, withCredentials:true})
+    - axios.post("http://..", {id:Act_id, id2:id..}, {withCredentials:true})
+    - axios.delete("http://..", {data:{id:Act_id..}, withCredentials:true})
+    - axios.patch("http://..", {id:Act_id..}, {withCredentials:true})
+
+- Backend build function:
+    - router.get/post/patch/delete("/NameOfFunction", RequireAuth, async(req,res)=>{
+        { id } = req.query["Act_id"] < get
+        { id } = req.body < post, patch, delete
+    })
 
 ====================== Errors and fix  ================= 
 
@@ -117,6 +129,9 @@ Inner workings of events(btn click, page render..)
 3. Open localhost:3000, output is blank
     - Fix: Open console in browser (mac: ctrl+option+c, windows:crtl+shift+j > click on console)
       see error there
+
+4. Cannot connect to localhost(3000 or 8080)
+    - Fix check what protocol or ip is being used for those 2 ports, kill task
         
 === Backend
 

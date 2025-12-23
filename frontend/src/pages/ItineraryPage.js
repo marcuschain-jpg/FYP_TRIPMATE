@@ -26,7 +26,7 @@ function ItineraryPage() {
   //Load trip & activities
   useEffect(() => {
     setLoading(true);
-    axios.get("http://localhost:8080/Itinerary/GetAllActivities", {params:{i_id: tripId}})
+    axios.get("http://localhost:8080/Itinerary/GetAllActivities", {params:{i_id: tripId}, withCredentials:true})
     .then(res => {
       renderLoadTrip(res.data);
       renderLoadActivities(res.data);
@@ -43,7 +43,15 @@ function ItineraryPage() {
         setSelectedDate(firstdate);
         setLoading(false);
       }
-    });
+    })
+    .catch(err =>{
+      if(err.response.status === 404)
+        {
+          const errData = err.response;
+          const errorMsg = errData.status + ": " + errData.data.message;
+          navigate(`/login/${errorMsg}`);
+        }
+    })
   }, [isArranging]);
 
   // Change arrange button state
@@ -123,7 +131,7 @@ function ItineraryPage() {
     localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
     setTrips(updatedTrips);
     setTrip({ ...thisTrip });*/
-    await axios.delete("http://localhost:8080/Itinerary/DeleteActivity", {data:{activityid:index}})
+    await axios.delete("http://localhost:8080/Itinerary/DeleteActivity", {data:{activityid:index}, withCredentials:true})
     .then(response => {
       if(response.data === true) 
       {
@@ -135,7 +143,7 @@ function ItineraryPage() {
 
   const arrangeItinerary = async() => {
     // 5 second countdown then arrange if not reset timer
-    await axios.get("http://localhost:8080/Itinerary/ArrangeItinerary", {params:{i_id:tripId}})
+    await axios.get("http://localhost:8080/Itinerary/ArrangeItinerary", {params:{i_id:tripId}, withCredentials:true})
     .then(res => {
       if(res.data === true) 
       {

@@ -8,6 +8,7 @@ const cookieParser = require("cookie-parser"); // store cookies on website
 const landingRouter = require("./routes/Landing")
 const itineraryRouter = require("./routes/Itinerary");
 const authServiceRouter = require("./routes/AuthService");
+const RequireAuths = require('./middlewares/RequireAuths.js');
 
 
 const app = express();
@@ -23,6 +24,10 @@ app.use(cookieParser());
 app.use("/Landing", landingRouter);
 app.use("/Itinerary", itineraryRouter);
 app.use("/AuthService", authServiceRouter);
+
+app.post("/AuthOnly", RequireAuths, async(req, res) => {
+  return res.status(200).send({authenticated:true});
+});
 
 //add access images with backend path
 app.use("/images", express.static(path.join(__dirname, "../storage")));

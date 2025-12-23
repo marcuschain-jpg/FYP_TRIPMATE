@@ -6,10 +6,8 @@ const dotenv = require("dotenv");
 dotenv.config({ path: "keys.env" });
 
 
-router.get('/Login', async (req, res) => {
-    const email = req.query["email"];
-    const password = req.query["password"];
-    const role = req.query["role"];
+router.post('/Login', async (req, res) => {
+    const {email, password, role} = req.body;
     let chkRole = false;
     
     try{
@@ -49,12 +47,13 @@ router.get('/Login', async (req, res) => {
 
                     res.cookie('token', token, {
                         maxAge: 60*60*24*10*1000, // 10 days in ms
+                        path: "/",
                         secure: false, // change only when https
                         httpOnly: true,
-                        sameSite: 'Strict'
+                        sameSite: 'lax'
                     });
 
-                    res.send({check: true, userid: userData.rows[0].userid, token});
+                    res.send({check: true, token});
                 }
             }
         }
