@@ -87,7 +87,7 @@ function ActivityFormPage() {
   useEffect(() => {
     if (editing)
     {
-      axios.get("http://localhost:8080/Itinerary/GetActivityToEdit", {params:{a_id: index}, withCredentials:true})
+      axios.get("http://localhost:8080//GetTypeForUser", {params:{a_id: index}, withCredentials:true})
       .then(response => {
         renderLoadActivity(response.data);
         setLoading(false);
@@ -101,13 +101,13 @@ function ActivityFormPage() {
       })
     }
     else{
-      axios.post("http://localhost:8080/AuthCheck", {}, {withCredentials:true})
+      axios.post("http://localhost:8080/Itinerary/LoadCreateActivity", {}, {withCredentials:true})
       .then(res => {
         console.log("Authenticated: ", res.data.authenticated);
         console.log("Role: ", res.data.role);
       })
       .catch(err => {
-        if(err.response.status === 401){
+        if(err.response.status === 401 || 403){
           const errData = err.response;
           const errorMsg = errData.status + ": " + errData.data.message;
           navigate(`/login/${errorMsg}`);

@@ -4,8 +4,9 @@ const pool = require("../helper/db.js");
 const RequireAuths = require("../middlewares/RequireAuths");
 
 
-router.get('/GetHome', RequireAuths, async(req, res) => {
+router.get('/GetHome', RequireAuths(["registered", "premium"]), async(req, res) => {
     userid = req.userid;
+    console.log("here");
 
     try{
         const data = await pool.query(

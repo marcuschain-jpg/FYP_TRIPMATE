@@ -13,17 +13,17 @@ export default function HomePage() {
   const [role, setRole] = useState("");
   const [name, setName] = useState("");
 
-  useEffect(async() => {
-    await axios.post("http://localhost:8080/AuthCheck", {}, {withCredentials: true})
+  useEffect(() => {
+    /*await axios.post("http://localhost:8080/AuthCheck", {}, {withCredentials: true})
     .then(res => {
       setRole(res.data.role);
-    })
-    await axios.get("http://localhost:8080/Landing/GetHome", {withCredentials: true})
+    });*/
+    axios.get("http://localhost:8080/Landing/GetHome", {withCredentials: true})
     .then(res=>{
       setName(res.data[0].first_name);
     })
     .catch(err => {
-      if(err.response.status === 401){
+      if(err.response.status === 401 || err.response.status === 403){
         const errData = err.response;
         const errorMsg = errData.status + ": " + errData.data.message;
         navigate(`/login/${errorMsg}`);

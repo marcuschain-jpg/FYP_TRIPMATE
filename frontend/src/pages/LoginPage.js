@@ -46,7 +46,8 @@ export default function LoginPage() {
         const token = res.data.token;
         console.log(res, document.cookie);
         showToast("Login successful! Redirecting...", "success");
-        setTimeout(() => navigate(`/home`), 1200);
+        if(role === "user") setTimeout(() => navigate(`/home`), 1200);
+        else if(role === "admin") setTimeout(() => navigate(`/admin/overview`), 1200);
       }
     })
   };
