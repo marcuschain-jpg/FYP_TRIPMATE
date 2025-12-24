@@ -13,7 +13,7 @@ router.post('/Login', async (req, res) => {
     try{
         // Check if email exist or role is correct
         const userData = await pool.query(
-        `SELECT userid, email, password, type
+        `SELECT 1, userid, email, password, type
          FROM users
          WHERE email = $1`, [email]
         );
@@ -24,16 +24,18 @@ router.post('/Login', async (req, res) => {
         }
         else
         {
-            if((userData.rows[0].type === "registered" || userData.rows[0].type === "premium") && role === "user") chkRole = true;
-            if(userData.rows[0].type === "admin" && role === "admin") chkRole = true;  
+            const realRole = userData.rows[0].type;
+            if((realRole === "registered" || realRole === "premium") && role === "user") chkRole = true;
+            if(realRole === "admin" && role === "admin") chkRole = true;  
             if(!chkRole) res.send({check: false, message: "No Account with entered email found"});
             else
             {
+                
                 // match email and password
                 const data = await pool.query(
-                    `SELECT userid, email, password, type
-                    FROM users
-                    WHERE email = $1 AND password = $2`, [email, password]
+                    `SELECT 1, userid, email, password, type
+                     FROM users
+                     WHERE email = $1 AND password = $2`, [email, password]
                 );
                 if(data.rowCount === 0) // wrong pw
                 {
@@ -41,9 +43,9 @@ router.post('/Login', async (req, res) => {
                 }
                 else if(data.rowCount === 1 && chkRole) // success
                 {
-                    userid = userData.rows[0].userid;
+                    const userid = userData.rows[0].userid;
                     const jwtSecret = process.env.JWT_SECRET;
-                    const token = jwt.sign({userid}, jwtSecret);
+                    const token = jwt.sign({userid, realRole}, jwtSecret);
 
                     res.cookie('token', token, {
                         maxAge: 60*60*24*10*1000, // 10 days in ms

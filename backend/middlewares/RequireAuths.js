@@ -9,7 +9,7 @@ const RequireAuths = (req, res, next) => {
 
     // Check if token is present
     if(!token) {
-        return res.status(404).send({message: "You must first be logged in"});
+        return res.status(401).send({message: "You must first be logged in"});
     }
     
     try{
@@ -18,6 +18,7 @@ const RequireAuths = (req, res, next) => {
         if(payload){
             req.authenticate = true;
             req.userid = payload.userid;
+            req.role = payload.realRole;
             return next();
         }
     }

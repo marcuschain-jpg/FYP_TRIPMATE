@@ -20,13 +20,14 @@ app.use( cors({ origin: "http://localhost:3000", credentials: true}));
 app.use(express.json());
 app.use(cookieParser());
 
-//Use route
+// Use route
 app.use("/Landing", landingRouter);
 app.use("/Itinerary", itineraryRouter);
 app.use("/AuthService", authServiceRouter);
 
-app.post("/AuthOnly", RequireAuths, async(req, res) => {
-  return res.status(200).send({authenticated:true});
+// Basic Auth function
+app.post("/AuthCheck", RequireAuths, (req, res) => {
+  return res.status(200).send({authenticated:true, role:req.role});
 });
 
 //add access images with backend path

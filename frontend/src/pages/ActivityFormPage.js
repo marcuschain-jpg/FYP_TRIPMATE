@@ -93,7 +93,7 @@ function ActivityFormPage() {
         setLoading(false);
       })
       .catch(err => {
-        if(err.response.status === 404){
+        if(err.response.status === 401){
           const errData = err.response;
           const errorMsg = errData.status + ": " + errData.data.message;
           navigate(`/login/${errorMsg}`);
@@ -101,12 +101,13 @@ function ActivityFormPage() {
       })
     }
     else{
-      axios.post("http://localhost:8080/AuthOnly", {}, {withCredentials:true})
+      axios.post("http://localhost:8080/AuthCheck", {}, {withCredentials:true})
       .then(res => {
         console.log("Authenticated: ", res.data.authenticated);
+        console.log("Role: ", res.data.role);
       })
       .catch(err => {
-        if(err.response.status === 404){
+        if(err.response.status === 401){
           const errData = err.response;
           const errorMsg = errData.status + ": " + errData.data.message;
           navigate(`/login/${errorMsg}`);

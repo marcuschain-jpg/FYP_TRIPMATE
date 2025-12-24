@@ -59,7 +59,7 @@ function MyTripsPage() {
         setLoading(false);
       })
       .catch((err) => {
-        if(err.response.status === 404)
+        if(err.response.status === 401)
         {
           const errData = err.response;
           const errorMsg = errData.status + ": " + errData.data.message;

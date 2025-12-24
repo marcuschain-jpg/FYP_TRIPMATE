@@ -9,28 +9,21 @@ import HomeSmall2 from "../Assets/HomeSmall2.jpg";
 
 export default function HomePage() {
   const navigate = useNavigate();  
-  const { userID } = useParams();
-
+  
+  const [role, setRole] = useState("");
   const [name, setName] = useState("");
 
-  useEffect(() => {
-    /*const user = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (user) {
-      setUsername(
-        user.name ||
-        user.fullName ||
-        user.username ||
-        user.firstName ||
-        user.email
-      );
-    }*/
-    axios.get("http://localhost:8080/Landing/GetHome", {withCredentials: true})
+  useEffect(async() => {
+    await axios.post("http://localhost:8080/AuthCheck", {}, {withCredentials: true})
+    .then(res => {
+      setRole(res.data.role);
+    })
+    await axios.get("http://localhost:8080/Landing/GetHome", {withCredentials: true})
     .then(res=>{
-      console.log(res);
       setName(res.data[0].first_name);
     })
     .catch(err => {
-      if(err.response.status === 404){
+      if(err.response.status === 401){
         const errData = err.response;
         const errorMsg = errData.status + ": " + errData.data.message;
         navigate(`/login/${errorMsg}`);
