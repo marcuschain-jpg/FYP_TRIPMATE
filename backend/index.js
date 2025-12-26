@@ -26,7 +26,7 @@ app.use("/Itinerary", itineraryRouter);
 app.use("/AuthService", authServiceRouter);
 
 // Basic Auth function
-app.post("/GetTypeForUser", RequireAuths(["registered", "premium"]), (req, res) => {
+app.post("/GetRoleForUser", RequireAuths(["registered", "premium"]), (req, res) => {
   return res.status(200).send({authenticated:true, role:req.role});
 });
 

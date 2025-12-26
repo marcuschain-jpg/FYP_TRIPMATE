@@ -87,13 +87,13 @@ function ActivityFormPage() {
   useEffect(() => {
     if (editing)
     {
-      axios.get("http://localhost:8080//GetTypeForUser", {params:{a_id: index}, withCredentials:true})
+      axios.get("http://localhost:8080//GetRoleForUser", {params:{a_id: index}, withCredentials:true})
       .then(response => {
         renderLoadActivity(response.data);
         setLoading(false);
       })
       .catch(err => {
-        if(err.response.status === 401){
+        if(err.response.status === 401 || 403){
           const errData = err.response;
           const errorMsg = errData.status + ": " + errData.data.message;
           navigate(`/login/${errorMsg}`);

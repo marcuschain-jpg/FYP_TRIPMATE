@@ -6,7 +6,6 @@ const RequireAuths = require("../middlewares/RequireAuths");
 
 router.get('/GetHome', RequireAuths(["registered", "premium"]), async(req, res) => {
     userid = req.userid;
-    console.log("here");
 
     try{
         const data = await pool.query(

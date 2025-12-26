@@ -1,4 +1,4 @@
-Last update: 16/12/2025
+Last update: 26/12/2025
 
 # FYP_TRIPMATE
 FYP Group: FYP-25-S4-27
@@ -110,10 +110,20 @@ Inner workings of events(btn click, page render..)
     - axios.patch("http://..", {id:Act_id..}, {withCredentials:true})
 
 - Backend build function:
-    - router.get/post/patch/delete("/NameOfFunction", RequireAuth, async(req,res)=>{
+    - router.get/post/patch/delete("/NameOfFunction", RequireAuth(["Insert roles", "premium"]), async(req,res)=>{
         { id } = req.query["Act_id"] < get
         { id } = req.body < post, patch, delete
     })
+
+- Error action & types:
+    - Valid action:
+        - 200: Send this when something is successful if not send below one
+    - Redirect user back to login page with error msg:
+        - 401: Not logged in
+        - 403: Wrong user type access webpage (user page access admin page)
+    - Must not happen after production:
+        - 404: AxiosError
+        - 500: DB error
 
 ====================== Errors and fix  ================= 
 
