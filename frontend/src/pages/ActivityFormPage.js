@@ -87,7 +87,7 @@ function ActivityFormPage() {
   useEffect(() => {
     if (editing)
     {
-      axios.get("http://localhost:8080//GetRoleForUser", {params:{a_id: index}, withCredentials:true})
+      axios.get("http://localhost:8080/Itinerary/GetActivityToEdit", {params:{a_id: index}, withCredentials:true})
       .then(response => {
         renderLoadActivity(response.data);
         setLoading(false);
@@ -101,10 +101,9 @@ function ActivityFormPage() {
       })
     }
     else{
-      axios.post("http://localhost:8080/Itinerary/LoadCreateActivity", {}, {withCredentials:true})
+      axios.post("http://localhost:8080/GetRoleForUser", {}, {withCredentials:true})
       .then(res => {
-        console.log("Authenticated: ", res.data.authenticated);
-        console.log("Role: ", res.data.role);
+        setLoading(false);
       })
       .catch(err => {
         if(err.response.status === 401 || 403){
@@ -500,11 +499,7 @@ function ActivityFormPage() {
         </div>
 
         <div className="activity-right-map">
-          {mapData ? (
-            <InitMaps mapData={mapData} />
-          ) : (
-            <p className="map-loading-text">Loading map...</p>
-          )}
+          {mapData ? (<InitMaps mapData={mapData} />) : (<p className="map-loading-text">Loading map...</p>)}
         </div>
       </div>
     </div>
