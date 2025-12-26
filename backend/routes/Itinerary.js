@@ -98,7 +98,7 @@ router.post("/upload", upload.single("photo"), async (req, res) => {
 // ================================== Prototype Functions ===================================
 
 // ================================== MyTripsPage============================================
-router.get("/GetAllItineraries", RequireAuth, async(req, res) => {
+router.get("/GetAllItineraries", RequireAuth(["registered", "premium"]), async(req, res) => {
   const userid = req.userid;
 
   try{
@@ -116,8 +116,9 @@ router.get("/GetAllItineraries", RequireAuth, async(req, res) => {
   }
 });
 
-router.post("/CreateItinerary", async(req, res) => {
-  const {iName, iDest, start, end, userid} = req.body;
+router.post("/CreateItinerary", RequireAuth(["registered", "premium"]), async(req, res) => {
+  const {iName, iDest, start, end} = req.body;
+  const userid = req.userid;
 
   try{
     const data = await pool.query(
@@ -132,7 +133,7 @@ router.post("/CreateItinerary", async(req, res) => {
   }
 });
 
-router.delete("/DeleteItinerary", async(req, res) =>{
+router.delete("/DeleteItinerary", RequireAuth(["registered", "premium"]), async(req, res) =>{
   const {itineraryid} = req.body;
 
   try{
@@ -151,7 +152,7 @@ router.delete("/DeleteItinerary", async(req, res) =>{
 });
 
 // ================================== TripDetailsPage ============================================
-router.get("/GetItinerary", async(req, res) => {
+router.get("/GetItinerary", RequireAuth(["registered", "premium"]), async(req, res) => {
   const i_id = req.query["i_id"];
 
   try{
@@ -166,7 +167,7 @@ router.get("/GetItinerary", async(req, res) => {
   }
 });
 
-router.patch("/UpdateItineraryComplete", async(req, res) => {
+router.patch("/UpdateItineraryComplete", RequireAuth(["registered", "premium"]), async(req, res) => {
   const {i_id, completed} = req.body;
 
   try{
@@ -186,7 +187,7 @@ router.patch("/UpdateItineraryComplete", async(req, res) => {
 });
 
 // ================================== ItineraryPage ============================================
-router.get("/GetAllActivities", async(req, res) => {
+router.get("/GetAllActivities", RequireAuth(["registered", "premium"]), async(req, res) => {
   const i_id = req.query['i_id'];
 
   try{
@@ -209,7 +210,7 @@ router.get("/GetAllActivities", async(req, res) => {
   }
 });
 
-router.delete("/DeleteActivity", async(req, res) => {
+router.delete("/DeleteActivity", RequireAuth(["registered", "premium"]), async(req, res) => {
   const {activityid} = req.body;
   
   try{
@@ -228,7 +229,7 @@ router.delete("/DeleteActivity", async(req, res) => {
   
 });
 
-router.get("/ArrangeItinerary", (req, res) => {
+router.get("/ArrangeItinerary", RequireAuth(["registered", "premium"]), (req, res) => {
   const i_id = req.query['i_id'];
   console.log('id: ', i_id);
   res.send(true);
@@ -289,7 +290,7 @@ router.get("/ArrangeItinerary", (req, res) => {
 });
 
 //==================================================== ActivityFormPage ==========================
-router.post("/CreateActivity", async(req,res) => {
+router.post("/CreateActivity", RequireAuth(["registered", "premium"]), async(req,res) => {
   const {aName, aLoc, aAddress, aDate, i_id, aOrder, aPlaceID} = req.body;
 
   const realOrder = (aOrder === true) ? 0 : null
@@ -310,9 +311,8 @@ router.post("/CreateActivity", async(req,res) => {
   }
 });
 
-router.patch("/EditActivity", async(req, res) => {
+router.patch("/EditActivity", RequireAuth(["registered", "premium"]), async(req, res) => {
   const {a_id, aName, aLoc, aAddress, aDate, aOrder, aPlaceID} = req.body;
-  console.log(aPlaceID);
 
   const realOrder = (aOrder === true) ? 0 : null
 
@@ -332,7 +332,7 @@ router.patch("/EditActivity", async(req, res) => {
   }
 });
 
-router.get("/GetActivityToEdit", async(req, res) => {
+router.get("/GetActivityToEdit", RequireAuth(["registered", "premium"]), async(req, res) => {
   const a_id = req.query['a_id'];
   try{
     const data = await pool.query(
@@ -349,7 +349,7 @@ router.get("/GetActivityToEdit", async(req, res) => {
   }
 });
 
-router.post("/LocSearch", async(req, res) => {
+router.post("/LocSearch", RequireAuth(["registered", "premium"]), async(req, res) => {
   const {input} = req.body;
 
   try {
@@ -392,10 +392,6 @@ router.post("/LocSearch", async(req, res) => {
     res.status(500).json({ error: "Failed to fetch autocomplete" });
   }
 });
-
-
-
-
 
 
 module.exports = router;

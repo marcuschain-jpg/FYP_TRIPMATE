@@ -8,6 +8,7 @@ const cookieParser = require("cookie-parser"); // store cookies on website
 const landingRouter = require("./routes/Landing")
 const itineraryRouter = require("./routes/Itinerary");
 const authServiceRouter = require("./routes/AuthService");
+const RequireAuths = require('./middlewares/RequireAuths.js');
 
 
 const app = express();
@@ -19,10 +20,15 @@ app.use( cors({ origin: "http://localhost:3000", credentials: true}));
 app.use(express.json());
 app.use(cookieParser());
 
-//Use route
+// Use route
 app.use("/Landing", landingRouter);
 app.use("/Itinerary", itineraryRouter);
 app.use("/AuthService", authServiceRouter);
+
+// Basic Auth function
+app.post("/GetRoleForUser", RequireAuths(["registered", "premium"]), (req, res) => {
+  return res.status(200).send({authenticated:true, role:req.role});
+});
 
 //add access images with backend path
 app.use("/images", express.static(path.join(__dirname, "../storage")));

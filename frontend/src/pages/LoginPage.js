@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import "../styles/Login.css";
 import axios from "axios";
 
@@ -8,6 +8,7 @@ import LoginBG from "../Assets/Login.jpg";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { errorMsg } = useParams();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,30 +20,21 @@ export default function LoginPage() {
     setTimeout(() => setToast(null), 2500);
   };
 
+  useEffect(() => {
+    if(errorMsg) {
+      showToast(errorMsg, "error");
+      return
+    }
+  }, [])
+
   const handleLogin = async() => {
     if (!email || !password || !role) {
       showToast("Please fill in all fields.", "error");
       return;
     }
 
-    //Load stored users
-    /*const users = JSON.parse(localStorage.getItem("users") || "[]");
 
-
-    //User login
-    const user = users.find(
-      (u) => u.email === email && u.password === password
-    );
-
-    if (!user) {
-      showToast("Invalid email or password.", "error");
-      return;
-    }
-
-    //Store logged-in user for HomePage greeting--> for the welcome message on homepage
-    localStorage.setItem("loggedInUser", JSON.stringify(user));*/
-
-    await axios.get("http://localhost:8080/AuthService/Login", {params:{email:email, password:password, role:role}})
+    await axios.post("http://localhost:8080/AuthService/Login", {email, password, role}, {withCredentials:true})
     .then(res => {
       if(res.data.check === false)
       {
@@ -51,12 +43,11 @@ export default function LoginPage() {
       }
       else if(res.data.check === true)
       {
-        const userid = res.data.userid;
         const token = res.data.token;
-        document.cookie = "token=" + token;
         console.log(res, document.cookie);
         showToast("Login successful! Redirecting...", "success");
-        setTimeout(() => navigate(`/home`), 1200);
+        if(role === "user") setTimeout(() => navigate(`/home`), 1200);
+        else if(role === "admin") setTimeout(() => navigate(`/admin/overview`), 1200);
       }
     })
   };

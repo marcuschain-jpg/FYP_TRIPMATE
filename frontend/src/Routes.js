@@ -149,6 +149,7 @@ function AppRoutes() {
           <Route path="/" element={<Landing />} />
           <Route path="/register" element={<CreateAccountPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path='/login/:errorMsg' element={<LoginPage />} /> {/* If user navigate without logging in, redirect back to home page*/}
           <Route path="/quiz" element={<QuizPage />} />
           <Route path="/pricing" element={<PricingPage />} />
         </Route>
