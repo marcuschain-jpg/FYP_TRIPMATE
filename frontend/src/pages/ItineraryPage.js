@@ -22,6 +22,7 @@ function ItineraryPage() {
   const [Loading, setLoading] = useState(true);
   const [isArranging, setIsArranging] = useState(false); 
   const[showChat, setShowChat] = useState(false); // for chat component
+  const [activityCoords, setActivityCoords] = useState([]); // store coords for maps
 
   //Load trip & activities
   useEffect(() => {
@@ -45,13 +46,13 @@ function ItineraryPage() {
       }
     })
     .catch(err =>{
-      if(err.response.status === 401)
+      if(err.response.status === 401||403)
         {
           const errData = err.response;
           const errorMsg = errData.status + ": " + errData.data.message;
           navigate(`/login/${errorMsg}`);
         }
-    })
+    });
   }, [isArranging]);
 
   // Change arrange button state
@@ -103,6 +104,15 @@ function ItineraryPage() {
       location: a.activity_location,
     }));
 
+    const coordAct = res.map(a => ({
+      id: a.activity_id,
+      coords:{
+      lng: parseFloat(a.longitude),
+      lat: parseFloat(a.latitude)
+      },
+      date: a.activity_date
+    }))
+    setActivityCoords(coordAct);
     setActivities(mapAct);
   };
 
@@ -113,6 +123,10 @@ function ItineraryPage() {
   let filteredActivities = activities.filter(
     (a) => a.date === selectedDate
   );
+
+  let filteredCoord = activityCoords.filter(
+    (a) => a.date === selectedDate
+  )
 
   //Delete actiity from itinerary
   const handleDeleteActivity = async(index) => {
@@ -241,11 +255,9 @@ function ItineraryPage() {
         </div>
 
         <div className="right-side">
-          {mapData ? (
-            <InitMaps DefaultMapData={mapData} />
-          ) : (
-            <p className="map-loading-text">Loading map…</p>
-          )}
+          {mapData ? (<InitMaps DefaultMapData={mapData} activityCoords={filteredCoord}/>) :
+          (<p className="map-loading-text">Loading map…</p>)
+          }
 
         </div>
       </div>

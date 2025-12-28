@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { GoogleMap, useLoadScript, MarkerF } from "@react-google-maps/api";
 import useMapData from "../hooks/FetchMapData";
 
-function InitMaps({ DefaultMapData, centerChange }) {
+function InitMaps({ DefaultMapData, centerChange, activityCoords }) {
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: DefaultMapData.apiKey, // from keys.env
   });
@@ -29,9 +29,11 @@ function InitMaps({ DefaultMapData, centerChange }) {
       center={mapData.center}
       zoom={12}
     >
-      {mapData.center && (
-        <MarkerF position={mapData.center} />
-      )}
+      {mapData.center && activityCoords.map(coord => (
+        <div key={coord.id}>
+          <MarkerF position={coord.coords} />
+        </div>
+      ))}
     </GoogleMap>
   );
 }

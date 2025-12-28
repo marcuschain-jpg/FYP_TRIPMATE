@@ -28,7 +28,8 @@ function ActivityFormPage() {
   const [originalMediaIds, setOriginalMediaIds] = useState([]); //For delete-sync
   const [firstLoad, setFirstLoad] = useState(true);
   const [searchResult, setSearchResult] = useState([]); // store search results from api, drop down bar
-  const [mapCenterChange, setMapCenterChange] = useState(null);
+  const [mapCenterChange, setMapCenterChange] = useState(null); // store center coord for maps
+  const [activityCoords, setActivityCoords] = useState([]); // store coords for maps
   //setMapData(useMapData()) // get API key & set default coordinates to mark on map
 
   // Search bar modal pop out
@@ -117,6 +118,11 @@ function ActivityFormPage() {
     setIsStartPoint(Number(a[0].activity_order === 0));
     setDefaultStart(Number(a[0].activity_order === 0));
     setMapCenterChange({lng:parseFloat(a[0].longitude), lat:parseFloat(a[0].latitude)});
+    setActivityCoords([{
+      id: index, 
+      coords:
+      {lng:parseFloat(a[0].longitude), lat:parseFloat(a[0].latitude)}
+    }]);
   };
 
   //Auto-check if only one activity on that date (excluding self when editing)
@@ -345,6 +351,11 @@ function ActivityFormPage() {
     setLongitude(res.lng);
     setLatitude(res.lat);
     setMapCenterChange({lng:res.lng, lat:res.lat});
+    setActivityCoords([{
+      id: index, 
+      coords:
+      {lng:res.lng, lat:res.lat}
+    }]);
 
     setFirstLoad(true);
     setShowLocSearch(false);
@@ -356,7 +367,7 @@ function ActivityFormPage() {
     <div className="activity-form-page">
       <button
         className="back-btn"
-        onClick={() => navigate(-1)}
+        onClick={() => navigate(`/mytrips/trip/itinerary/${tripId}/default`)}
       >
         ← Back
       </button>
@@ -483,7 +494,7 @@ function ActivityFormPage() {
           <div className="form-button-row">
             <button
               className="cancel-btn"
-              onClick={() => navigate(`/mytrips/trip/itinerary/${tripId}`)}
+              onClick={() => navigate(`/mytrips/trip/itinerary/${tripId}/default`)}
             >
               Cancel
             </button>
@@ -495,7 +506,7 @@ function ActivityFormPage() {
         </div>
 
         <div className="activity-right-map">
-          {mapData ? (<InitMaps DefaultMapData={mapData} centerChange={mapCenterChange} />) : (<p className="map-loading-text">Loading map...</p>)}
+          {mapData ? (<InitMaps DefaultMapData={mapData} centerChange={mapCenterChange} activityCoords={activityCoords}/>) : (<p className="map-loading-text">Loading map...</p>)}
         </div>
       </div>
     </div>
