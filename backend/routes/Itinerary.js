@@ -36,41 +36,6 @@ router.get("/maps", (req, res) => {
   });
 });
 
-router.get("/autocomplete", async (req, res) => {
-  const input = req.query.input;
-  if (!input) return res.json({ results: [] });
-
-  try {
-    const response = await axios.post(
-      "https://places.googleapis.com/v1/places:searchText",
-      {
-        textQuery: input,  // matches curl example
-        pageSize: 10,      // limit results
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "X-Goog-Api-Key": process.env.gMapsApiKey,
-          "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.priceRange"
-        },
-      }
-    );
-
-    // response.data.results contains the search results
-    const predictions = response.data.results.map((r) => ({
-      id: r.placeId,
-      name: r.displayName,
-      address: r.formattedAddress,
-      lat: r.location.lat,
-      lng: r.location.lng,
-    }));
-
-    res.json(predictions);
-  } catch (err) {
-    console.error("Places Text Search error:", err.response?.data || err.message);
-    res.status(500).json({ error: "Failed to fetch autocomplete" });
-  }
-});
 
 router.post("/upload", upload.single("photo"), async (req, res) => {
   // 1. Get photo from ../uploads temporarily  
@@ -291,14 +256,14 @@ router.get("/ArrangeItinerary", RequireAuth(["registered", "premium"]), (req, re
 
 //==================================================== ActivityFormPage ==========================
 router.post("/CreateActivity", RequireAuth(["registered", "premium"]), async(req,res) => {
-  const {aName, aLoc, aAddress, aDate, i_id, aOrder, aPlaceID} = req.body;
+  const {aName, aLoc, aAddress, aDate, i_id, aOrder, aPlaceID, lng, lat} = req.body;
 
   const realOrder = (aOrder === true) ? 0 : null
 
   try{
     const data = await pool.query(
-      `INSERT INTO activity (activity_name, activity_location, activity_address, activity_date, gmaps_placeid, itinerary_id, activity_order)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`, [aName, aLoc, aAddress, aDate, aPlaceID, i_id, realOrder]
+      `INSERT INTO activity (activity_name, activity_location, activity_address, activity_date, gmaps_placeid, itinerary_id, activity_order, longitude, latitude)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`, [aName, aLoc, aAddress, aDate, aPlaceID, i_id, realOrder, lng, lat]
     );
     if(data.rowCount === 1) //successfully insert
     {
@@ -312,15 +277,16 @@ router.post("/CreateActivity", RequireAuth(["registered", "premium"]), async(req
 });
 
 router.patch("/EditActivity", RequireAuth(["registered", "premium"]), async(req, res) => {
-  const {a_id, aName, aLoc, aAddress, aDate, aOrder, aPlaceID} = req.body;
+  const {a_id, aName, aLoc, aAddress, aDate, aOrder, aPlaceID, lng, lat} = req.body;
 
   const realOrder = (aOrder === true) ? 0 : null
 
   try{
     const data = await pool.query(
       `UPDATE activity
-       SET activity_name = $2, activity_location = $3, activity_address = $4, activity_date = $5, gmaps_placeid = $6, activity_order = $7   
-       WHERE activity_id = $1`, [a_id, aName, aLoc, aAddress, aDate, aPlaceID, realOrder]
+       SET activity_name = $2, activity_location = $3, activity_address = $4, activity_date = $5, gmaps_placeid = $6, activity_order = $7
+       , longitude = $8, latitude = $9
+       WHERE activity_id = $1`, [a_id, aName, aLoc, aAddress, aDate, aPlaceID, realOrder, lng, lat]
     );
     if(data.rowCount === 1) //successfully update
     {
@@ -336,7 +302,7 @@ router.get("/GetActivityToEdit", RequireAuth(["registered", "premium"]), async(r
   const a_id = req.query['a_id'];
   try{
     const data = await pool.query(
-      `SELECT activity_name, activity_location, activity_address, activity_order, gmaps_placeid,
+      `SELECT activity_name, activity_location, activity_address, activity_order, gmaps_placeid, longitude, latitude,
        TO_CHAR(activity_date, 'YYYY-MM-DD') AS activity_date
        FROM activity
        WHERE activity_id = $1`,[a_id]

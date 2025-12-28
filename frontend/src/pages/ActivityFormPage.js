@@ -5,26 +5,11 @@ import useMapData from "../hooks/FetchMapData";
 import "../styles/Itinerary.css";
 import axios from 'axios';
 
-//Ensures that activities created by each user are only visible by that user
-/*
-function getTripKey() {
-  const loggedStr = localStorage.getItem("loggedInUser");
-  if (loggedStr) {
-    try {
-      const user = JSON.parse(loggedStr);
-      const uniqueId = user.id || user.email;
-      if (uniqueId) {
-        return `trips_${uniqueId}`;
-      }
-    } catch (e) {}
-  }
-  return "trips_guest";
-}*/
-
 function ActivityFormPage() {
   const { tripId, mode, index } = useParams();
   const navigate = useNavigate();
   const mapData = useMapData();
+
 
   const [trips, setTrips] = useState([]);
   const [trip, setTrip] = useState(null);
@@ -36,11 +21,15 @@ function ActivityFormPage() {
   const [address, setAddress] = useState("");
   const [date, setDate] = useState("");
   const [placeid, setPlaceID] = useState("");
+  const [longitude, setLongitude] = useState(0);
+  const [latitude, setLatitude] = useState(0);
   const [media, setMedia] = useState([]); //Newly uploaded files
   const [existingMedia, setExistingMedia] = useState([]); //Already-saved media for this activity
   const [originalMediaIds, setOriginalMediaIds] = useState([]); //For delete-sync
   const [firstLoad, setFirstLoad] = useState(true);
   const [searchResult, setSearchResult] = useState([]); // store search results from api, drop down bar
+  const [mapCenterChange, setMapCenterChange] = useState(null);
+  //setMapData(useMapData()) // get API key & set default coordinates to mark on map
 
   // Search bar modal pop out
   const [showLocSearch, setShowLocSearch] = useState(false);
@@ -85,22 +74,25 @@ function ActivityFormPage() {
   }, [tripId, mode, index, editing]);*/
 
   useEffect(() => {
-    if (editing)
+    if (editing) // get data for edit
     {
-      axios.get("http://localhost:8080/Itinerary/GetActivityToEdit", {params:{a_id: index}, withCredentials:true})
-      .then(response => {
-        renderLoadActivity(response.data);
-        setLoading(false);
-      })
-      .catch(err => {
-        if(err.response.status === 401 || 403){
-          const errData = err.response;
-          const errorMsg = errData.status + ": " + errData.data.message;
-          navigate(`/login/${errorMsg}`);
-        }
-      })
+      const loadEditActivity = async() => {
+        await axios.get("http://localhost:8080/Itinerary/GetActivityToEdit", {params:{a_id: index}, withCredentials:true})
+        .then(response => {
+          renderLoadActivity(response.data);
+          setLoading(false);
+        })
+        .catch(err => {
+          if(err.response.status === 401 || 403){
+            const errData = err.response;
+            const errorMsg = errData.status + ": " + errData.data.message;
+            navigate(`/login/${errorMsg}`);
+          }
+        });
+      };
+      loadEditActivity();
     }
-    else{
+    else{ // create page - still need validate
       axios.post("http://localhost:8080/GetRoleForUser", {}, {withCredentials:true})
       .then(res => {
         setLoading(false);
@@ -124,7 +116,7 @@ function ActivityFormPage() {
     setPlaceID(a[0].gmaps_placeid)
     setIsStartPoint(Number(a[0].activity_order === 0));
     setDefaultStart(Number(a[0].activity_order === 0));
-    
+    setMapCenterChange({lng:parseFloat(a[0].longitude), lat:parseFloat(a[0].latitude)});
   };
 
   //Auto-check if only one activity on that date (excluding self when editing)
@@ -325,9 +317,8 @@ function ActivityFormPage() {
     if(editing) //edit
     {
       axios.patch("http://localhost:8080/Itinerary/EditActivity",
-        {a_id:index, aName: name, aLoc: locationName, aAddress: address, aDate: date, aOrder: isStartPoint, aPlaceID:placeid},
-        {withCredentials:true}
-      ) //trip id is activityid here
+        {a_id:index, aName: name, aLoc: locationName, aAddress: address, aDate: date, aOrder: isStartPoint, aPlaceID:placeid, lng:longitude, lat:latitude},
+        {withCredentials:true}) 
       .then(response => {
         if(response.data === true) alert("Succesfully edit activity!")
       });
@@ -335,7 +326,7 @@ function ActivityFormPage() {
     else //create
     {
       await axios.post("http://localhost:8080/Itinerary/CreateActivity",
-        {aName: name, aLoc: locationName, aAddress: address, aDate: date, i_id: tripId, aOrder: isStartPoint, aPlaceID:placeid},
+        {aName: name, aLoc: locationName, aAddress: address, aDate: date, i_id: tripId, aOrder: isStartPoint, aPlaceID:placeid, lng:longitude, lat:latitude},
         {withCredentials:true})
       .then(res=>{
         if(res.data === true) alert("Successfully created activity!")
@@ -346,10 +337,15 @@ function ActivityFormPage() {
     navigate(`/mytrips/trip/itinerary/${tripId}/${date}`);
   };
 
-  const updateFormBasedOnLoc = (res) => {
+  const updateFormBasedOnLoc = async(res) => {
+    //Update textbox and placeid
     setLocationName(res.name);
     setAddress(res.address);
     setPlaceID(res.placeid);
+    setLongitude(res.lng);
+    setLatitude(res.lat);
+    setMapCenterChange({lng:res.lng, lat:res.lat});
+
     setFirstLoad(true);
     setShowLocSearch(false);
   };
@@ -499,7 +495,7 @@ function ActivityFormPage() {
         </div>
 
         <div className="activity-right-map">
-          {mapData ? (<InitMaps mapData={mapData} />) : (<p className="map-loading-text">Loading map...</p>)}
+          {mapData ? (<InitMaps DefaultMapData={mapData} centerChange={mapCenterChange} />) : (<p className="map-loading-text">Loading map...</p>)}
         </div>
       </div>
     </div>

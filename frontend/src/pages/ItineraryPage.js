@@ -242,7 +242,7 @@ function ItineraryPage() {
 
         <div className="right-side">
           {mapData ? (
-            <InitMaps mapData={mapData} />
+            <InitMaps DefaultMapData={mapData} />
           ) : (
             <p className="map-loading-text">Loading map…</p>
           )}

@@ -1,10 +1,25 @@
-import React from "react";
-import { GoogleMap, useLoadScript, Marker } from "@react-google-maps/api";
+import React, { useEffect, useState } from "react";
+import { GoogleMap, useLoadScript, MarkerF } from "@react-google-maps/api";
+import useMapData from "../hooks/FetchMapData";
 
-function InitMaps({ mapData }) {
+function InitMaps({ DefaultMapData, centerChange }) {
   const { isLoaded } = useLoadScript({
-    googleMapsApiKey: mapData.apiKey, // always valid
+    googleMapsApiKey: DefaultMapData.apiKey, // from keys.env
   });
+
+  const [mapData, setMapData] = useState({
+    apiKey:DefaultMapData.apiKey,
+    center:DefaultMapData.center
+  });
+
+  useEffect(() => {
+    if(centerChange){
+    setMapData(prev => ({
+      ...prev,
+      center:{lat:centerChange.lat, lng:centerChange.lng}
+    }))
+    }
+  },[centerChange])
 
   if (!isLoaded) return <div>Loading Google Maps...</div>;
 
@@ -14,9 +29,9 @@ function InitMaps({ mapData }) {
       center={mapData.center}
       zoom={12}
     >
-      {mapData.markers?.map((m) => (
-        <Marker key={m.id} position={{ lat: m.lat, lng: m.lng }} />
-      ))}
+      {mapData.center && (
+        <MarkerF position={mapData.center} />
+      )}
     </GoogleMap>
   );
 }
