@@ -117,6 +117,8 @@ function ActivityFormPage() {
     setPlaceID(a[0].gmaps_placeid)
     setIsStartPoint(Number(a[0].activity_order === 0));
     setDefaultStart(Number(a[0].activity_order === 0));
+    setLongitude(parseFloat(a[0].longitude));
+    setLatitude(parseFloat(a[0].latitude));
     setMapCenterChange({lng:parseFloat(a[0].longitude), lat:parseFloat(a[0].latitude)});
     setActivityCoords([{
       id: index, 

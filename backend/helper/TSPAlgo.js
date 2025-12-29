@@ -121,7 +121,7 @@ async function TSPAlgo (activities, placeid, travelMode){ // by activity_id inst
             for (const perm of perms)
             {
                 const currentRoute = perm.map(Number); // convert array to number
-                if(currentRoute[0] == 0)
+                if(currentRoute[0] === 0)
                 {
                     const currentDistance = calculateDistance(currentRoute, distMatrix);
                     if(currentDistance < minDist)
@@ -149,20 +149,20 @@ async function TSPAlgo (activities, placeid, travelMode){ // by activity_id inst
     else
     {
         let twoOpt = (route, distMatrix) => {
+            console.log("ENTRY route 2-OPT:", JSON.stringify(route));
             const routeLen = route.length;
             let improved = true;
-            let minDist = 0;
 
             while(improved){
                 improved = false;
-                for(let i=1; i<routeLen; i++)
+                for(let i=1; i<routeLen-2; i++) //9
                 {
-                    for(let k=i+1; k<routeLen-1; k++)
+                    for(let k=i+1; k<routeLen-1; k++)//10
                     {
-                        const a = route[i-1];
-                        const b = route[i];
-                        const c = route[k];
-                        const d = route[k+1];
+                        const a = route[i-1]; //max 7
+                        const b = route[i]; //max 8
+                        const c = route[k]; //max 10
+                        const d = route[k+1]; //max 11
 
                         const oldDist = distMatrix[a][b] + distMatrix[c][d];
                         const newDist = distMatrix[a][c] + distMatrix[b][d];
@@ -175,13 +175,15 @@ async function TSPAlgo (activities, placeid, travelMode){ // by activity_id inst
                     }
                 }
             }
+
+            let minDist = 0;
             for(let i=0;i<routeLen-1;i++)
             {
                 minDist += distMatrix[route[i]][route[i+1]]; 
             }
-            minDist += distMatrix[route[routeLen-1]][route[0]]
-            console.log("2-opt")
-            return {route, minDist}
+            //minDist += distMatrix[route[routeLen-1]][route[0]]
+            console.log("2-opt");
+            return {route, minDist};
         }
         let defaultRoute = [];
         for(let i=0;i<activities.length;i++)

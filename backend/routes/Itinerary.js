@@ -224,12 +224,14 @@ router.get("/ArrangeItinerary", RequireAuth(["registered", "premium"]), (req, re
         data = await pool.query(
           `SELECT activity_id, gmaps_placeid
            FROM activity
-           WHERE activity_date = $1`, [date]
+           WHERE activity_date = $1
+           ORDER BY activity_order ASC`, [date]
         );
         const aID = data.rows.map(row => row.activity_id);
         const aPlaceID = data.rows.map(row => row.gmaps_placeid);
         //extract route matrix & run algo
         OrderActID = await TSPAlgo(aID, aPlaceID, transitMode);
+        console.log(OrderActID);
         
         // update order in db
         newOrderActID = await OrderActID.slice(1);
