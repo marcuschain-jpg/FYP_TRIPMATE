@@ -4,7 +4,7 @@ const dotenv = require("dotenv");
 const axios = require("axios");
 // --- DB stuff ---
 const pool = require("../helper/db.js");
-// --- geo tag lib ---
+// --- image insertion & geo tag ---
 const {exiftool} = require("exiftool-vendored"); //photo geotag
 const path = require("path") //photo path
 const multer = require("multer");
@@ -19,11 +19,10 @@ const RequireAuth = require("../middlewares/RequireAuths.js");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../uploads")); // make sure uploads exists
+    cb(null, path.join(__dirname, "../../storage")); // store in storage folder
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname); // get extension
-    const name = `${Date.now()}${ext}`; // e.g., 1699045600000.jpg
+    const name = `${Math.random().toString(32)}_dateVal_${Date.now().toString(32)}_${file.originalname}`; // e.g., uuid_date_file1.jpg
     cb(null, name);
   },
 });
@@ -257,32 +256,77 @@ router.get("/ArrangeItinerary", RequireAuth(["registered", "premium"]), (req, re
 });
 
 //==================================================== ActivityFormPage ==========================
-router.post("/CreateActivity", RequireAuth(["registered", "premium"]), async(req,res) => {
+router.post("/CreateActivity", RequireAuth(["registered", "premium"]), upload.array("media"), async(req,res) => {
   const {aName, aLoc, aAddress, aDate, i_id, aOrder, aPlaceID, lng, lat} = req.body;
+  let a_id = null;
+  let createAct = false;
 
   const realOrder = (aOrder === true) ? 0 : null
 
   try{
+    // 1. Create activity in activity
     const data = await pool.query(
       `INSERT INTO activity (activity_name, activity_location, activity_address, activity_date, gmaps_placeid, itinerary_id, activity_order, longitude, latitude)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`, [aName, aLoc, aAddress, aDate, aPlaceID, i_id, realOrder, lng, lat]
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING activity_id`, [aName, aLoc, aAddress, aDate, aPlaceID, i_id, realOrder, lng, lat]
     );
     if(data.rowCount === 1) //successfully insert
     {
-      res.send(true);
+      createAct = true;
+      a_id = data.rows[0].activity_id;
+      console.log("a_id: ", data.rows);
     }
   }
   catch(err){
     console.log(err);
     res.status(500).send("CreateActivity Failed");
   }
+
+  // 2. Upload photos in activity_photo
+
+  const photoRecRaw = req.files.map(file => [aName, `http://localhost:8080/images/${file.filename}`, lng, lat, a_id]);
+  const photoParams = req.files.map((_,i) => {
+    const counter = i*5;
+    return(`($${counter+1}, $${counter+2}, $${counter+3}, $${counter+4}, $${counter+5})`);
+  }).join(", ");
+  const photoRec = photoRecRaw.flat();
+
+  console.log(photoRecRaw);
+  console.log(photoParams);
+
+  try{
+    const data = await pool.query(
+    `INSERT INTO activity_photo (photo_title, photo_url, longitude, latitude, activity_id)
+     VALUES ${photoParams}`, photoRec
+    );
+    if(data.rowCount > 0 && createAct === true) //successfully update
+    {
+      res.send(true);
+    }
+  }
+  catch(err){
+    console.log(err);
+    res.status(500).send("Error inserting photos")
+  }
 });
 
-router.patch("/EditActivity", RequireAuth(["registered", "premium"]), async(req, res) => {
+router.patch("/EditActivity", RequireAuth(["registered", "premium"]), upload.array("media"), async(req, res) => {
   const {a_id, aName, aLoc, aAddress, aDate, aOrder, aPlaceID, lng, lat} = req.body;
+  let updateAct = false;
+  const photoRecRaw = req.files.map(file => [aName, `http://localhost:8080/images/${file.filename}`, lng, lat, a_id]);
+  const photoParams = req.files.map((_,i) => {
+    const counter = i*5;
+    return(`($${counter+1}, $${counter+2}, $${counter+3}, $${counter+4}, $${counter+5})`);
+  }).join(", ");
+  const photoRec = photoRecRaw.flat();
+
+  console.log(photoRecRaw);
+  console.log(photoParams);
+  
 
   const realOrder = (aOrder === true) ? 0 : null
 
+  // 1. Update activity info in activity
   try{
     const data = await pool.query(
       `UPDATE activity
@@ -292,13 +336,31 @@ router.patch("/EditActivity", RequireAuth(["registered", "premium"]), async(req,
     );
     if(data.rowCount === 1) //successfully update
     {
-      res.send(true);
+      updateAct = true;
     }
   }
   catch(err){
     res.status(500).send("UpdateCompleteFailed");
   }
+
+  // 2. Store photos in activity_photo 
+  try{
+    const data = await pool.query(
+    `INSERT INTO activity_photo (photo_title, photo_url, longitude, latitude, activity_id)
+     VALUES ${photoParams}`, photoRec
+    );
+    if(data.rowCount > 0 && updateAct === true) //successfully update
+    {
+      res.send(true);
+    }
+  }
+  catch(err){
+    console.log(err);
+    res.status(500).send("Error inserting photos")
+  }
+
 });
+
 
 router.get("/GetActivityToEdit", RequireAuth(["registered", "premium"]), async(req, res) => {
   const a_id = req.query['a_id'];

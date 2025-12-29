@@ -213,21 +213,36 @@ function ActivityFormPage() {
   //if (!trip && editing) return <p>Trip not found.</p>;
   if (loading && editing) return <p>Loading..</p>
 
+  const handlePhotoInput = (e) => {
+    const files = e.target.files
+    setMedia([...e.target.files]);
+  }
+
   //Save activity
   const handleSave = async() => {
     //Convert newly uploaded files from device to media objects using object URLs
-    const newMediaObjects =
+
+    const formData = new FormData();
+    for(let i=0;i<media.length;i++)
+    {
+      formData.append("media", media[i])
+    }
+
+    //console.log("media: ", media);
+    /*const newMediaObjects =
       media.length > 0
         ? Array.from(media).map((file) => ({
             id: Date.now() + Math.random(),
-            name: name || "Activity Media",
+            name: file.name || "Activity Media",
             type: file.type,
             url: URL.createObjectURL(file),
           }))
         : [];
 
+      console.log("media: ", newMediaObjects);
+
     //List of media for specific activity
-    /*const finalMedia = [...existingMedia, ...newMediaObjects];
+    //const finalMedia = [...existingMedia, ...newMediaObjects];
 
     const newActivity = {
       name,
@@ -324,17 +339,37 @@ function ActivityFormPage() {
     //Backend create and edit start here! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     if(editing) //edit
     {
-      axios.patch("http://localhost:8080/Itinerary/EditActivity",
-        {a_id:index, aName: name, aLoc: locationName, aAddress: address, aDate: date, aOrder: isStartPoint, aPlaceID:placeid, lng:longitude, lat:latitude},
-        {withCredentials:true}) 
+      formData.append("a_id", index);
+      formData.append("aName", name);
+      formData.append("aLoc", locationName);
+      formData.append("aAddress", address);
+      formData.append("aDate", date);
+      formData.append("aOrder", isStartPoint);
+      formData.append("aPlaceID", placeid);
+      formData.append("lng", longitude);
+      formData.append("lat", latitude);
+
+      await axios.patch("http://localhost:8080/Itinerary/EditActivity",
+        formData,
+        {headers:{ "Content-Type": "multipart/form-data" }, withCredentials:true}) 
       .then(response => {
         if(response.data === true) alert("Succesfully edit activity!")
-      });
+      }); 
     }
     else //create
     {
+      formData.append("aName", name);
+      formData.append("aLoc", locationName);
+      formData.append("aAddress", address);
+      formData.append("aDate", date);
+      formData.append("i_id", tripId);
+      formData.append("aOrder", isStartPoint);
+      formData.append("aPlaceID", placeid);
+      formData.append("lng", longitude);
+      formData.append("lat", latitude);
+
       await axios.post("http://localhost:8080/Itinerary/CreateActivity",
-        {aName: name, aLoc: locationName, aAddress: address, aDate: date, i_id: tripId, aOrder: isStartPoint, aPlaceID:placeid, lng:longitude, lat:latitude},
+        formData,
         {withCredentials:true})
       .then(res=>{
         if(res.data === true) alert("Successfully created activity!")
@@ -470,7 +505,7 @@ function ActivityFormPage() {
             <input
               type="file"
               multiple
-              onChange={(e) => setMedia([...e.target.files])}
+              onChange={handlePhotoInput}
             />
           </label>
 
