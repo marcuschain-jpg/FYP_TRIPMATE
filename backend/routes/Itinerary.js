@@ -30,7 +30,7 @@ const storage = multer.diskStorage({
 const upload = multer({storage});
 
 router.get("/maps", (req, res) => {
- res.json({
+ return res.json({
     apiKey: process.env.gMapsApiKey,
     center: { lat: 1.3521, lng: 103.8198 },
   });
@@ -52,11 +52,11 @@ router.post("/upload", upload.single("photo"), async (req, res) => {
 
         // 3. Save photo to storage, then db
         // 4. Remove temp photo from ../uploads
-        res.json({message: filePath});
+        return res.json({message: filePath});
     }
     catch(err) {
         console.error(err);
-        res.status(500).json({error: "Failed to geotag photo"})
+        return res.status(500).json({error: "Failed to geotag photo"})
     }
 });
 
@@ -73,11 +73,11 @@ router.get("/GetAllItineraries", RequireAuth(["registered", "premium"]), async(r
        WHERE user_host_id = $1
        ORDER BY completed ASC`, [userid]
     );
-    res.json(data.rows);
+    return res.json(data.rows);
   }
 
   catch(err){ //error running sql
-    res.status(500).send('View all itineraries failed');
+    return res.status(500).send('View all itineraries failed');
   }
 });
 
@@ -91,10 +91,10 @@ router.post("/CreateItinerary", RequireAuth(["registered", "premium"]), async(re
        VALUES ($1, $2, $3, $4, $5)
        RETURNING itinerary_id`, [iName, iDest,start,end,userid]
     );
-    res.json(data.rows);
+    return res.json(data.rows);
   }
   catch(err){
-    res.status(500).send("Create itinerary failed");
+    return res.status(500).send("Create itinerary failed");
   }
 });
 
@@ -108,11 +108,11 @@ router.delete("/DeleteItinerary", RequireAuth(["registered", "premium"]), async(
     );
     if(data.rowCount === 1) //successfully delete
     {
-      res.send(true);
+      return res.send(true);
     }
   }
   catch(err){
-    res.status(500).send("Create itinerary failed");
+    return res.status(500).send("Create itinerary failed");
   }
 });
 
@@ -125,10 +125,10 @@ router.get("/GetItinerary", RequireAuth(["registered", "premium"]), async(req, r
       `SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date, completed
        FROM itinerary WHERE itinerary_id = $1`, [i_id]
     );
-    res.json(data.rows);
+    return res.json(data.rows);
   }
   catch(err){ //error running sql
-    res.status(500).send('Load itinerary failed');
+    return res.status(500).send('Load itinerary failed');
   }
 });
 
@@ -143,11 +143,11 @@ router.patch("/UpdateItineraryComplete", RequireAuth(["registered", "premium"]),
     );
     if(data.rowCount === 1) //successfully update
     {
-      res.send(true);
+      return res.send(true);
     }
   }
   catch(err){
-    res.status(500).send("UpdateCompleteFailed");
+    return res.status(500).send("UpdateCompleteFailed");
   }
 });
 
@@ -167,17 +167,46 @@ router.get("/GetAllActivities", RequireAuth(["registered", "premium"]), async(re
        WHERE i.itinerary_id = $1
        ORDER BY activity_date ASC, a.activity_order ASC`, [i_id]
     );
-    res.json(data.rows);
+    return res.json(data.rows);
   }
   catch(err)
   {
-    res.status(500).send("GetAllActivities failed");
+    return res.status(500).send("GetAllActivities failed");
   }
 });
 
 router.delete("/DeleteActivity", RequireAuth(["registered", "premium"]), async(req, res) => {
   const {activityid} = req.body;
+  let photosDeleted = false;
+  let photoData = null;
+
+  // 1. Delete photos in storage
+  try{
+    photoData = await pool.query(
+      `SELECT photo_url
+       FROM activity_photo
+       WHERE activity_id = $1`, [activityid]
+    );
+  }
+  catch(err) {return res.status(500).send(err)}
+  console.log(photoData.rows);
+
+  photoData.rows.map(data => {
+    const url = data.photo_url.replace("http://localhost:8080/images/","");
+
+    console.log("URL! ", url);
+    //Delete photo in storage
+    if(url) {
+      photoStoragePath = path.join(__dirname, "../../storage");
+      finalURL = path.join(photoStoragePath, url);
+      fs.unlink(finalURL, (err) => {
+        if(err) console.log("failed to remove from storage", err)
+      });
+      photosDeleted = true;
+    }
+  })
   
+  // Delete activities cascade down other tables
   try{
     const data = await pool.query(
       `DELETE FROM activity
@@ -185,12 +214,13 @@ router.delete("/DeleteActivity", RequireAuth(["registered", "premium"]), async(r
     );
     if(data.rowCount === 1) //successfully delete
     {
-      res.send(true);
+      return res.send(true);
     }
   }
   catch(err){
-    res.status(500).send("DeleteActivity failed")
+    return res.status(500).send("DeleteActivity failed")
   }
+
   
 });
 
@@ -261,7 +291,9 @@ router.post("/CreateActivity", RequireAuth(["registered", "premium"]), upload.ar
   const {aName, aLoc, aAddress, aDate, i_id, aOrder, aPlaceID, lng, lat} = req.body;
   let a_id = null;
   let createAct = false;
+  let havePhoto = false;
 
+  if(req.files) havePhoto = true;
   const realOrder = (aOrder === true) ? 0 : null
 
   try{
@@ -280,40 +312,45 @@ router.post("/CreateActivity", RequireAuth(["registered", "premium"]), upload.ar
   }
   catch(err){
     console.log(err);
-    res.status(500).send("CreateActivity Failed");
+    return res.status(500).send("CreateActivity Failed");
   }
 
   // 2. Upload photos in activity_photo
 
-  const photoRecRaw = req.files.map(file => [aName, `http://localhost:8080/images/${file.filename}`, lng, lat, a_id]);
-  const photoParams = req.files.map((_,i) => {
-    const counter = i*5;
-    return(`($${counter+1}, $${counter+2}, $${counter+3}, $${counter+4}, $${counter+5})`);
-  }).join(", ");
-  const photoRec = photoRecRaw.flat();
+  if(havePhoto){
+    const photoRecRaw = req.files.map(file => [aName, `http://localhost:8080/images/${file.filename}`, lng, lat, a_id]);
+    const photoParams = req.files.map((_,i) => {
+      const counter = i*5;
+      return(`($${counter+1}, $${counter+2}, $${counter+3}, $${counter+4}, $${counter+5})`);
+    }).join(", ");
+    const photoRec = photoRecRaw.flat();
 
-  console.log(photoRecRaw);
-  console.log(photoParams);
-
-  try{
-    const data = await pool.query(
-    `INSERT INTO activity_photo (photo_title, photo_url, longitude, latitude, activity_id)
-     VALUES ${photoParams}`, photoRec
-    );
-    if(data.rowCount > 0 && createAct === true) //successfully update
-    {
-      res.send(true);
+    try{
+      const data = await pool.query(
+      `INSERT INTO activity_photo (photo_title, photo_url, longitude, latitude, activity_id)
+      VALUES ${photoParams}`, photoRec
+      );
+      if(data.rowCount > 0 && createAct === true) //successfully update
+      {
+        return res.send(true);
+      }
+    }
+    catch(err){
+      console.log(err);
+      return res.status(500).send("Error inserting photos")
     }
   }
-  catch(err){
-    console.log(err);
-    res.status(500).send("Error inserting photos")
+  else{
+    if(createAct) return res.send(true);
   }
 });
 
 router.patch("/EditActivity", RequireAuth(["registered", "premium"]), upload.array("media"), async(req, res) => {
   const {a_id, aName, aLoc, aAddress, aDate, aOrder, aPlaceID, lng, lat} = req.body;
+  let havePhoto = false;
   let updateAct = false;
+
+  if(req.files) havePhoto = true;
   const photoRecRaw = req.files.map(file => [aName, `http://localhost:8080/images/${file.filename}`, lng, lat, a_id]);
   const photoParams = req.files.map((_,i) => {
     const counter = i*5;
@@ -337,24 +374,30 @@ router.patch("/EditActivity", RequireAuth(["registered", "premium"]), upload.arr
     }
   }
   catch(err){
-    res.status(500).send("UpdateCompleteFailed");
+    return res.status(500).send("UpdateCompleteFailed");
   }
 
   // 2. Store photos in activity_photo 
-  try{
-    const data = await pool.query(
-    `INSERT INTO activity_photo (photo_title, photo_url, longitude, latitude, activity_id)
-     VALUES ${photoParams}`, photoRec
-    );
-    if(data.rowCount > 0 && updateAct === true) //successfully update
-    {
-      res.send(true);
+  if(havePhoto){
+    try{
+      const data = await pool.query(
+      `INSERT INTO activity_photo (photo_title, photo_url, longitude, latitude, activity_id)
+      VALUES ${photoParams}`, photoRec
+      );
+      if(data.rowCount > 0 && updateAct === true) //successfully update
+      {
+        return res.send(true);
+      }
+    }
+    catch(err){
+      console.log(err);
+      return res.status(500).send("Error inserting photos")
     }
   }
-  catch(err){
-    console.log(err);
-    res.status(500).send("Error inserting photos")
+  else{
+    if(updateAct) return res.send(true);
   }
+
 
 });
 
@@ -371,11 +414,11 @@ router.get("/GetActivityToEdit", RequireAuth(["registered", "premium"]), async(r
 	     ON a.activity_id = ap.activity_id
        WHERE a.activity_id = $1`,[a_id]
     );
-    res.json(data.rows);
+    return res.json(data.rows);
   }
   catch(err)
   {
-    res.status(500).send("GetActivityToEdit failed");
+    return res.status(500).send("GetActivityToEdit failed");
   }
 });
 
@@ -416,10 +459,10 @@ router.post("/LocSearch", RequireAuth(["registered", "premium"]), async(req, res
     }));
 
     console.log(predictions)
-    res.json(predictions);
+    return res.json(predictions);
   } catch (err) {
     console.error("Places Text Search error:", err.response?.data || err.message);
-    res.status(500).json({ error: "Failed to fetch autocomplete" });
+    return res.status(500).json({ error: "Failed to fetch autocomplete" });
   }
 });
 
@@ -445,11 +488,11 @@ router.delete("/DeleteActivityPhoto", RequireAuth(["registered", "premium"]), as
     );
     if(data.rowCount > 0)
     {
-      res.send(true)
+      return res.send(true)
     }
   }
   catch(err){
-    res.status(500).send("Error deleting photos from db");
+    return res.status(500).send("Error deleting photos from db");
   }
   
 });
