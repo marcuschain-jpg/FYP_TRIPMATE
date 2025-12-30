@@ -293,7 +293,7 @@ router.post("/CreateActivity", RequireAuth(["registered", "premium"]), upload.ar
   let createAct = false;
   let havePhoto = false;
 
-  if(req.files) havePhoto = true;
+  if(req.files.length > 0) havePhoto = true;
   const realOrder = (aOrder === true) ? 0 : null
 
   try{
@@ -350,7 +350,7 @@ router.patch("/EditActivity", RequireAuth(["registered", "premium"]), upload.arr
   let havePhoto = false;
   let updateAct = false;
 
-  if(req.files) havePhoto = true;
+  if(req.files.length > 0) havePhoto = true;
   const photoRecRaw = req.files.map(file => [aName, `http://localhost:8080/images/${file.filename}`, lng, lat, a_id]);
   const photoParams = req.files.map((_,i) => {
     const counter = i*5;

@@ -46,34 +46,6 @@ function ActivityFormPage() {
 
   const editing = mode === "edit";
 
-  //Load trip & existing activity if editing
-  /*useEffect(() => {
-    const tripKey = getTripKey();
-    const saved = JSON.parse(localStorage.getItem(tripKey) || "[]");
-    setTrips(saved);
-
-    const foundTrip = saved.find((t) => t.id === Number(tripId));
-    setTrip(foundTrip || null);
-
-    if (foundTrip && editing) {
-      const act = (foundTrip.activities || [])[Number(index)];
-
-      if (act) {
-        setName(act.name || "");
-        setLocationName(act.location || "");
-        setAddress(act.address || "");
-        setDate(act.date || "");
-        setOriginalDate(act.date || "");
-        setExistingMedia(act.media || []);
-        setOriginalMediaIds((act.media || []).map((m) => m.id));
-        setIsStartPoint(!!act.isStartPoint);
-
-        // checkbox not manually touched yet
-        setStartPointTouched(false);
-      }
-    }
-  }, [tripId, mode, index, editing]);*/
-
   useEffect(() => {
     if (editing) // get data for edit
     {
@@ -245,122 +217,15 @@ function ActivityFormPage() {
   //Save activity
   const handleSave = async() => {
     //Convert newly uploaded files from device to media objects using object URLs
-
     const formData = new FormData();
-    for(let i=0;i<media.length;i++)
+
+    if(media){
+      for(let i=0;i<media.length;i++)
     {
       formData.append("media", media[i])
     }
-
-    //console.log("media: ", media);
-    /*const newMediaObjects =
-      media.length > 0
-        ? Array.from(media).map((file) => ({
-            id: Date.now() + Math.random(),
-            name: file.name || "Activity Media",
-            type: file.type,
-            url: URL.createObjectURL(file),
-          }))
-        : [];
-
-      console.log("media: ", newMediaObjects);
-
-    //List of media for specific activity
-    //const finalMedia = [...existingMedia, ...newMediaObjects];
-
-    const newActivity = {
-      name,
-      location: locationName,
-      address,
-      date,
-      media: finalMedia,
-      isStartPoint, // ⭐ saved value
-    };
-
-    const updatedTrips = trips.map((t) => {
-      //if (t.id !== trip.id) return t;
-
-      //const let updatedActivities = [...(t.activities || [])];
-
-      //Insert or replace activity
-      if (editing) {
-        updatedActivities[Number(index)] = newActivity;
-
-      } else {
-        updatedActivities.push(newActivity);
-      }
-
-      //Only 1 start point per date if user checked this activity
-      if (isStartPoint) {
-        updatedActivities = updatedActivities.map((a, idx) => {
-          if (a.date === date) {
-            const isCurrent =
-              (editing && idx === Number(index)) ||
-              (!editing && idx === updatedActivities.length - 1);
-
-            return { ...a, isStartPoint: isCurrent };
-          }
-          return a;
-        });
-      }
-
-      //Ensure EACH DAY has a start point:
-      //If tjeres only 1 activity--> auto assined start point 
-      const byDate = {};
-      updatedActivities.forEach((a) => {
-        if (!byDate[a.date]) byDate[a.date] = [];
-        byDate[a.date].push(a);
-      });
-
-      Object.keys(byDate).forEach((day) => {
-        const dayActs = byDate[day];
-        const hasStart = dayActs.some((a) => a.isStartPoint);
-
-        if (!hasStart && dayActs.length > 0) {
-          const firstAct = dayActs[0];
-
-          updatedActivities = updatedActivities.map((a) => {
-            if (
-              a.date === day &&
-              a.name === firstAct.name &&
-              a.location === firstAct.location &&
-              a.address === firstAct.address
-            ) {
-              return { ...a, isStartPoint: true };
-            }
-            return a;
-          });
-        }
-      });
-
-      //Syncing media--> sync any edits to media in timeline, media page, and activity
-      //Remove any media that the user removed from this activity
-      const removedIds = originalMediaIds.filter(
-        (oldId) => !finalMedia.some((m) => m.id === oldId)
-      );
-
-      const filteredGallery = (t.mediaGallery || []).filter(
-        (m) => !removedIds.includes(m.id)
-      );
-
-      //Add newly uploaded media into gallery--> updates media and timeline can see them
-      const updatedMediaGallery = [...filteredGallery, ...newMediaObjects];
-
-      return {
-        ...t,
-        activities: updatedActivities,
-        mediaGallery: updatedMediaGallery,
-      };
-    });*/
-
-    /*const tripKey = getTripKey();
-    localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
-    setTrips(updatedTrips);
-
-    const updatedTrip = updatedTrips.find((t) => t.id === trip.id);
-    setTrip(updatedTrip || null);*/
-
-    //Backend create and edit start here! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    }
+    
     if(editing) //edit
     {
       formData.append("a_id", index);
