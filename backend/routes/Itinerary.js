@@ -4,10 +4,11 @@ const dotenv = require("dotenv");
 const axios = require("axios");
 // --- DB stuff ---
 const pool = require("../helper/db.js");
-// --- image insertion & geo tag ---
-const {exiftool} = require("exiftool-vendored"); //photo geotag
-const path = require("path") //photo path
-const multer = require("multer");
+// --- image lifecycle & geo tag ---
+const {exiftool} = require("exiftool-vendored"); // photo geotag
+const path = require("path") // photo path
+const multer = require("multer"); // manage and store files
+const fs = require("fs"); // to delete photos
 // Load custom env file
 dotenv.config({ path: "keys.env" });
 // --- Call other functions ---
@@ -320,10 +321,6 @@ router.patch("/EditActivity", RequireAuth(["registered", "premium"]), upload.arr
   }).join(", ");
   const photoRec = photoRecRaw.flat();
 
-  console.log(photoRecRaw);
-  console.log(photoParams);
-  
-
   const realOrder = (aOrder === true) ? 0 : null
 
   // 1. Update activity info in activity
@@ -366,10 +363,13 @@ router.get("/GetActivityToEdit", RequireAuth(["registered", "premium"]), async(r
   const a_id = req.query['a_id'];
   try{
     const data = await pool.query(
-      `SELECT activity_name, activity_location, activity_address, activity_order, gmaps_placeid, longitude, latitude,
-       TO_CHAR(activity_date, 'YYYY-MM-DD') AS activity_date
-       FROM activity
-       WHERE activity_id = $1`,[a_id]
+      `SELECT a.activity_name, a.activity_location, a.activity_address, a.activity_order, a.gmaps_placeid, a.longitude, a.latitude,
+	     ap.photo_id, ap.photo_url, ap.photo_title,
+	     TO_CHAR(a.activity_date, 'YYYY-MM-DD') AS activity_date
+       FROM activity a
+	     LEFT JOIN activity_photo ap
+	     ON a.activity_id = ap.activity_id
+       WHERE a.activity_id = $1`,[a_id]
     );
     res.json(data.rows);
   }
@@ -421,6 +421,37 @@ router.post("/LocSearch", RequireAuth(["registered", "premium"]), async(req, res
     console.error("Places Text Search error:", err.response?.data || err.message);
     res.status(500).json({ error: "Failed to fetch autocomplete" });
   }
+});
+
+router.delete("/DeleteActivityPhoto", RequireAuth(["registered", "premium"]), async(req, res) => {
+  const {photo_id, rawUrl} = req.body;
+  const url = rawUrl.replace("http://localhost:8080/images/","");
+
+  console.log("URL! ", url);
+  //Delete photo in storage
+  if(url) {
+    photoStoragePath = path.join(__dirname, "../../storage");
+    finalURL = path.join(photoStoragePath, url);
+    fs.unlink(finalURL, (err) => {
+      if(err) console.log("failed to remove from storage", err)
+    });
+  }
+  
+  //Delete photo in db
+  try{
+    const data = await pool.query(
+      `DELETE FROM activity_photo
+       WHERE photo_id = $1`, [photo_id]
+    );
+    if(data.rowCount > 0)
+    {
+      res.send(true)
+    }
+  }
+  catch(err){
+    res.status(500).send("Error deleting photos from db");
+  }
+  
 });
 
 

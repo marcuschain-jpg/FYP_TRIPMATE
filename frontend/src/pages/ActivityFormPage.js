@@ -110,6 +110,8 @@ function ActivityFormPage() {
 
   const renderLoadActivity = (a) => {
     console.log(a);
+
+    // Render basic activity details for display
     setName(a[0].activity_name);
     setLocationName(a[0].activity_location);
     setAddress(a[0].activity_address);
@@ -119,12 +121,23 @@ function ActivityFormPage() {
     setDefaultStart(Number(a[0].activity_order === 0));
     setLongitude(parseFloat(a[0].longitude));
     setLatitude(parseFloat(a[0].latitude));
+
+    // Render coords for maps
     setMapCenterChange({lng:parseFloat(a[0].longitude), lat:parseFloat(a[0].latitude)});
     setActivityCoords([{
       id: index, 
       coords:
       {lng:parseFloat(a[0].longitude), lat:parseFloat(a[0].latitude)}
     }]);
+
+    // Render existing media for an activity
+    if(a[0].photo_id !== null){
+    setExistingMedia(a.map(m => ({
+      id: m.photo_id,
+      name: m.photo_title,
+      url: m.photo_url
+    })));
+    };
   };
 
   //Auto-check if only one activity on that date (excluding self when editing)
@@ -167,11 +180,13 @@ function ActivityFormPage() {
   
   useEffect(() => {
     if(!locationName) return;
-    if(firstLoad) 
+    if(firstLoad) // When first load page dont search for anything
       {
         setFirstLoad(false);
         return;
       }
+
+    // Debounce 1 second in case got other input, then search
     const locTimer = setTimeout(async() => {
       console.log("Send to backend", locationName);
       await axios.post("http://localhost:8080/Itinerary/LocSearch", {input:locationName}, {withCredentials:true})
@@ -181,10 +196,7 @@ function ActivityFormPage() {
       .catch(err => {console.log(err);});
 
     }, 1000);
-    
-    
-    //open selection modal below loc textbox
-    //trigger once click, dont run use effect again, until another type
+
     return () => {
       clearTimeout(locTimer);
     };
@@ -210,12 +222,24 @@ function ActivityFormPage() {
     setSearchResult(mapResults);
   };
 
-  //if (!trip && editing) return <p>Trip not found.</p>;
   if (loading && editing) return <p>Loading..</p>
 
   const handlePhotoInput = (e) => {
     const files = e.target.files
     setMedia([...e.target.files]);
+  }
+
+  const handlePhotoDelete = async(m) => {
+    // Delete in /storage & in db
+    await axios.delete("http://localhost:8080/Itinerary/DeleteActivityPhoto", {data:{photo_id:m.id, rawUrl:m.url}, withCredentials:true})
+    .then(response => {
+      if(response.data === true) 
+      {
+        // Delete in Use state
+        setExistingMedia(existingMedia.filter((media) => media.id !== m.id))
+        console.log("deleted!")
+      }
+    });
   }
 
   //Save activity
@@ -476,8 +500,8 @@ function ActivityFormPage() {
           {/*Preview of any existing media in activity form*/}
           {existingMedia.length > 0 && (
             <div className="media-preview-container">
-              {existingMedia.map((m, i) => (
-                <div key={i} className="media-preview-item">
+              {existingMedia.map((m) => (
+                <div key={m.id} className="media-preview-item">
                   {m.url ? (
                     <img src={m.url} className="media-preview-img" />
                   ) : (
@@ -485,11 +509,7 @@ function ActivityFormPage() {
                   )}
                   <button
                     className="media-delete-existing"
-                    onClick={() =>
-                      setExistingMedia(
-                        existingMedia.filter((_, idx) => idx !== i)
-                      )
-                    }
+                    onClick={() => handlePhotoDelete(m)}
                   >
                     ✕
                   </button>

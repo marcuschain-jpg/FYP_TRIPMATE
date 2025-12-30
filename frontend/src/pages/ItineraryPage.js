@@ -133,18 +133,7 @@ function ItineraryPage() {
     if (!window.confirm("Are you sure you want to delete this activity?")) { 
       return;
     }
-
-    /*const tripKey = getTripKey();
-    const updatedTrips = [...trips];
-    const thisTrip = updatedTrips.find((t) => t.id === Number(tripId));*/
-
-    //if (!thisTrip) return;
-
-    /*thisTrip.activities.splice(index, 1);
-
-    localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
-    setTrips(updatedTrips);
-    setTrip({ ...thisTrip });*/
+    
     await axios.delete("http://localhost:8080/Itinerary/DeleteActivity", {data:{activityid:index}, withCredentials:true})
     .then(response => {
       if(response.data === true) 
