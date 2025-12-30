@@ -24,8 +24,9 @@ import GroupTripsPage from "./pages/GroupTripsPage";
 import GroupChatPage from "./pages/GroupChatPage";
 import ItineraryFeedPage from "./pages/ItineraryFeedPage";
 import ProfilePage from "./pages/ProfilePage"; 
-import EditProfilePage from "./pages/EditProfilePage"; 
-
+import EditProfilePage from "./pages/EditProfilePage";
+import ReviewsPage from "./pages/ReviewsPage";
+import HelpPage from "./pages/HelpPage";
 
 //Placeholder
 function Placeholder({ title }) {
@@ -38,6 +39,14 @@ function Placeholder({ title }) {
 }
 
 function AppRoutes() {
+  //Dummy flag to simulate first time login
+  const [isFirstLogin, setIsFirstLogin] = useState(true);
+
+  //Function to complete profile setup
+  const completeProfileSetup = () => {
+    setIsFirstLogin(false);
+  };
+
   //Shared state (dummy)
   const [groupTrips, setGroupTrips] = useState([
     {
@@ -140,7 +149,7 @@ function AppRoutes() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/quiz" element={<QuizPage />} />
           <Route path="/pricing" element={<PricingPage />} />
-          
+          <Route path="/reviews" element={<ReviewsPage />} />
         </Route>
 
         {/* ================= LOGGED-IN ================= */}
@@ -156,12 +165,18 @@ function AppRoutes() {
                 exitTrip,
                 removeTripFromJoinPage,
                 sendMessage,
+                isFirstLogin,
+                completeProfileSetup,
               }}
             />
           }
         >
-          <Route path="/home" element={<HomePage />} />
+          {/*Conditional first page based on login status*/}
+          <Route path="/home" element={isFirstLogin ? <EditProfilePage /> : <HomePage />} />
           <Route path="/mytrips" element={<MyTripsPage />} />
+          
+          {/*First time user setup*/}
+          <Route path="/setup-profile" element={<EditProfilePage />} />
           <Route path="/mytrips/trip/:tripId" element={<TripDetailsPage />} />
           <Route
             path="/mytrips/trip/itinerary/:tripId/:firstdate"
@@ -194,12 +209,15 @@ function AppRoutes() {
 
           {/*Profile*/}
           <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/edit-profile" element={<EditProfilePage />} /> {/* <--- NEW ROUTE */}
+          <Route path="/edit-profile" element={<EditProfilePage />} />
 
           <Route path="/chatbot" element={<ChatbotPage />} />
 
           {/*Join a trip*/}
           <Route path="/join-trip" element={<GroupTripsPage />} />
+
+          {/*Help Centre page*/}
+          <Route path="/help" element={<HelpPage />} />
          
           <Route path="/group-chat/:tripId" element={<GroupChatPage />} />
         </Route>

@@ -76,7 +76,7 @@ function ProfilePage() {
       setProfile(location.state.updatedProfile);
       navigate("/profile", { replace: true });
     }
-  }, [location.state]);
+  }, [location.state, navigate]);
 
   //Listen for bookmark changes coming from Feed page ( when you bookark/unbookmark a post)
   useEffect(() => {
@@ -141,7 +141,9 @@ function ProfilePage() {
               <button className="profile-btn edit-btn" onClick={() => navigate("/edit-profile", { state: { profile } })}>
                 Edit Profile
               </button>
-              <button className="profile-btn help-btn">Help</button>
+              <button className="profile-btn help-btn" onClick={() => navigate("/help")}>
+                Help
+              </button>
             </div>
           </div>
         </div>

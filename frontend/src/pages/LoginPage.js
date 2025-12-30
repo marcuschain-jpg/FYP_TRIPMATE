@@ -97,6 +97,7 @@ export default function LoginPage() {
           <option value="">Select Role</option>
           <option value="user">User</option>
           <option value="admin">Admin</option>
+          <option value="creator">Content Creator</option>
         </select>
 
         {/*Email field*/}
