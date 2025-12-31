@@ -1,11 +1,11 @@
-Last update: 26/12/2025
+Last update: 31/12/2025
 
 # FYP_TRIPMATE
 FYP Group: FYP-25-S4-27
 
 Frontend: React JS
 Backend: Node + Express JS
-Database: Supabase
+Database: PostgreSQL
 
 Guidelines:
 1. To work on our individual work from a branch, please create a sub branch
@@ -20,6 +20,9 @@ it is too huge. So when u install node modules, it reads what modules to install
 your own node_modules
 
 1. Get latest db.dump from telegram to update your postgres(fyp_tripmate table):
+    Create dump(for marcus only):
+    1. pg_dump -U postgres -Fc fyp_tripmate >db.dump
+
     Macbook:
     1. Ensure database is created for 'fyp_tripmate'
     2. download and mydb.dump file place it in documents
@@ -117,7 +120,8 @@ Inner workings of events(btn click, page render..)
 
 - Error action & types:
     - Valid action:
-        - 200: Send this when something is successful if not send below one
+        - optional - 200: Send this when something is successful if not send below one
+        - or can return res.send(<something>)
     - Redirect user back to login page with error msg:
         - 401: Not logged in
         - 403: Wrong user type access webpage (user page access admin page)
