@@ -46,11 +46,17 @@ function ItineraryPage() {
       }
     })
     .catch(err =>{
-      if(err.response.status === 401||403)
+      if(err.response.status === 401||err.response.status === 403)
         {
           const errData = err.response;
           const errorMsg = errData.status + ": " + errData.data.message;
           navigate(`/login/${errorMsg}`);
+        }
+      else if(err.response.status === 500)
+        {
+          const errData = err.response;
+          const errorMsg = errData.status + ": " + errData.data.message;
+          console.log(errorMsg);
         }
     });
   }, [isArranging]);
