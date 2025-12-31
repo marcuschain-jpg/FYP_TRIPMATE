@@ -1,110 +1,208 @@
-/*Landing page*/
 .landing-container {
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/*Hero section*/
+.hero-section {
+  position: relative;
+  width: 100%;
+  height: 80vh;
+  min-height: 600px;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  display: flex;
-  justify-content: center; /*Prevent extreme left/right skew*/
-  align-items: center;
-  position: relative;
-}
-
-/*Inner wrapper to keep content visually centered*/
-.landing-content {
-  width: 100%;
-  max-width: 1200px; /*How far content spreads*/
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 60px;
-}
-
-.hero-section {
-  color: white;
-  max-width: 650px;
-  text-shadow: 0 4px 8px rgba(0,0,0,0.4);
-}
-
-.hero-title {
-  font-size: 48px;
-  font-weight: 800;
-  margin-bottom: 15px;
-}
-
-.hero-subtitle {
-  font-size: 22px;
-  margin-bottom: 25px;
-}
-
-.hero-btn {
-  background: white;
-  color: #0077b6;
-  border: 2px solid white;
-  padding: 12px 28px;
-  font-size: 18px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: 0.2s ease;
-}
-
-.hero-btn:hover {
-  background: #e8f4ff;
-}
-
-/*Reviews section*/
-.reviews-container {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  max-width: 360px;
-}
-
-/*Individual review card*/
-.review-card {
-  background: white;
-  border-radius: 14px;
-  padding: 12px 14px; 
-  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-}
-
-
-/*Review header*/
-.review-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-
-.avatar {
-  width: 38px;
-  height: 38px;
-  background: #0077b6;
-  color: white;
-  font-weight: 700;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.review-name {
-  font-weight: 700;
-  font-size: 14px;
-  margin: 0;
+.hero-overlay {
+  position: relative;
+  z-index: 2;
+  padding: 40px 60px;
+  max-width: 1400px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
 }
 
-.review-stars {
-  color: #f4c430;
-  font-size: 13px;
-  margin: 0;
+.hero-title {
+  font-size: 4rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 2px 4px 8px rgba(0, 0, 0, 0.4);
+  letter-spacing: 1px;
+  text-align: left;
+  margin-bottom: 40px;
+  max-width: 800px;
 }
 
-.review-text {
-  font-size: 13px;
-  color: #444;
-  line-height: 1.4;
+/*Marketing video placeholder*/
+.video-placeholder {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 550px;
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  align-self: center;
+}
+
+.play-button {
+  cursor: pointer;
+  color: #555;
+  transition: all 0.3s ease;
+}
+
+.play-button:hover {
+  color: #0066cc;
+  transform: scale(1.1);
+}
+
+/*TripMate highlighted features section*/
+.features-section {
+  background: linear-gradient(180deg, #1a5f7a 0%, #0d3f52 100%);
+  padding: 80px 20px;
+  width: 100%;
+}
+
+.features-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+}
+
+/*Highlighted feature cards (3 total)*/
+.feature-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+}
+
+.feature-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  overflow: hidden;
+}
+
+.feature-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.feature-card:hover .feature-image {
+  transform: scale(1.05);
+}
+
+.feature-text {
+  padding: 30px 24px;
+  background: white;
+}
+
+.feature-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #1a1a1a;
+  margin-bottom: 12px;
+}
+
+.feature-description {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #555;
+}
+
+/*Responsive design --> supp to end up being dynamic from admin side*/
+@media (max-width: 1024px) {
+  .features-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+  }
+  
+  .hero-title {
+    font-size: 3rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    height: 70vh;
+    min-height: 500px;
+  }
+
+  .hero-overlay {
+    padding: 40px 20px;
+    align-items: center;
+  }
+
+  .hero-title {
+    font-size: 2.5rem;
+    text-align: center;
+    max-width: 100%;
+  }
+
+  .video-placeholder {
+    max-width: 90%;
+    height: 280px;
+  }
+
+  .features-section {
+    padding: 60px 20px;
+  }
+
+  .features-container {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .feature-card {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 2rem;
+  }
+
+  .video-placeholder {
+    height: 220px;
+  }
+
+  .feature-image-wrapper {
+    height: 220px;
+  }
+
+  .feature-text {
+    padding: 20px 16px;
+  }
+
+  .feature-title {
+    font-size: 1.25rem;
+  }
+
+  .feature-description {
+    font-size: 0.95rem;
+  }
 }

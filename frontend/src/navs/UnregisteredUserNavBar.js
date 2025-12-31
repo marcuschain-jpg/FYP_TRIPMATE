@@ -58,6 +58,8 @@ function UnregisteredUserNavBar() {
 
                     <div className="unreg-links">
                         <Link to="/pricing" className="unreg-link">Pricing</Link>
+                        {/* --- NEW LINK ADDED HERE --- */}
+                        <Link to="/reviews" className="unreg-link">Reviews</Link>
                         <Link to="/login" className="unreg-link">Login</Link>
                         <Link to="/register" className="unreg-link">Create Account</Link>
                     </div>

@@ -22,6 +22,12 @@ function UserNavbar({ outletContext }) {
         navigate("/"); //send user to landing page (marketing page)
     };
 
+    //Handle profile click to navigate to profile page--> from top right drop down 
+    const handleProfileClick = () => {
+        navigate("/profile");
+        setShowMenu(false);
+    };
+
     return (
         <>
             {/*Styling for registered user navbar--> shows up when user is logged in*/}
@@ -95,6 +101,11 @@ function UserNavbar({ outletContext }) {
                     padding: 12px 15px;
                     cursor: pointer;
                     transition: background 0.2s ease;
+                    border: none;
+                    background: none;
+                    width: 100%;
+                    text-align: left;
+                    font-size: 14px;
                 }
 
                 .profile-menu-item:hover {
@@ -135,20 +146,23 @@ function UserNavbar({ outletContext }) {
 
                         {showMenu && (
                             <div className="profile-menu">
-                                <div className="profile-menu-item">Profile</div>
-                                <div
+                                <button 
+                                    className="profile-menu-item"
+                                    onClick={handleProfileClick}
+                                >
+                                    Profile
+                                </button>
+                                <button
                                     className="profile-menu-item"
                                     onClick={handleLogout}
                                 >
                                     Logout
-                                </div>
+                                </button>
                             </div>
                         )}
                     </div>
                 </div>
             </nav>
-
-            {/* 🔑 THIS IS THE IMPORTANT PART */}
             <Outlet context={outletContext} />
         </>
     );
