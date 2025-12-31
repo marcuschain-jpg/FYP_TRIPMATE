@@ -8,29 +8,14 @@ import whatsapp from "../Assets/Whatsapp.png"
 import telegram from "../Assets/Telegram.png"
 import ItineraryChat from "../components/ItineraryChat";
 
-//Ensures that trips created by each user are only visible by that user
-function getTripKey() {
-  const loggedStr = localStorage.getItem("loggedInUser");
-  if (loggedStr) {
-    try {
-      const user = JSON.parse(loggedStr);
-      const uniqueId = user.id || user.email; //Use id/email
-      if (uniqueId) {
-        return `trips_${uniqueId}`;
-      }
-    } catch (e) {
-      //Ignore JSON parse errors and fall back
-    }
-  }
-  return "trips_guest";
-}
-
 function TripDetailsPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
 
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState("");
+  const [isPremium, setIsPremium] = useState(false);
 
   //State to control collaborator modal
   const [showCollaborators, setShowCollaborators] = useState(false);
@@ -50,15 +35,32 @@ function TripDetailsPage() {
 
   //Load trips and set current trip
   useEffect(() => {
-    axios
-      .get("http://localhost:8080/Itinerary/GetItinerary", {
+    axios.get("http://localhost:8080/Itinerary/GetItinerary", {
         params: { i_id: tripId },
+        withCredentials: true
       })
       .then((response) => {
         renderLoadTrip(response.data);
         setLoading(false);
+      })
+      .catch(err =>{
+        if(err.response.status === 401 || 403)
+          {
+            const errData = err.response;
+            const errorMsg = errData.status + ": " + errData.data.message;
+            navigate(`/login/${errorMsg}`);
+          }      
       });
+      
+    axios.post("http://localhost:8080/GetRoleForUser", {}, {withCredentials:true})
+    .then(res => {
+      setUserRole(res.data.role);
+    })
   }, []);
+
+  useEffect(() => {
+    if(userRole === "premium") setIsPremium(true);
+  }, [userRole])
 
   const renderLoadTrip = (res) => {
     // format date from timestamp to dd/mm/yyyy
@@ -88,7 +90,7 @@ function TripDetailsPage() {
       .patch("http://localhost:8080/Itinerary/UpdateItineraryComplete", {
         i_id: tripId,
         completed: status,
-      })
+      }, {withCredentials:true})
       .then((response) => {
         if (response.data === true) {
           setTrip({ ...trip, status });
@@ -120,7 +122,7 @@ function TripDetailsPage() {
     }
   };
 
-  if (!trip) return <p>Trip not found.</p>;
+  if (loading) return <p>Loading..</p>;
 
   return (
     <div className="tripdetails-page">
@@ -213,10 +215,10 @@ function TripDetailsPage() {
       {showCollaborators && (
         <div className="collab-overlay">
           <div className="collab-card">
-            <h3 className="collab-title">Add Collaborators</h3>
+            {isPremium && <h3 className="collab-title">Add Collaborators</h3>}
 
             {/*Input row*/}
-            <div className="collab-input-row">
+            {isPremium && <div className="collab-input-row">
               <input
                 type="text"
                 className="collab-input"
@@ -232,13 +234,13 @@ function TripDetailsPage() {
               >
                 Add
               </button>
-            </div>
+            </div>}
 
             {/*Members*/}
             <div className="members-section">
-              <p className="members-title">Members</p>
+              {isPremium && <p className="members-title">Members</p>}
 
-              {collaborators.map((name, index) => (
+              {isPremium && collaborators.map((name, index) => (
                 <div key={index} className="member-item">
                   <div className="avatar">
                     {name.charAt(0).toUpperCase()}
@@ -272,12 +274,12 @@ function TripDetailsPage() {
               >
                 Cancel
               </button>
-              <button
+              {isPremium && <button
                 className="save-btn"
                 onClick={() => setShowCollaborators(false)}
               >
                 Save
-              </button>
+              </button>}
             </div>
           </div>
         </div>

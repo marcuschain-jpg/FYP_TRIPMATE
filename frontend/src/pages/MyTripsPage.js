@@ -7,7 +7,6 @@ import ItineraryChat from "../components/ItineraryChat";
 
 function MyTripsPage() {
   const navigate = useNavigate();
-  const { userID } = useParams();
 
   const { myTrips: joinedGroupTrips } = useOutletContext();
 
@@ -54,20 +53,20 @@ function MyTripsPage() {
 
   //Load from backend (private trips)
   useEffect(() => {
-    axios
-      .get("http://localhost:8080/Itinerary/GetAllItineraries", {
-        params: { userid: userID },
-        withCredentials: true,
-      })
+    axios.get("http://localhost:8080/Itinerary/GetAllItineraries", {withCredentials: true})
       .then((response) => {
         renderLoadTrip(response.data);
         setLoading(false);
       })
       .catch((err) => {
-        console.error(err);
-        setLoading(false);
+        if(err.response.status === 401 || 403)
+        {
+          const errData = err.response;
+          const errorMsg = errData.status + ": " + errData.data.message;
+          navigate(`/login/${errorMsg}`);
+        }
       });
-  }, [userID]);
+  }, []);
 
   const renderLoadTrip = (res) => {
     const mapTrips = res.map((t) => ({
@@ -141,7 +140,9 @@ function MyTripsPage() {
         iDest: newDestination,
         start: newStart,
         end: newEnd,
-        userid: userID,
+      }, {withCredentials: true})
+      .catch(err => {
+        console.log(err)
       });
 
       newTripID = response.data?.[0]?.itinerary_id;
@@ -201,7 +202,7 @@ function MyTripsPage() {
         "http://localhost:8080/Itinerary/DeleteItinerary",
         {
           data: { itineraryid: tripToDelete.id },
-          withCredentials: true,
+          withCredentials: true
         }
       );
 
@@ -364,7 +365,7 @@ function MyTripsPage() {
                 {trip.isGroupTrip === true && (
                   <button
                     className="chat-btn"
-                    onClick={() => navigate(`/group-chat/${trip.id}`)}
+                    onClick={() => setShowChat(true)}
                   >
                     Chat
                   </button>

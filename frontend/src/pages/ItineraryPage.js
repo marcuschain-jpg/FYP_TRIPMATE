@@ -22,11 +22,12 @@ function ItineraryPage() {
   const [Loading, setLoading] = useState(true);
   const [isArranging, setIsArranging] = useState(false); 
   const[showChat, setShowChat] = useState(false); // for chat component
+  const [activityCoords, setActivityCoords] = useState([]); // store coords for maps
 
   //Load trip & activities
   useEffect(() => {
     setLoading(true);
-    axios.get("http://localhost:8080/Itinerary/GetAllActivities", {params:{i_id: tripId}})
+    axios.get("http://localhost:8080/Itinerary/GetAllActivities", {params:{i_id: tripId}, withCredentials:true})
     .then(res => {
       renderLoadTrip(res.data);
       renderLoadActivities(res.data);
@@ -43,6 +44,14 @@ function ItineraryPage() {
         setSelectedDate(firstdate);
         setLoading(false);
       }
+    })
+    .catch(err =>{
+      if(err.response.status === 401||403)
+        {
+          const errData = err.response;
+          const errorMsg = errData.status + ": " + errData.data.message;
+          navigate(`/login/${errorMsg}`);
+        }
     });
   }, [isArranging]);
 
@@ -95,6 +104,15 @@ function ItineraryPage() {
       location: a.activity_location,
     }));
 
+    const coordAct = res.map(a => ({
+      id: a.activity_id,
+      coords:{
+      lng: parseFloat(a.longitude),
+      lat: parseFloat(a.latitude)
+      },
+      date: a.activity_date
+    }))
+    setActivityCoords(coordAct);
     setActivities(mapAct);
   };
 
@@ -106,24 +124,17 @@ function ItineraryPage() {
     (a) => a.date === selectedDate
   );
 
+  let filteredCoord = activityCoords.filter(
+    (a) => a.date === selectedDate
+  )
+
   //Delete actiity from itinerary
   const handleDeleteActivity = async(index) => {
     if (!window.confirm("Are you sure you want to delete this activity?")) { 
       return;
     }
-
-    /*const tripKey = getTripKey();
-    const updatedTrips = [...trips];
-    const thisTrip = updatedTrips.find((t) => t.id === Number(tripId));*/
-
-    //if (!thisTrip) return;
-
-    /*thisTrip.activities.splice(index, 1);
-
-    localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
-    setTrips(updatedTrips);
-    setTrip({ ...thisTrip });*/
-    await axios.delete("http://localhost:8080/Itinerary/DeleteActivity", {data:{activityid:index}})
+    
+    await axios.delete("http://localhost:8080/Itinerary/DeleteActivity", {data:{activityid:index}, withCredentials:true})
     .then(response => {
       if(response.data === true) 
       {
@@ -135,7 +146,7 @@ function ItineraryPage() {
 
   const arrangeItinerary = async() => {
     // 5 second countdown then arrange if not reset timer
-    await axios.get("http://localhost:8080/Itinerary/ArrangeItinerary", {params:{i_id:tripId}})
+    await axios.get("http://localhost:8080/Itinerary/ArrangeItinerary", {params:{i_id:tripId}, withCredentials:true})
     .then(res => {
       if(res.data === true) 
       {
@@ -233,11 +244,9 @@ function ItineraryPage() {
         </div>
 
         <div className="right-side">
-          {mapData ? (
-            <InitMaps mapData={mapData} />
-          ) : (
-            <p className="map-loading-text">Loading map…</p>
-          )}
+          {mapData ? (<InitMaps DefaultMapData={mapData} activityCoords={filteredCoord}/>) :
+          (<p className="map-loading-text">Loading map…</p>)
+          }
 
         </div>
       </div>

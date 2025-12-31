@@ -1,4 +1,4 @@
-Last update: 16/12/2025
+Last update: 26/12/2025
 
 # FYP_TRIPMATE
 FYP Group: FYP-25-S4-27
@@ -102,6 +102,28 @@ Inner workings of events(btn click, page render..)
 - FE files + main function + BE files + Primary Routes> CapitalizeEveryWord (to reduce typescript error)
 - Frontend internal functions + Secondary Routes > Use camelCasing
     - example: const activitySelect = ['a','b','c']..
+- Frontend > Backend AXIOS http calls:
+    Use withCredentials to authenticate first > then call backend function
+    - axios.get("http://..", {params:{id:Act_id..}, withCredentials:true})
+    - axios.post("http://..", {id:Act_id, id2:id..}, {withCredentials:true})
+    - axios.delete("http://..", {data:{id:Act_id..}, withCredentials:true})
+    - axios.patch("http://..", {id:Act_id..}, {withCredentials:true})
+
+- Backend build function:
+    - router.get/post/patch/delete("/NameOfFunction", RequireAuth(["Insert roles", "premium"]), async(req,res)=>{
+        { id } = req.query["Act_id"] < get
+        { id } = req.body < post, patch, delete
+    })
+
+- Error action & types:
+    - Valid action:
+        - 200: Send this when something is successful if not send below one
+    - Redirect user back to login page with error msg:
+        - 401: Not logged in
+        - 403: Wrong user type access webpage (user page access admin page)
+    - Must not happen after production:
+        - 404: AxiosError
+        - 500: DB error
 
 ====================== Errors and fix  ================= 
 
@@ -117,6 +139,9 @@ Inner workings of events(btn click, page render..)
 3. Open localhost:3000, output is blank
     - Fix: Open console in browser (mac: ctrl+option+c, windows:crtl+shift+j > click on console)
       see error there
+
+4. Cannot connect to localhost(3000 or 8080)
+    - Fix check what protocol or ip is being used for those 2 ports, kill task
         
 === Backend
 

@@ -459,6 +459,7 @@
     border-radius: 12px;
     border: 1px solid #ddd;
     padding: 0;
+    margin-top: 5%;
     height: 600px;
     display: flex;
 }
@@ -550,6 +551,27 @@
     border-radius: 6px;
     border: 1px solid #c8c8c8;
     margin: 8px 0 18px 0;
+    box-sizing: border-box;
+}
+
+.form-input-search{
+    width: 100%;
+    border: 1px solid #c8c8c8;
+    margin: -18px 0 10px 0;
+    box-sizing: border-box;
+}
+
+.form-input-search-res{
+    width: 100%;
+    padding: 6px 0 6px 10px;
+    border-bottom: 1px solid black;
+    box-sizing: border-box;
+    font-size: 11px;
+}
+
+.form-input-search-res:hover{
+    background-color: #f5f5f5;
+    cursor: pointer;
 }
 
 .upload-media-btn { /*Upload media ffrom device to acitivty information*/
@@ -600,7 +622,7 @@
 }
 
 .activity-right-map {
-    width: 60%;
+    width: 65%;
     background: white;
     border-radius: 12px;
     padding: 15px;
@@ -611,6 +633,7 @@
 .activity-right-map iframe,
 .activity-right-map div {
     border-radius: 12px !important;
+    
     height: 100% !important;
 }
 

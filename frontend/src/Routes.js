@@ -1,9 +1,11 @@
-import React, { useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useState } from "react";
 
 //Navbars
 import UserNavbar from "./navs/UserNavbar";
 import UnregisteredUserNavbar from "./navs/UnregisteredUserNavBar";
+import AdminNavbar from "./navs/AdminNavbar";
 
 //Pages
 import Landing from "./pages/Landing";
@@ -27,6 +29,14 @@ import ProfilePage from "./pages/ProfilePage";
 import EditProfilePage from "./pages/EditProfilePage";
 import ReviewsPage from "./pages/ReviewsPage";
 import HelpPage from "./pages/HelpPage";
+
+//import admin pages
+import Overview from "./pages/Overview";
+import Users from "./pages/Users";
+import UserProfile from "./pages/UserProfile";
+import Content from "./pages/Content";
+import Support from "./pages/Support";
+
 
 //Placeholder
 function Placeholder({ title }) {
@@ -147,6 +157,7 @@ function AppRoutes() {
           <Route path="/" element={<Landing />} />
           <Route path="/register" element={<CreateAccountPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path='/login/:errorMsg' element={<LoginPage />} /> {/* If user navigate without logging in, redirect back to home page*/}
           <Route path="/quiz" element={<QuizPage />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/reviews" element={<ReviewsPage />} />
@@ -220,6 +231,17 @@ function AppRoutes() {
           <Route path="/help" element={<HelpPage />} />
          
           <Route path="/group-chat/:tripId" element={<GroupChatPage />} />
+        </Route>
+        
+        {/* ================= ADMIN ROUTES ================= */}
+        <Route path="/admin" element={<AdminNavbar />}>
+          <Route index element={<Navigate to="overview" replace />} />
+          <Route path="overview" element={<Overview />} />
+          <Route path="users" element={<Users />} />
+          <Route path="users/:id" element={<UserProfile />} />
+          <Route path="content" element={<Content />} />
+          <Route path="support" element={<Support />} />
+          <Route path="*" element={<Navigate to="overview" replace />} />
         </Route>
       </Routes>
     </BrowserRouter>
