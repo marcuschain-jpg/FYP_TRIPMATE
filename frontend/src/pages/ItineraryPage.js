@@ -15,14 +15,14 @@ function ItineraryPage() {
 
   const mapData = useMapData();
 
-  const [trips, setTrips] = useState([]); // to delete
+  const [trips, setTrips] = useState([]); 
   const [trip, setTrip] = useState(null);
   const [activities, setActivities] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
   const [Loading, setLoading] = useState(true);
   const [isArranging, setIsArranging] = useState(false); 
-  const[showChat, setShowChat] = useState(false); // for chat component
-  const [activityCoords, setActivityCoords] = useState([]); // store coords for maps
+  const[showChat, setShowChat] = useState(false); 
+  const [activityCoords, setActivityCoords] = useState([]); //Store coords for maps
 
   //Load trip & activities
   useEffect(() => {
@@ -33,7 +33,7 @@ function ItineraryPage() {
       renderLoadActivities(res.data);
       const data = res.data
 
-      // load default earliest date
+      //load default earliest date
       if(firstdate === "default")
       {
         const uniqueDates = Array.from(new Set(data.map(a => a.activity_date))).sort();
@@ -61,7 +61,7 @@ function ItineraryPage() {
     });
   }, [isArranging]);
 
-  // Change arrange button state
+  //Change arrange button state
   useEffect(() => {
     //join room for trip
     if(!socket) return;
@@ -151,7 +151,7 @@ function ItineraryPage() {
   };
 
   const arrangeItinerary = async() => {
-    // 5 second countdown then arrange if not reset timer
+    //5 second countdown then arrange if not reset timer
     await axios.get("http://localhost:8080/Itinerary/ArrangeItinerary", {params:{i_id:tripId}, withCredentials:true})
     .then(res => {
       if(res.data === true) 
@@ -184,7 +184,6 @@ function ItineraryPage() {
           <h2>Activities</h2>
 
           {/*Date drop down bar--> user can view activities for selected date*/}
-          {/* Date dropdown + Arrange button */}
             {!Loading && activities.length > 0 && (
             <div className="date-row">
               <select
