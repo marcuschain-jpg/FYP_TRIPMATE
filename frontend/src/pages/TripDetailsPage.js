@@ -122,7 +122,7 @@ function TripDetailsPage() {
     }
   };
 
-  if (!trip) return <p>Trip not found.</p>;
+  if (loading) return <p>Loading..</p>;
 
   return (
     <div className="tripdetails-page">

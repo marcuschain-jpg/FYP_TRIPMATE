@@ -5,26 +5,11 @@ import useMapData from "../hooks/FetchMapData";
 import "../styles/Itinerary.css";
 import axios from 'axios';
 
-//Ensures that activities created by each user are only visible by that user
-/*
-function getTripKey() {
-  const loggedStr = localStorage.getItem("loggedInUser");
-  if (loggedStr) {
-    try {
-      const user = JSON.parse(loggedStr);
-      const uniqueId = user.id || user.email;
-      if (uniqueId) {
-        return `trips_${uniqueId}`;
-      }
-    } catch (e) {}
-  }
-  return "trips_guest";
-}*/
-
 function ActivityFormPage() {
   const { tripId, mode, index } = useParams();
   const navigate = useNavigate();
   const mapData = useMapData();
+
 
   const [trips, setTrips] = useState([]);
   const [trip, setTrip] = useState(null);
@@ -36,11 +21,16 @@ function ActivityFormPage() {
   const [address, setAddress] = useState("");
   const [date, setDate] = useState("");
   const [placeid, setPlaceID] = useState("");
+  const [longitude, setLongitude] = useState(0);
+  const [latitude, setLatitude] = useState(0);
   const [media, setMedia] = useState([]); //Newly uploaded files
   const [existingMedia, setExistingMedia] = useState([]); //Already-saved media for this activity
   const [originalMediaIds, setOriginalMediaIds] = useState([]); //For delete-sync
   const [firstLoad, setFirstLoad] = useState(true);
   const [searchResult, setSearchResult] = useState([]); // store search results from api, drop down bar
+  const [mapCenterChange, setMapCenterChange] = useState(null); // store center coord for maps
+  const [activityCoords, setActivityCoords] = useState([]); // store coords for maps
+  //setMapData(useMapData()) // get API key & set default coordinates to mark on map
 
   // Search bar modal pop out
   const [showLocSearch, setShowLocSearch] = useState(false);
@@ -56,51 +46,26 @@ function ActivityFormPage() {
 
   const editing = mode === "edit";
 
-  //Load trip & existing activity if editing
-  /*useEffect(() => {
-    const tripKey = getTripKey();
-    const saved = JSON.parse(localStorage.getItem(tripKey) || "[]");
-    setTrips(saved);
-
-    const foundTrip = saved.find((t) => t.id === Number(tripId));
-    setTrip(foundTrip || null);
-
-    if (foundTrip && editing) {
-      const act = (foundTrip.activities || [])[Number(index)];
-
-      if (act) {
-        setName(act.name || "");
-        setLocationName(act.location || "");
-        setAddress(act.address || "");
-        setDate(act.date || "");
-        setOriginalDate(act.date || "");
-        setExistingMedia(act.media || []);
-        setOriginalMediaIds((act.media || []).map((m) => m.id));
-        setIsStartPoint(!!act.isStartPoint);
-
-        // checkbox not manually touched yet
-        setStartPointTouched(false);
-      }
-    }
-  }, [tripId, mode, index, editing]);*/
-
   useEffect(() => {
-    if (editing)
+    if (editing) // get data for edit
     {
-      axios.get("http://localhost:8080/Itinerary/GetActivityToEdit", {params:{a_id: index}, withCredentials:true})
-      .then(response => {
-        renderLoadActivity(response.data);
-        setLoading(false);
-      })
-      .catch(err => {
-        if(err.response.status === 401 || 403){
-          const errData = err.response;
-          const errorMsg = errData.status + ": " + errData.data.message;
-          navigate(`/login/${errorMsg}`);
-        }
-      })
+      const loadEditActivity = async() => {
+        await axios.get("http://localhost:8080/Itinerary/GetActivityToEdit", {params:{a_id: index}, withCredentials:true})
+        .then(response => {
+          renderLoadActivity(response.data);
+          setLoading(false);
+        })
+        .catch(err => {
+          if(err.response.status === 401 || 403){
+            const errData = err.response;
+            const errorMsg = errData.status + ": " + errData.data.message;
+            navigate(`/login/${errorMsg}`);
+          }
+        });
+      };
+      loadEditActivity();
     }
-    else{
+    else{ // create page - still need validate
       axios.post("http://localhost:8080/GetRoleForUser", {}, {withCredentials:true})
       .then(res => {
         setLoading(false);
@@ -117,6 +82,8 @@ function ActivityFormPage() {
 
   const renderLoadActivity = (a) => {
     console.log(a);
+
+    // Render basic activity details for display
     setName(a[0].activity_name);
     setLocationName(a[0].activity_location);
     setAddress(a[0].activity_address);
@@ -124,7 +91,25 @@ function ActivityFormPage() {
     setPlaceID(a[0].gmaps_placeid)
     setIsStartPoint(Number(a[0].activity_order === 0));
     setDefaultStart(Number(a[0].activity_order === 0));
-    
+    setLongitude(parseFloat(a[0].longitude));
+    setLatitude(parseFloat(a[0].latitude));
+
+    // Render coords for maps
+    setMapCenterChange({lng:parseFloat(a[0].longitude), lat:parseFloat(a[0].latitude)});
+    setActivityCoords([{
+      id: index, 
+      coords:
+      {lng:parseFloat(a[0].longitude), lat:parseFloat(a[0].latitude)}
+    }]);
+
+    // Render existing media for an activity
+    if(a[0].photo_id !== null){
+    setExistingMedia(a.map(m => ({
+      id: m.photo_id,
+      name: m.photo_title,
+      url: m.photo_url
+    })));
+    };
   };
 
   //Auto-check if only one activity on that date (excluding self when editing)
@@ -167,11 +152,13 @@ function ActivityFormPage() {
   
   useEffect(() => {
     if(!locationName) return;
-    if(firstLoad) 
+    if(firstLoad) // When first load page dont search for anything
       {
         setFirstLoad(false);
         return;
       }
+
+    // Debounce 1 second in case got other input, then search
     const locTimer = setTimeout(async() => {
       console.log("Send to backend", locationName);
       await axios.post("http://localhost:8080/Itinerary/LocSearch", {input:locationName}, {withCredentials:true})
@@ -181,10 +168,7 @@ function ActivityFormPage() {
       .catch(err => {console.log(err);});
 
     }, 1000);
-    
-    
-    //open selection modal below loc textbox
-    //trigger once click, dont run use effect again, until another type
+
     return () => {
       clearTimeout(locTimer);
     };
@@ -210,132 +194,71 @@ function ActivityFormPage() {
     setSearchResult(mapResults);
   };
 
-  //if (!trip && editing) return <p>Trip not found.</p>;
   if (loading && editing) return <p>Loading..</p>
+
+  const handlePhotoInput = (e) => {
+    const files = e.target.files
+    setMedia([...e.target.files]);
+  }
+
+  const handlePhotoDelete = async(m) => {
+    // Delete in /storage & in db
+    await axios.delete("http://localhost:8080/Itinerary/DeleteActivityPhoto", {data:{photo_id:m.id, rawUrl:m.url}, withCredentials:true})
+    .then(response => {
+      if(response.data === true) 
+      {
+        // Delete in Use state
+        setExistingMedia(existingMedia.filter((media) => media.id !== m.id))
+        console.log("deleted!")
+      }
+    });
+  }
 
   //Save activity
   const handleSave = async() => {
     //Convert newly uploaded files from device to media objects using object URLs
-    const newMediaObjects =
-      media.length > 0
-        ? Array.from(media).map((file) => ({
-            id: Date.now() + Math.random(),
-            name: name || "Activity Media",
-            type: file.type,
-            url: URL.createObjectURL(file),
-          }))
-        : [];
+    const formData = new FormData();
 
-    //List of media for specific activity
-    /*const finalMedia = [...existingMedia, ...newMediaObjects];
-
-    const newActivity = {
-      name,
-      location: locationName,
-      address,
-      date,
-      media: finalMedia,
-      isStartPoint, // ⭐ saved value
-    };
-
-    const updatedTrips = trips.map((t) => {
-      //if (t.id !== trip.id) return t;
-
-      //const let updatedActivities = [...(t.activities || [])];
-
-      //Insert or replace activity
-      if (editing) {
-        updatedActivities[Number(index)] = newActivity;
-
-      } else {
-        updatedActivities.push(newActivity);
-      }
-
-      //Only 1 start point per date if user checked this activity
-      if (isStartPoint) {
-        updatedActivities = updatedActivities.map((a, idx) => {
-          if (a.date === date) {
-            const isCurrent =
-              (editing && idx === Number(index)) ||
-              (!editing && idx === updatedActivities.length - 1);
-
-            return { ...a, isStartPoint: isCurrent };
-          }
-          return a;
-        });
-      }
-
-      //Ensure EACH DAY has a start point:
-      //If tjeres only 1 activity--> auto assined start point 
-      const byDate = {};
-      updatedActivities.forEach((a) => {
-        if (!byDate[a.date]) byDate[a.date] = [];
-        byDate[a.date].push(a);
-      });
-
-      Object.keys(byDate).forEach((day) => {
-        const dayActs = byDate[day];
-        const hasStart = dayActs.some((a) => a.isStartPoint);
-
-        if (!hasStart && dayActs.length > 0) {
-          const firstAct = dayActs[0];
-
-          updatedActivities = updatedActivities.map((a) => {
-            if (
-              a.date === day &&
-              a.name === firstAct.name &&
-              a.location === firstAct.location &&
-              a.address === firstAct.address
-            ) {
-              return { ...a, isStartPoint: true };
-            }
-            return a;
-          });
-        }
-      });
-
-      //Syncing media--> sync any edits to media in timeline, media page, and activity
-      //Remove any media that the user removed from this activity
-      const removedIds = originalMediaIds.filter(
-        (oldId) => !finalMedia.some((m) => m.id === oldId)
-      );
-
-      const filteredGallery = (t.mediaGallery || []).filter(
-        (m) => !removedIds.includes(m.id)
-      );
-
-      //Add newly uploaded media into gallery--> updates media and timeline can see them
-      const updatedMediaGallery = [...filteredGallery, ...newMediaObjects];
-
-      return {
-        ...t,
-        activities: updatedActivities,
-        mediaGallery: updatedMediaGallery,
-      };
-    });*/
-
-    /*const tripKey = getTripKey();
-    localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
-    setTrips(updatedTrips);
-
-    const updatedTrip = updatedTrips.find((t) => t.id === trip.id);
-    setTrip(updatedTrip || null);*/
-
-    //Backend create and edit start here! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    if(media){
+      for(let i=0;i<media.length;i++)
+    {
+      formData.append("media", media[i])
+    }
+    }
+    
     if(editing) //edit
     {
-      axios.patch("http://localhost:8080/Itinerary/EditActivity",
-        {a_id:index, aName: name, aLoc: locationName, aAddress: address, aDate: date, aOrder: isStartPoint, aPlaceID:placeid},
-        {withCredentials:true}
-      ) //trip id is activityid here
+      formData.append("a_id", index);
+      formData.append("aName", name);
+      formData.append("aLoc", locationName);
+      formData.append("aAddress", address);
+      formData.append("aDate", date);
+      formData.append("aOrder", isStartPoint);
+      formData.append("aPlaceID", placeid);
+      formData.append("lng", longitude);
+      formData.append("lat", latitude);
+
+      await axios.patch("http://localhost:8080/Itinerary/EditActivity",
+        formData,
+        {headers:{ "Content-Type": "multipart/form-data" }, withCredentials:true}) 
       .then(response => {
         if(response.data === true) alert("Succesfully edit activity!")
-      });
+      }); 
     }
     else //create
     {
+      formData.append("aName", name);
+      formData.append("aLoc", locationName);
+      formData.append("aAddress", address);
+      formData.append("aDate", date);
+      formData.append("i_id", tripId);
+      formData.append("aOrder", isStartPoint);
+      formData.append("aPlaceID", placeid);
+      formData.append("lng", longitude);
+      formData.append("lat", latitude);
+
       await axios.post("http://localhost:8080/Itinerary/CreateActivity",
-        {aName: name, aLoc: locationName, aAddress: address, aDate: date, i_id: tripId, aOrder: isStartPoint, aPlaceID:placeid},
+        formData,
         {withCredentials:true})
       .then(res=>{
         if(res.data === true) alert("Successfully created activity!")
@@ -346,10 +269,20 @@ function ActivityFormPage() {
     navigate(`/mytrips/trip/itinerary/${tripId}/${date}`);
   };
 
-  const updateFormBasedOnLoc = (res) => {
+  const updateFormBasedOnLoc = async(res) => {
+    //Update textbox and placeid
     setLocationName(res.name);
     setAddress(res.address);
     setPlaceID(res.placeid);
+    setLongitude(res.lng);
+    setLatitude(res.lat);
+    setMapCenterChange({lng:res.lng, lat:res.lat});
+    setActivityCoords([{
+      id: index, 
+      coords:
+      {lng:res.lng, lat:res.lat}
+    }]);
+
     setFirstLoad(true);
     setShowLocSearch(false);
   };
@@ -360,7 +293,7 @@ function ActivityFormPage() {
     <div className="activity-form-page">
       <button
         className="back-btn"
-        onClick={() => navigate(-1)}
+        onClick={() => navigate(`/mytrips/trip/itinerary/${tripId}/default`)}
       >
         ← Back
       </button>
@@ -432,8 +365,8 @@ function ActivityFormPage() {
           {/*Preview of any existing media in activity form*/}
           {existingMedia.length > 0 && (
             <div className="media-preview-container">
-              {existingMedia.map((m, i) => (
-                <div key={i} className="media-preview-item">
+              {existingMedia.map((m) => (
+                <div key={m.id} className="media-preview-item">
                   {m.url ? (
                     <img src={m.url} className="media-preview-img" />
                   ) : (
@@ -441,11 +374,7 @@ function ActivityFormPage() {
                   )}
                   <button
                     className="media-delete-existing"
-                    onClick={() =>
-                      setExistingMedia(
-                        existingMedia.filter((_, idx) => idx !== i)
-                      )
-                    }
+                    onClick={() => handlePhotoDelete(m)}
                   >
                     ✕
                   </button>
@@ -461,7 +390,7 @@ function ActivityFormPage() {
             <input
               type="file"
               multiple
-              onChange={(e) => setMedia([...e.target.files])}
+              onChange={handlePhotoInput}
             />
           </label>
 
@@ -487,7 +416,7 @@ function ActivityFormPage() {
           <div className="form-button-row">
             <button
               className="cancel-btn"
-              onClick={() => navigate(`/mytrips/trip/itinerary/${tripId}`)}
+              onClick={() => navigate(`/mytrips/trip/itinerary/${tripId}/default`)}
             >
               Cancel
             </button>
@@ -499,7 +428,7 @@ function ActivityFormPage() {
         </div>
 
         <div className="activity-right-map">
-          {mapData ? (<InitMaps mapData={mapData} />) : (<p className="map-loading-text">Loading map...</p>)}
+          {mapData ? (<InitMaps DefaultMapData={mapData} centerChange={mapCenterChange} activityCoords={activityCoords}/>) : (<p className="map-loading-text">Loading map...</p>)}
         </div>
       </div>
     </div>

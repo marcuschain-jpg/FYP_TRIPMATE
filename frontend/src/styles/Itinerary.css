@@ -622,7 +622,7 @@
 }
 
 .activity-right-map {
-    width: 60%;
+    width: 65%;
     background: white;
     border-radius: 12px;
     padding: 15px;
@@ -633,6 +633,7 @@
 .activity-right-map iframe,
 .activity-right-map div {
     border-radius: 12px !important;
+    
     height: 100% !important;
 }
 
