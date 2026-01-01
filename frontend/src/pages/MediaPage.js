@@ -200,7 +200,7 @@ function MediaPage() {
   const openEditModal = (item, activityId) => {
     setEditItem(item);
     setEditActivityId(activityId);
-    setEditTitle(item.media_name || item.photo_title || "");
+    setEditTitle(item.photo_title || "");
     setShowEditModal(true);
   };
 
@@ -210,25 +210,47 @@ function MediaPage() {
       alert("Title cannot be empty");
       return;
     }
+    let updateComplete = false;
 
-    //Update in state
-    setActivityMedia((prev) => ({
-      ...prev,
-      [editActivityId]: prev[editActivityId].map((m) =>
-        (m.media_id === editItem.media_id || m.media_id === editItem.photo_id)
-          ? { ...m, media_name: editTitle }
-          : m
-      ),
-    }));
+    try{
+      const res = await axios.patch("http://localhost:8080/Media/EditPhoto", {p_id:editItem.photo_id, title:editTitle}, {withCredentials:true});
+      updateComplete = res.data;
+    }
+    catch(err){
+      if(err.response.status === 401||err.response.status === 403)
+      {
+        const errData = err.response;
+        const errorMsg = errData.status + ": " + errData.data.message;
+        navigate(`/login/${errorMsg}`);
+      }
+    else if(err.response.status === 500)
+      {
+        const errData = err.response;
+        const errorMsg = errData.status + ": " + errData.data.message;
+        console.log(errorMsg);
+      }
+    }
+    if(updateComplete)
+    {
+      //Update in state
+      setActivityMedia((prev) => ({
+        ...prev,
+        [editActivityId]: prev[editActivityId].map((m) =>
+          (m.photo_id === editItem.photo_id)
+            ? { ...m, media_name: editTitle }
+            : m
+        ),
+      }));
 
-    alert("Media updated successfully!");
-    setShowEditModal(false);
+      alert("Media updated successfully!");
+      setShowEditModal(false); 
+    }
   };
 
   //Delete media
   const handleDelete = async (media, activityId) => {
     if (!window.confirm("Delete this media?")) return;
-    let deleteConfirm = true;
+    let deleteConfirm = false;
     console.log("media: ", media.photo_id);
     console.log("media: ", media.photo_url);
 

@@ -95,5 +95,20 @@ router.delete("/DeleteActivityPhoto", RequireAuth(["registered", "premium"]), as
   
 });
 
+router.patch("/EditPhoto", RequireAuth(["registered", "premium"]), async(req, res) => {
+  const {p_id, title} = req.body;
+
+  try{
+    const data = await pool.query(
+      `UPDATE activity_photo
+       SET photo_title = $1
+       WHERE photo_id = $2`, [title, p_id]
+    );
+    if(data.rowCount > 0 ) { return res.send(true); }
+  }
+  catch(err) { return res.status(500).send("edit failed") }
+
+});
+
 
 module.exports = router
