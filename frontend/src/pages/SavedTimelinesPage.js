@@ -1,31 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../styles/Timeline.css";
-
-//Ensures that timelines saved by each user are only visible by that user
-/*function getTripKey() {
-  const loggedStr = localStorage.getItem("loggedInUser");
-  if (loggedStr) {
-    try {
-      const user = JSON.parse(loggedStr);
-      const uniqueId = user.id || user.email;
-      if (uniqueId) {
-        return `trips_${uniqueId}`;
-      }
-    } catch (e) {}
-  }
-  return "trips_guest";
-}*/
+import axios from 'axios';
 
 function SavedTimelinesPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
 
-  const [trip, setTrip] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [activeTimeline, setActiveTimeline] = useState(null);
   const [timeline, setTimeline] = useState([
     {
-      createdAt: "2025-12-18T04:24:15.817Z",
       id: 1,
       name: "new timeline!",
       nodes:
@@ -57,7 +42,6 @@ function SavedTimelinesPage() {
       ]
     },
     {
-      createdAt: "2025-12-18T04:24:15.817Z",
       id: 2,
       name: "another timeline!",
       nodes:
@@ -100,10 +84,61 @@ function SavedTimelinesPage() {
 
   //if (!trip) return <p>Trip not found.</p>;
 
+  useEffect(() => {
+    axios.get("http://localhost:8080/Timeline/GetSavedTimelines", {params:{i_id: tripId}, withCredentials:true})
+    .then(response => {
+      renderLoadTimelines(response.data);
+      setLoading(false);
+    })
+    .catch(err => {
+      if(err.response)
+      {
+        const errData = err.response;
+        const errorMsg = errData.status + ": " + errData.data.message;
+        if(err.response.status === 401|| err.response.status === 403)
+        {  
+          navigate(`/login/${errorMsg}`);
+        }
+        else if(err.response.status === 500)
+        {
+          console.log(errorMsg);  
+        }
+      }
+    });
+  }, []);
+
+  const renderLoadTimelines = (res) => {
+    const rawTimelinesArr = res.map(item => {return{
+      id: item.timeline_id,
+      name: item.timeline_name,
+      nodes: []
+    }})
+    const timelineArr = [];
+    rawTimelinesArr.forEach(element => {
+      if(!timelineArr.find(item => item.id === element.id)) timelineArr.push(element)
+    });
+    res.forEach(item => {
+      const curTimelineArr = timelineArr.find(arrItem => arrItem.id === item.timeline_id);
+      if(curTimelineArr){
+        curTimelineArr.nodes.push({
+        date: item.activity_date,
+        mediaid: item.photo_id,
+        name: item.photo_title,
+        url: item.photo_url,
+        x: item.x_coord,
+        y:item.y_coord
+      });
+      }
+    });
+    console.log(timelineArr);
+
+    setTimeline(timelineArr);
+  };
+
   const timelines = timeline || [];
 
   //Delete saved timeline
-  const handleDelete = (id) => {
+  const handleDelete = async(id) => {
     //const timeline = timelines.find((tl) => tl.id === id);
     const selectedTimeline = timeline.filter(i => i.id === id)
     //Confirmation popup message
@@ -129,10 +164,31 @@ function SavedTimelinesPage() {
     setTrip(updatedTrips.find((t) => t.id === trip.id));*/
 
     //Success popup message 
+    
 
-    const updatedTimelines = timeline.filter(i => i.id !== id)
-    setTimeline(updatedTimelines);
-    alert("Timeline deleted successfully.");
+    await axios.delete("http://localhost:8080/Timeline/DeleteSavedTimeline", {data:{t_id:id}, withCredentials:true})
+    .then(res => {
+      if(res.data === true){
+        const updatedTimelines = timeline.filter(i => i.id !== id)
+        setTimeline(updatedTimelines);
+        alert("Timeline deleted successfully.");
+      }
+    })
+    .catch(err => {
+      if(err.response)
+      {
+        const errData = err.response;
+        const errorMsg = errData.status + ": " + errData.data.message;
+        if(err.response.status === 401|| err.response.status === 403)
+        {  
+          navigate(`/login/${errorMsg}`);
+        }
+        else if(err.response.status === 500)
+        {
+          console.log(errorMsg);  
+        }
+      }
+    });
   };
 
   //View timeline inside the page
@@ -140,6 +196,8 @@ function SavedTimelinesPage() {
     const tl = timelines.find((t) => t.id === timelineId);
     if (tl) setActiveTimeline(tl);
   };
+
+  {loading && <p>Loading..</p>}
 
   return (
     <div className="timeline-page">

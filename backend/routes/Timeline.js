@@ -66,4 +66,44 @@ router.post("/SaveTimeline", RequireAuth(["registered", "premium"]), async(req,r
     
 });
 
+
+router.get("/GetSavedTimelines", RequireAuth(["registered", "premium"]), async(req,res) => {
+    const i_id = req.query["i_id"]
+
+    try{
+       const data = await pool.query(
+        `SELECT t.timeline_id, t.timeline_name, tp.photo_id,
+         ap.photo_title, ap.photo_url, tp.x_coord, tp.y_coord,
+         TO_CHAR(a.activity_date, 'YYYY-MM-DD') AS activity_date
+         FROM timeline t
+         JOIN itinerary i ON t.itinerary_id = i.itinerary_id
+         JOIN timeline_photo tp ON t.timeline_id = tp. timeline_id
+         JOIN activity_photo ap ON tp.photo_id = ap.photo_id
+         JOIN activity a ON ap.activity_id = a.activity_id
+         where t.itinerary_id = $1`, [i_id]
+       );
+       if(data.rowCount > 0) return res.send(data.rows);
+    }
+    catch(err) {return res.status(500).send({message: "GetSavedTimelines failed"})}
+});
+
+router.delete("/DeleteSavedTimeline", RequireAuth(["registered", "premium"]), async(req,res) => {
+    const {t_id} = req.body;
+
+    try{
+    const data = await pool.query(
+      `DELETE FROM timeline
+       WHERE timeline_id = $1`, [t_id]
+    );
+    if(data.rowCount > 0)
+    {
+      return res.send(true)
+    }
+  }
+  catch(err){
+    return res.status(500).send("Error deleting photos from db");
+  }
+})
+
+
 module.exports = router;
