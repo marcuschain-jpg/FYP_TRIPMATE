@@ -40,7 +40,7 @@ function MediaPage() {
       setLoading(true);
       setError(null);
 
-      //Fetch all activities for this trip 9created by user in itinerary)
+      //Fetch all activities for this trip created by user in itinerary)
       const activitiesRes = await axios.get(
         "http://localhost:8080/Itinerary/GetAllActivities",
         { params: { i_id: tripId }, withCredentials: true }
@@ -64,6 +64,8 @@ function MediaPage() {
           date: a.activity_date,
           location: a.activity_location,
           address: a.activity_address,
+          lng: a.longitude,
+          lat: a.latitude
         }));
 
         setActivities(mappedActivities);

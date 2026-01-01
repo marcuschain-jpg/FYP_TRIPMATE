@@ -4,60 +4,25 @@ const dotenv = require("dotenv");
 const axios = require("axios");
 // --- DB stuff ---
 const pool = require("../helper/db.js");
-// --- image lifecycle & geo tag ---
-const {exiftool} = require("exiftool-vendored"); // photo geotag
+// Path manipulation ---
 const path = require("path") // photo path
-const multer = require("multer"); // manage and store files
 const fs = require("fs"); // to delete photos
+const InsertPhoto = require("../middlewares/PhotoImp.js"); // edit photo path and insert
+const Geotag = require("../helper/Geotag.js"); // geotag photo
 // Load custom env file
 dotenv.config({ path: "keys.env" });
 // --- Call other functions ---
 const InitRealtime = require("../helper/Realtime.js");
-const TSPAlgo = require("../helper/TSPAlgo.js");
+const TSPAlgo = require("../helper/TSPAlgo.js"); // Arrange activity
 // --- Authenticate ---
-const RequireAuth = require("../middlewares/RequireAuths.js");
+const RequireAuth = require("../middlewares/RequireAuths.js"); // Authenticate and authorize user
 
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../../storage")); // store in storage folder
-  },
-  filename: (req, file, cb) => {
-    const name = `${Math.random().toString(32)}_dateVal_${Date.now().toString(32)}_${file.originalname}`; // e.g., uuid_date_file1.jpg
-    cb(null, name);
-  },
-});
-const upload = multer({storage});
-
+// Default key and center coord to initialize maps
 router.get("/maps", (req, res) => {
  return res.json({
     apiKey: process.env.gMapsApiKey,
     center: { lat: 1.3521, lng: 103.8198 },
   });
-});
-
-
-router.post("/upload", upload.single("photo"), async (req, res) => {
-  // 1. Get photo from ../uploads temporarily  
-  const filePath = req.file.path;
-
-    try{
-        // 2. Geotag
-        await exiftool.write(filePath,{ //sample coordinates
-            GPSLatitude: 1.3521,
-            GPSLongitude: 103.8198,
-            GPSLatitudeRef: "N",
-            GPSLongitudeRef: "E"
-        });
-
-        // 3. Save photo to storage, then db
-        // 4. Remove temp photo from ../uploads
-        return res.json({message: filePath});
-    }
-    catch(err) {
-        console.error(err);
-        return res.status(500).json({error: "Failed to geotag photo"})
-    }
 });
 
 // ================================== Prototype Functions ===================================
@@ -76,7 +41,7 @@ router.get("/GetAllItineraries", RequireAuth(["registered", "premium"]), async(r
     return res.json(data.rows);
   }
 
-  catch(err){ //error running sql
+  catch(err){
     return res.status(500).send('View all itineraries failed');
   }
 });
@@ -287,7 +252,7 @@ router.get("/ArrangeItinerary", RequireAuth(["registered", "premium"]), (req, re
 });
 
 //==================================================== ActivityFormPage ==========================
-router.post("/CreateActivity", RequireAuth(["registered", "premium"]), upload.array("media"), async(req,res) => {
+router.post("/CreateActivity", RequireAuth(["registered", "premium"]), InsertPhoto(), async(req,res) => {
   const {aName, aLoc, aAddress, aDate, i_id, aOrder, aPlaceID, lng, lat} = req.body;
   let a_id = null;
   let createAct = false;
@@ -318,6 +283,17 @@ router.post("/CreateActivity", RequireAuth(["registered", "premium"]), upload.ar
   // 2. Upload photos in activity_photo
 
   if(havePhoto){
+    // Geotag
+    for (const file of req.files){
+      const filePath = path.join(__dirname, "../../storage", file.filename)
+      try{ await Geotag(filePath, lng, lat); }
+      catch(err) { console.log("failed to geotag"); } 
+      fs.unlink((filePath + "_original"), (err) => {
+      if(err) console.log("failed to remove from storage", err)
+    });
+    }
+
+    // Prepare photo content for upload in db
     const photoRecRaw = req.files.map(file => [aName, `http://localhost:8080/images/${file.filename}`, lng, lat, a_id]);
     const photoParams = req.files.map((_,i) => {
       const counter = i*5;
@@ -325,6 +301,7 @@ router.post("/CreateActivity", RequireAuth(["registered", "premium"]), upload.ar
     }).join(", ");
     const photoRec = photoRecRaw.flat();
 
+    // Upload photo content in db
     try{
       const data = await pool.query(
       `INSERT INTO activity_photo (photo_title, photo_url, longitude, latitude, activity_id)
@@ -345,18 +322,12 @@ router.post("/CreateActivity", RequireAuth(["registered", "premium"]), upload.ar
   }
 });
 
-router.patch("/EditActivity", RequireAuth(["registered", "premium"]), upload.array("media"), async(req, res) => {
+router.patch("/EditActivity", RequireAuth(["registered", "premium"]), InsertPhoto(), async(req, res) => {
   const {a_id, aName, aLoc, aAddress, aDate, aOrder, aPlaceID, lng, lat} = req.body;
   let havePhoto = false;
   let updateAct = false;
 
   if(req.files.length > 0) havePhoto = true;
-  const photoRecRaw = req.files.map(file => [aName, `http://localhost:8080/images/${file.filename}`, lng, lat, a_id]);
-  const photoParams = req.files.map((_,i) => {
-    const counter = i*5;
-    return(`($${counter+1}, $${counter+2}, $${counter+3}, $${counter+4}, $${counter+5})`);
-  }).join(", ");
-  const photoRec = photoRecRaw.flat();
 
   const realOrder = (aOrder === true) ? 0 : null
 
@@ -379,6 +350,27 @@ router.patch("/EditActivity", RequireAuth(["registered", "premium"]), upload.arr
 
   // 2. Store photos in activity_photo 
   if(havePhoto){
+
+    // Geotag
+    for (const file of req.files){
+      const filePath = path.join(__dirname, "../../storage", file.filename)
+      try{ await Geotag(filePath, lng, lat); }
+      catch(err) { console.log("failed to geotag"); } 
+      fs.unlink((filePath + "_original"), (err) => {
+      if(err) console.log("failed to remove from storage", err)
+    });
+    }
+    
+
+    // Prepare for insert in db
+    const photoRecRaw = req.files.map(file => [aName, `http://localhost:8080/images/${file.filename}`, lng, lat, a_id]);
+    const photoParams = req.files.map((_,i) => {
+      const counter = i*5;
+      return(`($${counter+1}, $${counter+2}, $${counter+3}, $${counter+4}, $${counter+5})`);
+    }).join(", ");
+    const photoRec = photoRecRaw.flat();
+
+    // Insert photo in db
     try{
       const data = await pool.query(
       `INSERT INTO activity_photo (photo_title, photo_url, longitude, latitude, activity_id)

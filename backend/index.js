@@ -9,6 +9,7 @@ const landingRouter = require("./routes/Landing")
 const itineraryRouter = require("./routes/Itinerary");
 const authServiceRouter = require("./routes/AuthService");
 const timelineRouter = require("./routes/Timeline");
+const mediaRouter = require("./routes/Media");
 const RequireAuths = require('./middlewares/RequireAuths.js');
 
 
@@ -26,6 +27,7 @@ app.use("/Landing", landingRouter); // Marketing page/Landing
 app.use("/Itinerary", itineraryRouter); // Itinerary related pages
 app.use("/AuthService", authServiceRouter); // Login & create account
 app.use("/Timeline", timelineRouter); // Timeline page
+app.use("/Media", mediaRouter); // Media page
 
 // Basic Auth function for pages that dont need get any information
 app.post("/GetRoleForUser", RequireAuths(["registered", "premium"]), (req, res) => {
