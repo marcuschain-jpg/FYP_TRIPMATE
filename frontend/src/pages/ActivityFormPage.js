@@ -27,19 +27,19 @@ function ActivityFormPage() {
   const [existingMedia, setExistingMedia] = useState([]); //Already-saved media for this activity
   const [originalMediaIds, setOriginalMediaIds] = useState([]); //For delete-sync
   const [firstLoad, setFirstLoad] = useState(true);
-  const [searchResult, setSearchResult] = useState([]); // store search results from api, drop down bar
+  const [searchResult, setSearchResult] = useState([]); //store search results from api, drop down bar
   const [mapCenterChange, setMapCenterChange] = useState(null); // store center coord for maps
   const [activityCoords, setActivityCoords] = useState([]); // store coords for maps
   //setMapData(useMapData()) // get API key & set default coordinates to mark on map
 
-  // Search bar modal pop out
+  //Search bar modal pop out
   const [showLocSearch, setShowLocSearch] = useState(false);
 
   //Start point checkbox
   const [isStartPoint, setIsStartPoint] = useState(false);
   const [defaultStart, setDefaultStart] = useState(false);
 
-  // Track if user manually toggled checkbox
+  //Track if user manually toggled checkbox
   const [startPointTouched, setStartPointTouched] = useState(false);
 
   const [originalDate, setOriginalDate] = useState("");
@@ -47,7 +47,7 @@ function ActivityFormPage() {
   const editing = mode === "edit";
 
   useEffect(() => {
-    if (editing) // get data for edit
+    if (editing) 
     {
       const loadEditActivity = async() => {
         await axios.get("http://localhost:8080/Itinerary/GetActivityToEdit", {params:{a_id: index}, withCredentials:true})
@@ -65,7 +65,7 @@ function ActivityFormPage() {
       };
       loadEditActivity();
     }
-    else{ // create page - still need validate
+    else{ //create page--> still need validate
       axios.post("http://localhost:8080/GetRoleForUser", {}, {withCredentials:true})
       .then(res => {
         setLoading(false);
@@ -83,7 +83,7 @@ function ActivityFormPage() {
   const renderLoadActivity = (a) => {
     console.log(a);
 
-    // Render basic activity details for display
+    //Render basic activity details for display
     setName(a[0].activity_name);
     setLocationName(a[0].activity_location);
     setAddress(a[0].activity_address);
@@ -91,10 +91,11 @@ function ActivityFormPage() {
     setPlaceID(a[0].gmaps_placeid)
     setIsStartPoint(Number(a[0].activity_order === 0));
     setDefaultStart(Number(a[0].activity_order === 0));
+    setOriginalDate(a[0].activity_date);
     setLongitude(parseFloat(a[0].longitude));
     setLatitude(parseFloat(a[0].latitude));
 
-    // Render coords for maps
+    //Render coords for maps
     setMapCenterChange({lng:parseFloat(a[0].longitude), lat:parseFloat(a[0].latitude)});
     setActivityCoords([{
       id: index, 
@@ -102,7 +103,7 @@ function ActivityFormPage() {
       {lng:parseFloat(a[0].longitude), lat:parseFloat(a[0].latitude)}
     }]);
 
-    // Render existing media for an activity
+    //Render existing media for an activity
     if(a[0].photo_id !== null){
     setExistingMedia(a.map(m => ({
       id: m.photo_id,
@@ -115,25 +116,29 @@ function ActivityFormPage() {
   //Auto-check if only one activity on that date (excluding self when editing)
   useEffect(() => {
     if (!trip || !date) return;
+    if (startPointTouched) return; 
 
     const activitiesSameDate = (trip.activities || []).filter(
       (a, idx) => a.date === date && (!editing || idx !== Number(index))
     );
 
     if (activitiesSameDate.length === 0) {
+      //Only activity on this date
       setIsStartPoint(true);
+    } else {
+      //There are other activities on this date
+      setIsStartPoint(false);
     }
-  }, [date, trip, editing, index]);
+  }, [date, trip, editing, index, startPointTouched]);
 
   useEffect(() => {
     if (!trip || !editing) return;
     if (!originalDate) return;
     if (!date) return;
+    if (startPointTouched) return; // User manually chose → respect it
 
     //Date unchanged → keep current checkbox value
     if (date === originalDate) return;
-
-    //User manually chose → respect it return;
 
     //If moving to a day that already has activities, default unchecked
     const otherActsOnNewDate = (trip.activities || []).filter(
@@ -147,19 +152,18 @@ function ActivityFormPage() {
       //Day already has activities (and likely has start point) → don't steal start point
       setIsStartPoint(false);
     }
-  }, [date, originalDate, startPointTouched, trip, editing, index]);
+  }, [date, originalDate, trip, editing, index, startPointTouched]);
 
   
   useEffect(() => {
     if(!locationName) return;
-    if(firstLoad) // When first load page dont search for anything
+    if(firstLoad) //When first load page dont search for anything
       {
         setFirstLoad(false);
         return;
       }
 
-    // Debounce 1 second in case got other input, then search
-    const locTimer = setTimeout(async() => {
+      const locTimer = setTimeout(async() => {
       console.log("Send to backend", locationName);
       await axios.post("http://localhost:8080/Itinerary/LocSearch", {input:locationName}, {withCredentials:true})
       .then(res=>{
@@ -202,12 +206,10 @@ function ActivityFormPage() {
   }
 
   const handlePhotoDelete = async(m) => {
-    // Delete in /storage & in db
     await axios.delete("http://localhost:8080/Itinerary/DeleteActivityPhoto", {data:{photo_id:m.id, rawUrl:m.url}, withCredentials:true})
     .then(response => {
       if(response.data === true) 
       {
-        // Delete in Use state
         setExistingMedia(existingMedia.filter((media) => media.id !== m.id))
         console.log("deleted!")
       }

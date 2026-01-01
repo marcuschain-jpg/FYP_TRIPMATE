@@ -1,192 +1,229 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import "../styles/Itinerary.css";
-
-//Ensures that media uploaded by each user are only visible by that user
-/*
-function getTripKey() {
-  const loggedStr = localStorage.getItem("loggedInUser");
-  if (loggedStr) {
-    try {
-      const user = JSON.parse(loggedStr);
-      const uniqueId = user.id || user.email;
-      if (uniqueId) {
-        return `trips_${uniqueId}`;
-      }
-    } catch (e) {}
-  }
-  return "trips_guest";
-}*/
+import "../styles/Media.css";
+import axios from "axios";
 
 function MediaPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
 
-  const [trips, setTrips] = useState([]);
   const [trip, setTrip] = useState(null);
-  const [gallery, setGallery] = useState([
-    {
-      id: 1,
-      url:"http://localhost:8080/images/me_beach.jpg",
-      name: "me on a beach",
-      date: "2025-12-12"
-    },
-    {
-      id: 2,
-      url:"http://localhost:8080/images/image.jpg",
-      name: "resevoir picture 2",
-      date: "2025-12-24"
-    },
-    {
-      id: 3,
-      url:"http://localhost:8080/images/download.jpg",
-      name: "resevoir picture 3",
-      date: "2025-12-25"
-    }
-  ]);
+  const [activities, setActivities] = useState([]);
+  const [filteredActivities, setFilteredActivities] = useState([]);
+  const [activityMedia, setActivityMedia] = useState({}); // Store media by activity ID
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  //Filter state
+  const [selectedDate, setSelectedDate] = useState("");
+  const [allDates, setAllDates] = useState([]);
+  const [uploadingActivityId, setUploadingActivityId] = useState(null);
 
   //Modal state
   const [showEditModal, setShowEditModal] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [editTitle, setEditTitle] = useState("");
-  const [editDate, setEditDate] = useState("");
+  const [editActivityId, setEditActivityId] = useState(null);
 
-  //Load trip & media from local storage
-  /*useEffect(() => {
-    const tripKey = getTripKey();
-    const saved = JSON.parse(localStorage.getItem(tripKey) || "[]");
-    setTrips(saved);
+  //Load trip and activities 
+  useEffect(() => {
+    loadTripData();
+  }, [tripId]);
 
-    const foundTrip = saved.find((t) => t.id === Number(tripId));
-    if (foundTrip) {
-      setTrip(foundTrip);
-      setGallery(foundTrip.mediaGallery || []);
+  //Filter activities when date changes
+  useEffect(() => {
+    filterActivitiesByDate();
+  }, [activities, selectedDate]);
+
+  const loadTripData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      //Fetch all activities for this trip 9created by user in itinerary)
+      const activitiesRes = await axios.get(
+        "http://localhost:8080/Itinerary/GetAllActivities",
+        { params: { i_id: tripId }, withCredentials: true }
+      );
+
+      if (activitiesRes.data && Array.isArray(activitiesRes.data)) {
+        //Set trip info from first activity
+        if (activitiesRes.data.length > 0) {
+          setTrip({
+            id: tripId,
+            name: activitiesRes.data[0].itinerary_name,
+            start: activitiesRes.data[0].start_date,
+            end: activitiesRes.data[0].end_date,
+          });
+        }
+
+        //Map activities 
+        const mappedActivities = activitiesRes.data.map((a) => ({
+          id: a.activity_id,
+          name: a.activity_name,
+          date: a.activity_date,
+          location: a.activity_location,
+          address: a.activity_address,
+        }));
+
+        setActivities(mappedActivities);
+
+        //Extract unique dates and sort
+        const uniqueDates = Array.from(
+          new Set(mappedActivities.map((a) => a.date))
+        ).sort();
+        setAllDates(uniqueDates);
+
+        //Set default to first date
+        if (uniqueDates.length > 0 && !selectedDate) {
+          setSelectedDate(uniqueDates[0]);
+        }
+
+        //Load media for each activity
+        await loadMediaForActivities(mappedActivities);
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error("Error loading trip data:", error);
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        navigate("/login");
+      } else {
+        setError("Failed to load activities");
+      }
+      setLoading(false);
     }
-  }, [tripId]);*/
-
-  //if (!trip) return <p>Trip not found.</p>;
-
-  //Update media gallery for the trip
-  const updateTripMedia = (updatedGallery) => {
-    //const tripKey = getTripKey();
-
-    /*const updatedTrips = trips.map((t) =>
-      t.id === trip.id ? { ...t, mediaGallery: updatedGallery } : t
-    );
-
-    //localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
-    setTrips(updatedTrips);
-
-    const updatedTrip = updatedTrips.find((t) => t.id === trip.id);
-    setTrip(updatedTrip || null);*/
-    //setGallery(updatedTrip?.mediaGallery || []);
   };
 
-  //Upload new media 
-  const handleUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const id = Date.now();
-    const ext = file.name.split(".").pop();
-    const updatedFileName = `${id}.${ext}`;
+  //Load media for all activities
+  const loadMediaForActivities = async (activitiesList) => {
+    const mediaMap = {};
 
-    const newMedia = {
-      id,
-      url: `http://localhost:8080/images/${updatedFileName}`,
-      name: file.name,
-      date: "2025-12-12" //Optional date field > maybe can select which activity to add to
-    };
+    for (const activity of activitiesList) {
+      try {
+        const mediaRes = await axios.get(
+          "http://localhost:8080/Itinerary/GetActivityMedia",
+          { params: { a_id: activity.id }, withCredentials: true }
+        );
 
-    console.log(newMedia);
-    setGallery(prev => [...prev, newMedia]);
-    //updateTripMedia([...gallery, newMedia]);
+        //Store media array for this activity (could be empty)
+        mediaMap[activity.id] = Array.isArray(mediaRes.data) ? mediaRes.data : [];
+      } catch (err) {
+        console.log(`No media found for activity ${activity.id}`);
+        //Dummy data 
+        mediaMap[activity.id] = [
+          {
+            media_id: `dummy-${activity.id}-1`,
+            media_name: "Sample Photo 1",
+            media_url: "https://via.placeholder.com/400x300?text=Photo+1"
+          },
+          {
+            media_id: `dummy-${activity.id}-2`,
+            media_name: "Sample Photo 2",
+            media_url: "https://via.placeholder.com/400x300?text=Photo+2"
+          }
+        ];
+      }
+    }
+
+    setActivityMedia(mediaMap);
   };
 
-  
-  const openEditModal = (item) => {
+  //Filter activities by selected date
+  const filterActivitiesByDate = () => {
+    if (!selectedDate) {
+      setFilteredActivities(activities);
+    } else {
+      const filtered = activities.filter((a) => a.date === selectedDate);
+      setFilteredActivities(filtered);
+    }
+  };
+
+  //Upload media to specific activity
+  const handleUpload = async (e, activityId) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingActivityId(activityId);
+
+    //Convert files to data URLs and store in state
+    const newMedia = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const reader = new FileReader();
+      
+      reader.onload = (event) => {
+        const mediaItem = {
+          media_id: `temp-${Date.now()}-${i}`,
+          media_name: file.name,
+          media_url: event.target.result, // Data URL
+        };
+        
+        newMedia.push(mediaItem);
+        
+        //Update state once all files are loaded
+        if (newMedia.length === files.length) {
+          setActivityMedia((prev) => ({
+            ...prev,
+            [activityId]: [...(prev[activityId] || []), ...newMedia],
+          }));
+          alert("Media uploaded successfully!");
+          setUploadingActivityId(null);
+          e.target.value = "";
+        }
+      };
+      
+      reader.readAsDataURL(file);
+    }
+  };
+
+  //Open edit modal
+  const openEditModal = (item, activityId) => {
     setEditItem(item);
-    setEditTitle(item.name);
-    setEditDate(item.date || "");
+    setEditActivityId(activityId);
+    setEditTitle(item.media_name || item.photo_title || "");
     setShowEditModal(true);
   };
 
-  //Edit media title--> sync name across activities, media page, timeline page 
-  const saveEditChanges = () => {
-    //const tripKey = getTripKey();
+  //Save edit changes
+  const saveEditChanges = async () => {
+    if (!editTitle.trim()) {
+      alert("Title cannot be empty");
+      return;
+    }
 
-    /*const updatedTrips = trips.map((t) => {
-      if (t.id !== trip.id) return t;
+    //Update in state
+    setActivityMedia((prev) => ({
+      ...prev,
+      [editActivityId]: prev[editActivityId].map((m) =>
+        (m.media_id === editItem.media_id || m.media_id === editItem.photo_id)
+          ? { ...m, media_name: editTitle }
+          : m
+      ),
+    }));
 
-      const updatedGallery = (t.mediaGallery || []).map((m) =>
-        m.id === editItem.id ? { ...m, name: editTitle, date: editDate } : m
-      );
-
-      const updatedActivities = (t.activities || []).map((act) => ({
-        ...act,
-        media: (act.media || []).map((m) =>
-          m.id === editItem.id ? { ...m, name: editTitle, date: editDate } : m
-        ),
-      }));
-
-      return {
-        ...t,
-        mediaGallery: updatedGallery,
-        activities: updatedActivities,
-      };
-    });
-
-    //localStorage.setItem(tripKey, JSON.stringify(updatedTrips))
-    setTrips(updatedTrips);
-
-    const updatedTrip = updatedTrips.find((t) => t.id === trip.id);
-    setTrip(updatedTrip || null);
-    setGallery(updatedTrip?.mediaGallery || []);*/
-    setGallery(prev => prev.map(s => s.id === editItem.id ? {...s, 
-      name: editTitle,
-      date: editDate
-    }: s))
-
-
+    alert("Media updated successfully!");
     setShowEditModal(false);
   };
 
-  //Delete media--> sync across activities, media page, timeline page 
-  const handleDelete = (photo_id) => {
-    if (!window.confirm("Delete this media everywhere?")) return;
+  //Delete media
+  const handleDelete = async (mediaId, activityId) => {
+    if (!window.confirm("Delete this media?")) return;
 
-    /*const tripKey = getTripKey();
+    setActivityMedia((prev) => ({
+      ...prev,
+      [activityId]: prev[activityId].filter((m) => m.media_id !== mediaId),
+    }));
 
-    const updatedTrips = trips.map((t) => {
-      if (t.id !== trip.id) return t;
-
-      const updatedGallery = (t.mediaGallery || []).filter(
-        (m) => m.id !== item.id
-      );
-
-      const updatedActivities = (t.activities || []).map((act) => ({
-        ...act,
-        media: (act.media || []).filter((m) => m.id !== item.id),
-      }));
-
-      return {
-        ...t,
-        mediaGallery: updatedGallery,
-        activities: updatedActivities,
-      };
-    });*/
-
-    //localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
-    /*setTrips(updatedTrips);
-    const updatedTrip = updatedTrips.find((t) => t.id === trip.id);
-    setTrip(updatedTrip || null);
-    setGallery(updatedTrip?.mediaGallery || []);*/
-
-    const updatedGallery = gallery.filter(gallery => gallery.id !== photo_id)
-    setGallery(updatedGallery);
+    alert("Media deleted successfully!");
   };
 
+  if (loading) return <p className="loading-text">Loading media...</p>;
+
+  if (error) return <p className="loading-text">{error}</p>;
+
   return (
-    <div className="media-page">
+    <div className="media-container">
       <button
         className="back-btn"
         onClick={() => navigate(`/mytrips/trip/${tripId}`)}
@@ -194,115 +231,151 @@ function MediaPage() {
         ← Back
       </button>
 
-      <h1 className="media-title">To Singapore! — Media</h1>
-
-      <div className="media-layout">
-        <div className="media-sidebar">
-          <label className="media-upload-btn">
-            <span className="media-upload-icon">+</span>
-            Upload Media
-            <input
-              type="file"
-              accept="image/*,video/*"
-              onChange={handleUpload}
-            />
-          </label>
-        </div>
-
-        {/*Media Gallery*/}
-        <div className="media-gallery-wrapper">
-          {gallery.length === 0 ? (
-            <p className="media-gallery-empty">
-              No media yet. Upload something or add media from activities!
-            </p>
-          ) : (
-            <div className="media-grid">
-              {gallery.map((item) => (
-                <div key={item.id} className="media-card">
-                  {item.url ? (
-                    <img
-                      src={item.url}
-                      alt={item.name}
-                      className="media-image"
-                    />
-                  ) : (
-                    <div className="media-file-fallback">
-                      📄 {item.name}
-                    </div>
-                  )}
-
-                  <div className="media-card-body">
-                    <p className="media-title-text">{item.name}</p>
-
-                    {item.date && (
-                      <p className="media-date-text">
-                        <strong>Date:</strong> {item.date.split("-").reverse().join("/")}
-                      </p>
-                    )}
-
-                    <div className="media-card-actions">
-                      <button
-                        className="media-edit-btn"
-                        onClick={() => openEditModal(item)}
-                      >
-                        Edit
-                      </button>
-
-                      <button
-                        className="media-delete-btn"
-                        onClick={() => handleDelete(item.id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      <div className="media-header">
+        <h1 className="media-title">{trip?.name || "Trip"} — Media</h1>
+        <p className="media-date-range">
+          {trip ? `${trip.start} – ${trip.end}` : ""}
+        </p>
       </div>
 
-      {/*Edit media title & add date field --> will be auto geotagged later on*/}
-      {showEditModal && (
-        <div className="modal-overlay">
-          <div className="media-edit-modal">
+      {/*Date filter--> only shows dates that contain acitivities created by users*/}
+      {allDates.length > 0 && (
+        <div className="media-filter-bar">
+          <label className="filter-label">Filter by date:</label>
+          <select
+            className="filter-select"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+          >
+            <option value="">All Dates</option>
+            {allDates.map((date) => (
+              <option key={date} value={date}>
+                {new Date(date).toLocaleDateString("en-GB", {
+                  weekday: "short",
+                  day: "numeric",
+                  month: "long",
+                })}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
-            <img src={editItem.url} className="media-edit-preview" />
+      {/*Activities and media grid*/}
+      <div className="activities-container">
+        {filteredActivities.length === 0 ? (
+          <div className="no-activities">
+            <p>No activities for the selected date. Create one in the Itinerary page first!</p>
+          </div>
+        ) : (
+          filteredActivities.map((activity) => (
+            <div key={activity.id} className="activity-card">
+              <div className="activity-header">
+                <h2 className="activity-name">{activity.name}</h2>
+                <p className="activity-location">
+                  <strong>{activity.location}</strong>
+                  {activity.address && ` • ${activity.address}`}
+                </p>
+                <p className="activity-date">
+                  {new Date(activity.date).toLocaleDateString("en-GB", {
+                    weekday: "short",
+                    day: "numeric",
+                    month: "long",
+                  })}
+                </p>
+              </div>
 
-            <div className="media-edit-fields">
-              <label>Title</label>
+              {/*Add media button*/}
+              <label className="upload-btn">
+                <span className="upload-icon">➕</span>
+                <span>Add Media</span>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*,video/*"
+                  onChange={(e) => handleUpload(e, activity.id)}
+                  disabled={uploadingActivityId === activity.id}
+                />
+              </label>
+
+              {/*Display uploaded media*/}
+              <div className="media-grid">
+                {activityMedia[activity.id] && activityMedia[activity.id].length > 0 ? (
+                  activityMedia[activity.id].map((media) => (
+                    <div key={media.media_id || media.photo_id} className="media-item">
+                      <div className="media-image-container">
+                        {media.media_url || media.photo_url ? (
+                          <img
+                            src={media.media_url || media.photo_url}
+                            alt={media.media_name || media.photo_title}
+                            className="media-image"
+                          />
+                        ) : (
+                          <div className="media-placeholder">📄</div>
+                        )}
+                      </div>
+                      
+                      <div className="media-info">
+                        <p className="media-title">{media.media_name || media.photo_title}</p>
+                        <div className="media-actions">
+                          <button
+                            className="edit-btn"
+                            onClick={() => openEditModal(media, activity.id)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="delete-btn"
+                            onClick={() => handleDelete(media.media_id || media.photo_id, activity.id)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="no-media">No media yet. Upload to get started!</p>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/*Edit media modal*/}
+      {showEditModal && editItem && (
+        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            {(editItem.media_url || editItem.photo_url) && (
+              <img src={editItem.media_url || editItem.photo_url} className="modal-image" />
+            )}
+
+            <div className="modal-content">
+              <h3 className="modal-title">Edit Title</h3>
               <input
-                className="media-edit-input"
+                className="modal-input"
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="Enter media title"
               />
 
-              <label>Date</label>
-              <input
-                type="date"
-                className="media-edit-input"
-                value={editDate}
-                onChange={(e) => setEditDate(e.target.value)}
-              />
-
-              <div className="media-edit-buttons">
+              <div className="modal-buttons">
                 <button
-                  className="media-edit-cancel"
+                  className="cancel-btn"
                   onClick={() => setShowEditModal(false)}
                 >
                   Cancel
                 </button>
 
                 <button
-                  className="media-edit-save"
+                  className="save-btn"
                   onClick={saveEditChanges}
                 >
                   Save
                 </button>
               </div>
             </div>
-
           </div>
         </div>
       )}
