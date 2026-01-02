@@ -114,7 +114,7 @@ function ActivityFormPage() {
   };
 
   //Auto-check if only one activity on that date (excluding self when editing)
-  useEffect(() => {
+  /*useEffect(() => {
     if (!trip || !date) return;
     if (startPointTouched) return; 
 
@@ -152,7 +152,7 @@ function ActivityFormPage() {
       //Day already has activities (and likely has start point) → don't steal start point
       setIsStartPoint(false);
     }
-  }, [date, originalDate, trip, editing, index, startPointTouched]);
+  }, [date, originalDate, trip, editing, index, startPointTouched]);*/
 
   
   useEffect(() => {

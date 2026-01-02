@@ -326,10 +326,14 @@ router.patch("/EditActivity", RequireAuth(["registered", "premium"]), InsertPhot
   const {a_id, aName, aLoc, aAddress, aDate, aOrder, aPlaceID, lng, lat} = req.body;
   let havePhoto = false;
   let updateAct = false;
+  let order = false;
 
   if(req.files.length > 0) havePhoto = true;
 
-  const realOrder = (aOrder === true) ? 0 : null
+  if(aOrder === 'true') order = true;
+  else order = false;
+  const realOrder = (order === true) ? 0 : null
+  
 
   // 1. Update activity info in activity
   try{
