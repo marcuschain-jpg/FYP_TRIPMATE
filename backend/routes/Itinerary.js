@@ -141,9 +141,11 @@ router.get("/GetAllActivities", RequireAuth(["registered", "premium"]), async(re
 });
 
 router.delete("/DeleteActivity", RequireAuth(["registered", "premium"]), async(req, res) => {
-  const {activityid} = req.body;
+  const {activityid, i_id} = req.body;
   let photosDeleted = false;
   let photoData = null;
+  let payload = null;
+  const io = req.app.get("io");
 
   // 1. Delete photos in storage
   try{
@@ -153,37 +155,43 @@ router.delete("/DeleteActivity", RequireAuth(["registered", "premium"]), async(r
        WHERE activity_id = $1`, [activityid]
     );
   }
-  catch(err) {return res.status(500).send(err)}
-  console.log(photoData.rows);
+  catch(err) {photoData = null;}
 
-  photoData.rows.map(data => {
-    const url = data.photo_url.replace("http://localhost:8080/images/","");
+  if(photoData){
+    console.log(photoData.rows);
+    photoData.rows.map(data => {
+      const url = data.photo_url.replace("http://localhost:8080/images/","");
 
-    console.log("URL! ", url);
-    //Delete photo in storage
-    if(url) {
-      photoStoragePath = path.join(__dirname, "../../storage");
-      finalURL = path.join(photoStoragePath, url);
-      fs.unlink(finalURL, (err) => {
-        if(err) console.log("failed to remove from storage", err)
-      });
-      photosDeleted = true;
-    }
-  })
+      console.log("URL! ", url);
+      //Delete photo in storage
+      if(url) {
+        photoStoragePath = path.join(__dirname, "../../storage");
+        finalURL = path.join(photoStoragePath, url);
+        fs.unlink(finalURL, (err) => {
+          if(err) console.log("failed to remove from storage", err)
+        });
+        photosDeleted = true;
+      }
+    })
+  }
+  
   
   // Delete activities cascade down other tables
   try{
-    const data = await pool.query(
+    payload = await pool.query(
       `DELETE FROM activity
-       WHERE activity_id = $1`, [activityid]
+       WHERE activity_id = $1
+       RETURNING activity_id`, [activityid]
     );
-    if(data.rowCount === 1) //successfully delete
+    if(payload.rowCount === 1) //successfully delete
     {
+      io.to(`trip_${i_id}`).emit("notification", { message: "activity deleted!", payload:payload.rows });
       return res.send(true);
     }
   }
   catch(err){
-    return res.status(500).send("DeleteActivity failed")
+    console.log(err);
+    return res.status(500).send("DeleteActivity failed");
   }
 
   
@@ -257,22 +265,25 @@ router.post("/CreateActivity", RequireAuth(["registered", "premium"]), InsertPho
   let a_id = null;
   let createAct = false;
   let havePhoto = false;
+  const io = req.app.get("io");
+  let payload = null;
 
   if(req.files.length > 0) havePhoto = true;
   const realOrder = (aOrder === true) ? 0 : null
 
   try{
     // 1. Create activity in activity
-    const data = await pool.query(
+    payload = await pool.query(
       `INSERT INTO activity (activity_name, activity_location, activity_address, activity_date, gmaps_placeid, itinerary_id, activity_order, longitude, latitude)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       RETURNING activity_id`, [aName, aLoc, aAddress, aDate, aPlaceID, i_id, realOrder, lng, lat]
+       RETURNING activity_id, activity_name, activity_address, activity_location, longitude, latitude,
+       TO_CHAR(activity_date, 'YYYY-MM-DD') AS activity_date`, [aName, aLoc, aAddress, aDate, aPlaceID, i_id, realOrder, lng, lat]
     );
-    if(data.rowCount === 1) //successfully insert
+    if(payload.rowCount === 1) //successfully insert
     {
       createAct = true;
-      a_id = data.rows[0].activity_id;
-      console.log("a_id: ", data.rows);
+      a_id = payload.rows[0].activity_id;
+      console.log("a_id: ", payload.rows);
     }
   }
   catch(err){
@@ -305,10 +316,12 @@ router.post("/CreateActivity", RequireAuth(["registered", "premium"]), InsertPho
     try{
       const data = await pool.query(
       `INSERT INTO activity_photo (photo_title, photo_url, longitude, latitude, activity_id)
-      VALUES ${photoParams}`, photoRec
+       VALUES ${photoParams}
+      `, photoRec
       );
       if(data.rowCount > 0 && createAct === true) //successfully update
       {
+        io.to(`trip_${i_id}`).emit("notification", { message: "activity created!", payload:payload.rows });
         return res.send(true);
       }
     }
@@ -318,15 +331,20 @@ router.post("/CreateActivity", RequireAuth(["registered", "premium"]), InsertPho
     }
   }
   else{
-    if(createAct) return res.send(true);
+    if(createAct) {
+      io.to(`trip_${i_id}`).emit("notification", { message: "activity created!", payload: payload.rows  });
+      return res.send(true);
+    }
   }
 });
 
 router.patch("/EditActivity", RequireAuth(["registered", "premium"]), InsertPhoto(), async(req, res) => {
-  const {a_id, aName, aLoc, aAddress, aDate, aOrder, aPlaceID, lng, lat} = req.body;
+  const {a_id, i_id , aName, aLoc, aAddress, aDate, aOrder, aPlaceID, lng, lat} = req.body;
   let havePhoto = false;
   let updateAct = false;
   let order = false;
+  let payload = null;
+  const io = req.app.get("io");
 
   if(req.files.length > 0) havePhoto = true;
 
@@ -337,19 +355,21 @@ router.patch("/EditActivity", RequireAuth(["registered", "premium"]), InsertPhot
 
   // 1. Update activity info in activity
   try{
-    const data = await pool.query(
+    payload = await pool.query(
       `UPDATE activity
        SET activity_name = $2, activity_location = $3, activity_address = $4, activity_date = $5, gmaps_placeid = $6, activity_order = $7
        , longitude = $8, latitude = $9
-       WHERE activity_id = $1`, [a_id, aName, aLoc, aAddress, aDate, aPlaceID, realOrder, lng, lat]
+       WHERE activity_id = $1
+       RETURNING activity_id, activity_name, activity_address, activity_location, longitude, latitude,
+       TO_CHAR(activity_date, 'YYYY-MM-DD') AS activity_date`, [a_id, aName, aLoc, aAddress, aDate, aPlaceID, realOrder, lng, lat]
     );
-    if(data.rowCount === 1) //successfully update
+    if(payload.rowCount === 1) //successfully update
     {
       updateAct = true;
     }
   }
   catch(err){
-    return res.status(500).send("UpdateCompleteFailed");
+    return res.status(500).send("EditActivityFailed");
   }
 
   // 2. Store photos in activity_photo 
@@ -382,6 +402,7 @@ router.patch("/EditActivity", RequireAuth(["registered", "premium"]), InsertPhot
       );
       if(data.rowCount > 0 && updateAct === true) //successfully update
       {
+        io.to(`trip_${i_id}`).emit("notification", { message: "activity edited!", payload:payload.rows });
         return res.send(true);
       }
     }
@@ -391,7 +412,10 @@ router.patch("/EditActivity", RequireAuth(["registered", "premium"]), InsertPhot
     }
   }
   else{
-    if(updateAct) return res.send(true);
+    if(updateAct) {
+      io.to(`trip_${i_id}`).emit("notification", { message: "activity edited!" , payload:payload.rows });
+      return res.send(true);
+    }
   }
 
 

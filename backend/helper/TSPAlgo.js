@@ -150,8 +150,6 @@ async function TSPAlgo (activities, placeid, travelMode){ // by activity_id inst
     {
         let twoOpt = (route, distMatrix) => {
             console.log("ENTRY route 2-OPT:", JSON.stringify(route));
-            console.log("route: ", route)
-            console.log("distmatrix: ",distMatrix);
             let improved = true;
 
             // symmatrise matrix

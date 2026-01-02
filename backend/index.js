@@ -46,6 +46,8 @@ io.on("connection", (socket) => {
     socket.join(room);
     console.log(`${socket.id} joined room ${room}`);
   });
+
+  socket.on("disconnect", () => console.log(`Client disconencted: ${socket.id}`));
 });
 
 // Set backend port

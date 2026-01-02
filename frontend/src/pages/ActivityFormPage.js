@@ -231,6 +231,7 @@ function ActivityFormPage() {
     if(editing) //edit
     {
       formData.append("a_id", index);
+      formData.append("i_id", tripId);
       formData.append("aName", name);
       formData.append("aLoc", locationName);
       formData.append("aAddress", address);
