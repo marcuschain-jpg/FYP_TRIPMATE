@@ -9,7 +9,7 @@ const landingRouter = require("./routes/Landing")
 const itineraryRouter = require("./routes/Itinerary");
 const authServiceRouter = require("./routes/AuthService");
 const RequireAuths = require('./middlewares/RequireAuths.js');
-
+const usersRoute = require("./routes/users");
 
 const app = express();
 const server = http.createServer(app);
@@ -43,6 +43,10 @@ io.on("connection", (socket) => {
     console.log(`${socket.id} joined room ${room}`);
   });
 });
+
+//Realtime Update for User in Admin Page
+app.use("/api/users", usersRoute);
+
 
 
 server.listen(8080, () => {
