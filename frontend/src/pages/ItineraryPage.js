@@ -36,7 +36,7 @@ function ItineraryPage() {
           console.error("Maps endpoint returned no apiKey:", res.data);
           return;
         }
-        setMapConfig(res.data); 
+        setMapConfig(res.data);
       })
       .catch((err) => {
         console.error(
@@ -49,8 +49,10 @@ function ItineraryPage() {
   //Google Maps (in this page)
   const mapDivRef = useRef(null);
   const mapRef = useRef(null);
-  const markersRef = useRef([]);
-  const polylineRef = useRef(null);
+
+  //Directions refs 
+  const directionsServiceRef = useRef(null);
+  const directionsRendererRef = useRef(null);
 
   function loadGoogleMaps(apiKey) {
     return new Promise((resolve, reject) => {
@@ -74,22 +76,10 @@ function ItineraryPage() {
     });
   }
 
-  function clearMarkers() {
-    markersRef.current.forEach((m) => m.setMap(null));
-    markersRef.current = [];
-  }
-
-  function clearPolyline() { //Connecting lines between way markers to display routes
-    if (polylineRef.current) {
-      polylineRef.current.setMap(null);
-      polylineRef.current = null;
+  function clearDirections() {
+    if (directionsRendererRef.current) {
+      directionsRendererRef.current.setDirections({ routes: [] });
     }
-  }
-
-  function fitToPoints(latLngs) {
-    const bounds = new window.google.maps.LatLngBounds();
-    latLngs.forEach((p) => bounds.extend(p));
-    mapRef.current.fitBounds(bounds);
   }
 
   useEffect(() => {
@@ -113,6 +103,21 @@ function ItineraryPage() {
             streetViewControl: false,
             fullscreenControl: true,
           });
+
+          //Initialize directions objects
+          directionsServiceRef.current = new window.google.maps.DirectionsService();
+          directionsRendererRef.current = new window.google.maps.DirectionsRenderer({
+            map: mapRef.current,
+            suppressMarkers: false, // Google will show A/B/C markers
+            preserveViewport: false,
+
+            //Route line styling (color, opacity etc) 
+            polylineOptions: {
+              strokeColor: "#393F86", 
+              strokeOpacity: 0.9,
+              strokeWeight: 6,
+            },
+          });
         }
       } catch (e) {
         console.error("Google Maps failed to load:", e);
@@ -124,7 +129,7 @@ function ItineraryPage() {
     };
   }, [mapConfig]);
 
-  // LOAD TRIP & ACTIVITIES
+  //Load trips and activities
   useEffect(() => {
     setLoading(true);
 
@@ -145,7 +150,7 @@ function ItineraryPage() {
         };
         setTrip(mapTrips);
 
-        //Activities & coords
+        //Activities & location coords
         const mapAct = data.map((a) => ({
           id: a.activity_id,
           name: a.activity_name,
@@ -217,47 +222,56 @@ function ItineraryPage() {
     [activities, selectedDate]
   );
 
-  //Draw markers & connecting line for selected date in drop line (without displaying lines from previous days )
+  //Draw driving route 
   useEffect(() => {
     if (!mapRef.current || !(window.google && window.google.maps)) return;
     if (!selectedDate) return;
+    if (!directionsServiceRef.current || !directionsRendererRef.current) return;
 
     const filteredCoord = activityCoords.filter(
-      (a) => normDate(a.date) === normDate(selectedDate)
-    );
+      (a) => normDate(a.date) === normDate(selectedDate))
+    ;
 
-    const latLngs = (filteredCoord || [])
+    const points = (filteredCoord || [])
       .map((a) => a.coords)
       .filter((c) => Number.isFinite(c?.lat) && Number.isFinite(c?.lng))
-      .map((c) => new window.google.maps.LatLng(c.lat, c.lng));
+      .map((c) => ({ lat: c.lat, lng: c.lng }));
 
-    //Removes previous day's lines (prevents overlap)
-    clearMarkers();
-    clearPolyline();
+    //Clear previous day's route
+    clearDirections();
 
-    if (latLngs.length === 0) return;
+    //Need min 2 markers
+    if (points.length < 2) {
+      if (points.length === 1) {
+        mapRef.current.setCenter(points[0]);
+        mapRef.current.setZoom(14);
+      }
+      return;
+    }
 
-    //Markers
-    latLngs.forEach((pos, idx) => {
-      const marker = new window.google.maps.Marker({
-        position: pos,
-        map: mapRef.current,
-        label: `${idx + 1}`,
-      });
-      markersRef.current.push(marker);
-    });
+    const origin = points[0];
+    const destination = points[points.length - 1];
+    const waypoints = points.slice(1, -1).map((p) => ({
+      location: p,
+      stopover: true,
+    }));
 
-    fitToPoints(latLngs);
-
-    //Displayed oute (for selected day)
-    polylineRef.current = new window.google.maps.Polyline({
-      path: latLngs,
-      geodesic: true,
-      strokeColor: "#393F86", // ✅ your colour
-      strokeOpacity: 0.95,
-      strokeWeight: 6,
-      map: mapRef.current,
-    });
+    directionsServiceRef.current.route(
+      {
+        origin,
+        destination,
+        waypoints,
+        travelMode: window.google.maps.TravelMode.DRIVING,
+        optimizeWaypoints: false, //keep your activity order
+      },
+      (result, status) => {
+        if (status === "OK" && result) {
+          directionsRendererRef.current.setDirections(result);
+        } else {
+          console.error("Directions request failed:", status, result);
+        }
+      }
+    );
   }, [activityCoords, selectedDate]);
 
   //Delete activity
