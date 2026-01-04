@@ -121,7 +121,7 @@ async function TSPAlgo (activities, placeid, travelMode){ // by activity_id inst
             for (const perm of perms)
             {
                 const currentRoute = perm.map(Number); // convert array to number
-                if(currentRoute[0] == 0)
+                if(currentRoute[0] === 0)
                 {
                     const currentDistance = calculateDistance(currentRoute, distMatrix);
                     if(currentDistance < minDist)
@@ -149,20 +149,28 @@ async function TSPAlgo (activities, placeid, travelMode){ // by activity_id inst
     else
     {
         let twoOpt = (route, distMatrix) => {
-            const routeLen = route.length;
+            console.log("ENTRY route 2-OPT:", JSON.stringify(route));
             let improved = true;
-            let minDist = 0;
+
+            // symmatrise matrix
+            for (let i = 0; i < route.length; i++) {
+            for (let j = i + 1; j < route.length; j++) {
+                const v = (distMatrix[i][j] + distMatrix[j][i]) / 2;
+                distMatrix[i][j] = v;
+                distMatrix[j][i] = v;
+                }
+            }
 
             while(improved){
                 improved = false;
-                for(let i=1; i<routeLen; i++)
+                for(let i=1; i<route.length-2; i++) //9
                 {
-                    for(let k=i+1; k<routeLen-1; k++)
+                    for(let k=i+1; k<route.length-1; k++)//10
                     {
-                        const a = route[i-1];
-                        const b = route[i];
-                        const c = route[k];
-                        const d = route[k+1];
+                        const a = route[i-1]; //max 7
+                        const b = route[i]; //max 8
+                        const c = route[k]; //max 10
+                        const d = route[k+1]; //max 11
 
                         const oldDist = distMatrix[a][b] + distMatrix[c][d];
                         const newDist = distMatrix[a][c] + distMatrix[b][d];
@@ -171,17 +179,21 @@ async function TSPAlgo (activities, placeid, travelMode){ // by activity_id inst
                         {
                             route.splice(i, k-i+1, ...route.slice(i, k+1).reverse());
                             improved = true;
+                            break;
                         }
                     }
+                    if(improved) break;
                 }
             }
-            for(let i=0;i<routeLen-1;i++)
+
+            let minDist = 0;
+            for(let i=0;i<route.length-1;i++)
             {
                 minDist += distMatrix[route[i]][route[i+1]]; 
             }
-            minDist += distMatrix[route[routeLen-1]][route[0]]
-            console.log("2-opt")
-            return {route, minDist}
+            //minDist += distMatrix[route[routeLen-1]][route[0]]
+            console.log("2-opt");
+            return {route, minDist};
         }
         let defaultRoute = [];
         for(let i=0;i<activities.length;i++)
@@ -194,8 +206,6 @@ async function TSPAlgo (activities, placeid, travelMode){ // by activity_id inst
         {
             newOrderActivities[i] = activities[route[i]];
         }
-        //console.log("Shortest Route: ", newOrderActivities);
-        //console.log("Min Dist: ", minDist);
         return newOrderActivities;
     }
 }

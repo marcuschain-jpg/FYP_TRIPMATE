@@ -1,87 +1,116 @@
 /*Background*/
 .pricing-bg {
-    width: 100%;
-    height: 100vh;
-    background-size: cover;
-    background-position: center;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  /*Two-card wrapper--> premium & regular*/
+  width: 100%;
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+/*Two-card wrapper--> premium & regular*/
+.pricing-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: stretch; 
+  gap: 3rem;
+  max-width: 1200px;
+  width: 100%;
+}
+
+/*Card styling*/
+.pricing-card {
+  width: 320px;
+  padding: 30px 25px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  display: flex;
+  flex-direction: column;
+}
+
+/*Premium version card*/
+.premium {
+  background: #0b6fa4;
+  color: white;
+}
+
+.premium .pricing-btn {
+  background: white;
+  color: #0b6fa4;
+}
+
+.premium .pricing-btn:hover {
+  background: #f0f0f0;
+}
+
+.pricing-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.pricing-price {
+  font-size: 40px;
+  font-weight: 900;
+  margin-bottom: 15px;
+}
+
+.pricing-price span {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/*Premium functions list*/
+.pricing-list {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 15px;
+  text-align: left;
+  flex-grow: 1; 
+}
+
+.pricing-list li {
+  margin-bottom: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/*Button*/
+.pricing-btn {
+  width: 100%;
+  padding: 12px;
+  background: #0b6fa4;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: auto; 
+}
+
+.pricing-btn:hover {
+  background: #095a87;
+}
+
+@media (max-width: 768px) {
   .pricing-wrapper {
-    display: flex;
-    justify-content: center;
+    flex-direction: column;
+    gap: 2rem;
     align-items: center;
-    gap: 3rem;
   }
   
-  /*Card styling*/
   .pricing-card {
-    width: 320px;
-    padding: 30px 25px;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.9);
-    text-align: center;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-  }
-  
-  /*Premium version card*/
-  .premium {
-    background: #0b6fa4;
-    color: white;
-  }
-  
-  .premium .pricing-btn {
-    background: white;
-    color: #0b6fa4;
-  }
-  
-  .pricing-title {
-    font-size: 22px;
-    font-weight: 700;
-    margin-bottom: 10px;
-  }
-  
-  .pricing-price {
-    font-size: 40px;
-    font-weight: 900;
-    margin-bottom: 20px;
-  }
-  
-  .pricing-price span {
-    font-size: 16px;
-    font-weight: 500;
-  }
-  
-  /*Premium functions list*/
-  .pricing-list {
-    list-style: none;
-    padding: 0;
-    margin-bottom: 20px;
-    text-align: left;
-  }
-  
-  .pricing-list li {
-    margin-bottom: 10px;
-    font-size: 14px;
-  }
-  
-  /*Button*/
-  .pricing-btn {
     width: 100%;
-    padding: 12px;
-    background: #0b6fa4;
-    border: none;
-    border-radius: 10px;
-    color: white;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
+    max-width: 350px;
   }
   
-  .pricing-btn:hover {
-    background: #095a87;
+  .pricing-bg {
+    min-height: auto;
+    padding: 60px 20px;
   }
-  
+}
