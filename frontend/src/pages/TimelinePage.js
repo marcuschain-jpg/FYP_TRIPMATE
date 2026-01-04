@@ -21,10 +21,11 @@ function TimelinePage() {
     .catch(err => {
       const errData = err.response;
       const errorMsg = errData.status + ": " + errData.data.message;
-      if(err.response.status === 401 || 403){
+      const errStatus = err.response.status;
+      if([401, 403].includes(errStatus)){
         navigate(`/login/${errorMsg}`);
       }
-      else if(err.response.status === 500){
+      else if([500].includes(errStatus)){
         console.log(errorMsg);
       }
     });
@@ -78,27 +79,6 @@ function TimelinePage() {
     const name = prompt("Enter a name for this timeline:");
     if (!name) return;
 
-    //const tripKey = getTripKey();
-    //const saved = JSON.parse(localStorage.getItem(tripKey) || "[]");
-
-    /*const updatedTrips = saved.map((t) => {
-      if (t.id !== trip.id) return t;
-
-      const newTimeline = {
-        id: Date.now(),
-        name,
-        createdAt: new Date().toISOString(),
-        nodes: timeline 
-      };
-
-      return {
-        ...t,
-        savedTimelines: [...(t.savedTimelines || []), newTimeline],
-      };
-    });
-
-    localStorage.setItem(tripKey, JSON.stringify(updatedTrips));*/
-
     await axios.post("http://localhost:8080/Timeline/SaveTimeline", {i_id:tripId, name:name, timeline_photos:timeline}, {withCredentials:true})
     .then(res => {
       if(res.data)
@@ -107,16 +87,20 @@ function TimelinePage() {
       }
     })
     .catch(err =>{
-      const errData = err.response;
-      const errorMsg = errData.status + ": " + errData.data.message;
-      if(err.response.status === 401|| err.response.status === 403)
+      if(err.response)
       {
-        navigate(`/login/${errorMsg}`);
+        const errData = err.response;
+        const errorMsg = errData.status + ": " + errData.data.message;
+        if(err.response.status === 401|| err.response.status === 403)
+        {  
+          navigate(`/login/${errorMsg}`);
+        }
+        else if(err.response.status === 500)
+        {
+          console.log(errorMsg);  
+        }
       }
-      else if(err.response.status === 500)
-      {
-        console.log(errorMsg);  
-      }
+      
     });
 
     const newTimeline = {
