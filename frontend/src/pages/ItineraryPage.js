@@ -207,26 +207,20 @@ function ItineraryPage() {
     });
 
     socket.on("Arranged", (data) => {
-      if(!data.running) {
-        console.log("Arranged event received", data);
-        setIsArranging(false);
-      }
-    });
-
-    socket.on("notification", (data) => {
-      if(data.message){
-        console.log(data.message);
-        console.log("payload", data.payload);
-        renderUpdateActivities(data.payload, data.message);
-      }
+      if (!data.running) setIsArranging(false);
     });
 
     return () => {
       socket.off("Arranging");
       socket.off("Arranged");
-      socket.off("notification");
     };
   }, [tripId]);
+
+  //List matches map date logic
+  const filteredActivities = useMemo(
+    () => activities.filter((a) => normDate(a.date) === normDate(selectedDate)),
+    [activities, selectedDate]
+  );
 
   //Draw driving route 
   useEffect(() => {
@@ -279,98 +273,6 @@ function ItineraryPage() {
       }
     );
   }, [activityCoords, selectedDate]);
-
-  //List matches map date logic
-  const filteredActivities = useMemo(
-    () => activities.filter((a) => normDate(a.date) === normDate(selectedDate)),
-    [activities, selectedDate]
-  );
-
-  // Functions to load upon rendering ====
-  const renderLoadTrip = (res) => {
-    const mapTrips = {
-      id: tripId,
-      name: res[0].itinerary_name,
-      start: res[0].start_date,
-      end: res[0].end_date,
-    };
-
-    setTrip(mapTrips);
-  };
-
-  const renderLoadActivities = (res) => {
-    const mapAct = res.map(a => ({
-      id: a.activity_id,
-      name: a.activity_name,
-      date: a.activity_date,
-      address: a.activity_address,
-      location: a.activity_location,
-    }));
-
-    const coordAct = res.map(a => ({
-      id: a.activity_id,
-      coords:{
-      lng: parseFloat(a.longitude),
-      lat: parseFloat(a.latitude)
-      },
-      date: a.activity_date
-    }))
-    setActivityCoords(coordAct);
-    setActivities(mapAct);
-  };
-
-  // Functions to load upon receiving socket updates for REAL TIME ====
-  const renderUpdateActivities = (res, message) => {
-    if(message === "activity created!"){
-      const mapAct = res.map(a => ({
-      id: a.activity_id,
-      name: a.activity_name,
-      date: a.activity_date,
-      address: a.activity_address,
-      location: a.activity_location,
-    }));
-
-    const coordAct = res.map(a => ({
-      id: a.activity_id,
-      coords:{
-      lng: parseFloat(a.longitude),
-      lat: parseFloat(a.latitude)
-      },
-      date: a.activity_date
-    }))
-    setActivityCoords(prev =>[...prev, ...coordAct]);
-    setActivities(prev=>[...prev, ...mapAct]);
-    }
-
-    else if(message === "activity edited!"){
-      setActivities(prev => prev.map( a => {
-        const updated = res.find(r => r.activity_id === a.id);
-        if(updated){
-          return{
-            ...a,
-            name: updated.activity_name,
-            date: updated.activity_date,
-            address: updated.activity_address,
-            location: updated.activity_location
-          };
-        }
-        return a;
-      }));
-    }
-
-    else if(message === "activity deleted!"){
-      setActivities((prev) => prev.filter((a) => a.id !== res[0].activity_id));
-    }
-  };
-
-
-  if (!trip) return <p className="loading-text">Trip not found.</p>;
-
-
-  /*let filteredActivities = activities.filter(
-    (a) => a.date === selectedDate
-  );*/
-
 
   //Delete activity
   const handleDeleteActivity = async (index) => {
