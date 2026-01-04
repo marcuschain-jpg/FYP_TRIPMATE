@@ -79,17 +79,25 @@ function ItineraryPage() {
       if(!data.running) {
         console.log("Arranged event received", data);
         setIsArranging(false);
-        //send data here too?
-        //if(data.updatedItinerary) {}
+      }
+    });
+
+    socket.on("notification", (data) => {
+      if(data.message){
+        console.log(data.message);
+        console.log("payload", data.payload);
+        renderUpdateActivities(data.payload, data.message);
       }
     });
 
     return () => {
       socket.off("Arranging");
       socket.off("Arranged");
+      socket.off("notification");
     };
   }, []);
 
+  // Functions to load upon rendering ====
   const renderLoadTrip = (res) => {
     const mapTrips = {
       id: tripId,
@@ -122,6 +130,50 @@ function ItineraryPage() {
     setActivities(mapAct);
   };
 
+  // Functions to load upon receiving socket updates for REAL TIME ====
+  const renderUpdateActivities = (res, message) => {
+    if(message === "activity created!"){
+      const mapAct = res.map(a => ({
+      id: a.activity_id,
+      name: a.activity_name,
+      date: a.activity_date,
+      address: a.activity_address,
+      location: a.activity_location,
+    }));
+
+    const coordAct = res.map(a => ({
+      id: a.activity_id,
+      coords:{
+      lng: parseFloat(a.longitude),
+      lat: parseFloat(a.latitude)
+      },
+      date: a.activity_date
+    }))
+    setActivityCoords(prev =>[...prev, ...coordAct]);
+    setActivities(prev=>[...prev, ...mapAct]);
+    }
+
+    else if(message === "activity edited!"){
+      setActivities(prev => prev.map( a => {
+        const updated = res.find(r => r.activity_id === a.id);
+        if(updated){
+          return{
+            ...a,
+            name: updated.activity_name,
+            date: updated.activity_date,
+            address: updated.activity_address,
+            location: updated.activity_location
+          };
+        }
+        return a;
+      }));
+    }
+
+    else if(message === "activity deleted!"){
+      setActivities((prev) => prev.filter((a) => a.id !== res[0].activity_id));
+    }
+  };
+
 
   if (!trip) return <p className="loading-text">Trip not found.</p>;
 
@@ -140,7 +192,7 @@ function ItineraryPage() {
       return;
     }
     
-    await axios.delete("http://localhost:8080/Itinerary/DeleteActivity", {data:{activityid:index}, withCredentials:true})
+    await axios.delete("http://localhost:8080/Itinerary/DeleteActivity", {data:{activityid:index, i_id:tripId}, withCredentials:true})
     .then(response => {
       if(response.data === true) 
       {

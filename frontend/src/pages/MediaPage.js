@@ -33,18 +33,16 @@ function MediaPage() {
   //Filter activities when date changes
   useEffect(() => {
     filterActivitiesByDate();
+    console.log("activityMedia: ", activityMedia);
   }, [activities, selectedDate]);
 
   const loadTripData = async () => {
     try {
       setLoading(true);
       setError(null);
-
+      
       //Fetch all activities for this trip created by user in itinerary)
-      const activitiesRes = await axios.get(
-        "http://localhost:8080/Itinerary/GetAllActivities",
-        { params: { i_id: tripId }, withCredentials: true }
-      );
+      const activitiesRes = await axios.get("http://localhost:8080/Itinerary/GetAllActivities",{ params: { i_id: tripId }, withCredentials: true });
 
       if (activitiesRes.data && Array.isArray(activitiesRes.data)) {
         //Set trip info from first activity
@@ -89,7 +87,9 @@ function MediaPage() {
     } catch (error) {
       console.error("Error loading trip data:", error);
       if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-        navigate("/login");
+        const errData = error.response;
+        const errorMsg = errData.status + ": " + errData.data.message;
+        navigate(`/login/${errorMsg}`);
       } else {
         setError("Failed to load activities");
       }
@@ -100,31 +100,34 @@ function MediaPage() {
   //Load media for all activities
   const loadMediaForActivities = async (activitiesList) => {
     const mediaMap = {};
+    let mediaRes = [];
+
+    try{
+      const res = await axios.get("http://localhost:8080/Media/GetActivityMedia", { params: { i_id: tripId }, withCredentials: true });
+      mediaRes = res.data;
+      }
+    catch(err){
+      if(err.response.status === 401||err.response.status === 403)
+      {
+        const errData = err.response;
+        const errorMsg = errData.status + ": " + errData.data.message;
+        navigate(`/login/${errorMsg}`);
+      }
+    else if(err.response.status === 500)
+      {
+        const errData = err.response;
+        const errorMsg = errData.status + ": " + errData.data.message;
+        console.log(errorMsg);
+      }
+    }
 
     for (const activity of activitiesList) {
-      try {
-        const mediaRes = await axios.get(
-          "http://localhost:8080/Itinerary/GetActivityMedia",
-          { params: { a_id: activity.id }, withCredentials: true }
-        );
-
-        //Store media array for this activity (could be empty)
-        mediaMap[activity.id] = Array.isArray(mediaRes.data) ? mediaRes.data : [];
-      } catch (err) {
+        //Store media array for this activity (could be empty)*/
+        mediaMap[activity.id] = mediaRes ? mediaRes.filter(item => item.activity_id === activity.id) : [];
+        if(mediaMap[activity.id].length === 0) {
         console.log(`No media found for activity ${activity.id}`);
-        //Dummy data 
-        mediaMap[activity.id] = [
-          {
-            media_id: `dummy-${activity.id}-1`,
-            media_name: "Sample Photo 1",
-            media_url: "https://via.placeholder.com/400x300?text=Photo+1"
-          },
-          {
-            media_id: `dummy-${activity.id}-2`,
-            media_name: "Sample Photo 2",
-            media_url: "https://via.placeholder.com/400x300?text=Photo+2"
-          }
-        ];
+        //default no info
+        mediaMap[activity.id] = [];
       }
     }
 
@@ -142,48 +145,62 @@ function MediaPage() {
   };
 
   //Upload media to specific activity
-  const handleUpload = async (e, activityId) => {
+  const handleUpload = async (e, activity) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    setUploadingActivityId(activityId);
+    setUploadingActivityId(activity.id);
 
-    //Convert files to data URLs and store in state
-    const newMedia = [];
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const reader = new FileReader();
-      
-      reader.onload = (event) => {
-        const mediaItem = {
-          media_id: `temp-${Date.now()}-${i}`,
-          media_name: file.name,
-          media_url: event.target.result, // Data URL
-        };
-        
-        newMedia.push(mediaItem);
-        
-        //Update state once all files are loaded
-        if (newMedia.length === files.length) {
-          setActivityMedia((prev) => ({
-            ...prev,
-            [activityId]: [...(prev[activityId] || []), ...newMedia],
-          }));
-          alert("Media uploaded successfully!");
-          setUploadingActivityId(null);
-          e.target.value = "";
-        }
-      };
-      
-      reader.readAsDataURL(file);
+    const formData = new FormData();
+    console.log(files);
+
+    if(files){
+      for(let i=0;i<files.length;i++)
+      {
+        formData.append("media", files[i])
+      }
     }
+
+    formData.append("a_id", activity.id);
+    formData.append("photoTitle", activity.name);
+    formData.append("lng", activity.lng);
+    formData.append("lat", activity.lat);
+    let mediaRes = [];
+
+    try{
+      const res = await axios.post("http://localhost:8080/Media/InsertMedia", formData, {withCredentials:true})
+      mediaRes = res.data;
+    }
+    catch(err){
+      if(err.response.status === 401||err.response.status === 403)
+      {
+        const errData = err.response;
+        const errorMsg = errData.status + ": " + errData.data.message;
+        navigate(`/login/${errorMsg}`);
+      }
+    else if(err.response.status === 500)
+      {
+        const errData = err.response;
+        const errorMsg = errData.status + ": " + errData.data.message;
+        console.log(errorMsg);
+      }
+    }
+    if(mediaRes.length > 0){
+        setActivityMedia((prev) => ({
+              ...prev,
+              [activity.id]: [...(prev[activity.id] || []), ...mediaRes],
+            }));
+            alert("Media uploaded successfully!");
+            setUploadingActivityId(null);
+            e.target.value = "";
+      }
   };
 
   //Open edit modal
   const openEditModal = (item, activityId) => {
     setEditItem(item);
     setEditActivityId(activityId);
-    setEditTitle(item.media_name || item.photo_title || "");
+    setEditTitle(item.photo_title || "");
     setShowEditModal(true);
   };
 
@@ -193,31 +210,77 @@ function MediaPage() {
       alert("Title cannot be empty");
       return;
     }
+    let updateComplete = false;
 
-    //Update in state
-    setActivityMedia((prev) => ({
-      ...prev,
-      [editActivityId]: prev[editActivityId].map((m) =>
-        (m.media_id === editItem.media_id || m.media_id === editItem.photo_id)
-          ? { ...m, media_name: editTitle }
-          : m
-      ),
-    }));
+    try{
+      const res = await axios.patch("http://localhost:8080/Media/EditPhoto", {p_id:editItem.photo_id, title:editTitle}, {withCredentials:true});
+      updateComplete = res.data;
+    }
+    catch(err){
+      if(err.response.status === 401||err.response.status === 403)
+      {
+        const errData = err.response;
+        const errorMsg = errData.status + ": " + errData.data.message;
+        navigate(`/login/${errorMsg}`);
+      }
+    else if(err.response.status === 500)
+      {
+        const errData = err.response;
+        const errorMsg = errData.status + ": " + errData.data.message;
+        console.log(errorMsg);
+      }
+    }
+    if(updateComplete)
+    {
+      //Update in state
+      setActivityMedia((prev) => ({
+        ...prev,
+        [editActivityId]: prev[editActivityId].map((m) =>
+          (m.photo_id === editItem.photo_id)
+            ? { ...m, media_name: editTitle }
+            : m
+        ),
+      }));
 
-    alert("Media updated successfully!");
-    setShowEditModal(false);
+      alert("Media updated successfully!");
+      setShowEditModal(false); 
+    }
   };
 
   //Delete media
-  const handleDelete = async (mediaId, activityId) => {
+  const handleDelete = async (media, activityId) => {
     if (!window.confirm("Delete this media?")) return;
+    let deleteConfirm = false;
+    console.log("media: ", media.photo_id);
+    console.log("media: ", media.photo_url);
 
-    setActivityMedia((prev) => ({
+    try{
+      const res = await axios.delete("http://localhost:8080/Media/DeleteActivityPhoto", {data:{photo_id:media.photo_id, rawUrl:media.photo_url}, withCredentials:true})
+      deleteConfirm = res.data;
+    }
+    catch(err){
+      if(err.response.status === 401||err.response.status === 403)
+      {
+        const errData = err.response;
+        const errorMsg = errData.status + ": " + errData.data.message;
+        navigate(`/login/${errorMsg}`);
+      }
+    else if(err.response.status === 500)
+      {
+        const errData = err.response;
+        const errorMsg = errData.status + ": " + errData.data.message;
+        console.log(errorMsg);
+      }
+    }
+    if(deleteConfirm)
+    {
+      setActivityMedia((prev) => ({
       ...prev,
-      [activityId]: prev[activityId].filter((m) => m.media_id !== mediaId),
-    }));
+      [activityId]: prev[activityId].filter((m) => m.photo_id !== media.photo_id),
+      }));
 
-    alert("Media deleted successfully!");
+      alert("Media deleted successfully!");
+    }
   };
 
   if (loading) return <p className="loading-text">Loading media...</p>;
@@ -295,7 +358,7 @@ function MediaPage() {
                   type="file"
                   multiple
                   accept="image/*,video/*"
-                  onChange={(e) => handleUpload(e, activity.id)}
+                  onChange={(e) => handleUpload(e, activity)}
                   disabled={uploadingActivityId === activity.id}
                 />
               </label>
@@ -328,7 +391,7 @@ function MediaPage() {
                           </button>
                           <button
                             className="delete-btn"
-                            onClick={() => handleDelete(media.media_id || media.photo_id, activity.id)}
+                            onClick={() => handleDelete(media || media, activity.id)}
                           >
                             Delete
                           </button>

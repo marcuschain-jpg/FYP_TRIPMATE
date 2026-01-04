@@ -150,14 +150,22 @@ async function TSPAlgo (activities, placeid, travelMode){ // by activity_id inst
     {
         let twoOpt = (route, distMatrix) => {
             console.log("ENTRY route 2-OPT:", JSON.stringify(route));
-            const routeLen = route.length;
             let improved = true;
+
+            // symmatrise matrix
+            for (let i = 0; i < route.length; i++) {
+            for (let j = i + 1; j < route.length; j++) {
+                const v = (distMatrix[i][j] + distMatrix[j][i]) / 2;
+                distMatrix[i][j] = v;
+                distMatrix[j][i] = v;
+                }
+            }
 
             while(improved){
                 improved = false;
-                for(let i=1; i<routeLen-2; i++) //9
+                for(let i=1; i<route.length-2; i++) //9
                 {
-                    for(let k=i+1; k<routeLen-1; k++)//10
+                    for(let k=i+1; k<route.length-1; k++)//10
                     {
                         const a = route[i-1]; //max 7
                         const b = route[i]; //max 8
@@ -171,13 +179,15 @@ async function TSPAlgo (activities, placeid, travelMode){ // by activity_id inst
                         {
                             route.splice(i, k-i+1, ...route.slice(i, k+1).reverse());
                             improved = true;
+                            break;
                         }
                     }
+                    if(improved) break;
                 }
             }
 
             let minDist = 0;
-            for(let i=0;i<routeLen-1;i++)
+            for(let i=0;i<route.length-1;i++)
             {
                 minDist += distMatrix[route[i]][route[i+1]]; 
             }
@@ -196,8 +206,6 @@ async function TSPAlgo (activities, placeid, travelMode){ // by activity_id inst
         {
             newOrderActivities[i] = activities[route[i]];
         }
-        //console.log("Shortest Route: ", newOrderActivities);
-        //console.log("Min Dist: ", minDist);
         return newOrderActivities;
     }
 }
