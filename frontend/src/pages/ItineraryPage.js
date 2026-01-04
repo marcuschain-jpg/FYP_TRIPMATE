@@ -228,11 +228,63 @@ function ItineraryPage() {
     };
   }, [tripId]);
 
+  //Draw driving route 
+  useEffect(() => {
+    if (!mapRef.current || !(window.google && window.google.maps)) return;
+    if (!selectedDate) return;
+    if (!directionsServiceRef.current || !directionsRendererRef.current) return;
+
+    const filteredCoord = activityCoords.filter(
+      (a) => normDate(a.date) === normDate(selectedDate))
+    ;
+
+    const points = (filteredCoord || [])
+      .map((a) => a.coords)
+      .filter((c) => Number.isFinite(c?.lat) && Number.isFinite(c?.lng))
+      .map((c) => ({ lat: c.lat, lng: c.lng }));
+
+    //Clear previous day's route
+    clearDirections();
+
+    //Need min 2 markers
+    if (points.length < 2) {
+      if (points.length === 1) {
+        mapRef.current.setCenter(points[0]);
+        mapRef.current.setZoom(14);
+      }
+      return;
+    }
+
+    const origin = points[0];
+    const destination = points[points.length - 1];
+    const waypoints = points.slice(1, -1).map((p) => ({
+      location: p,
+      stopover: true,
+    }));
+
+    directionsServiceRef.current.route(
+      {
+        origin,
+        destination,
+        waypoints,
+        travelMode: window.google.maps.TravelMode.DRIVING,
+        optimizeWaypoints: false, //keep your activity order
+      },
+      (result, status) => {
+        if (status === "OK" && result) {
+          directionsRendererRef.current.setDirections(result);
+        } else {
+          console.error("Directions request failed:", status, result);
+        }
+      }
+    );
+  }, [activityCoords, selectedDate]);
+
   //List matches map date logic
   const filteredActivities = useMemo(
     () => activities.filter((a) => normDate(a.date) === normDate(selectedDate)),
     [activities, selectedDate]
-  }, []);
+  );
 
   // Functions to load upon rendering ====
   const renderLoadTrip = (res) => {
@@ -319,57 +371,6 @@ function ItineraryPage() {
     (a) => a.date === selectedDate
   );*/
 
-  //Draw driving route 
-  useEffect(() => {
-    if (!mapRef.current || !(window.google && window.google.maps)) return;
-    if (!selectedDate) return;
-    if (!directionsServiceRef.current || !directionsRendererRef.current) return;
-
-    const filteredCoord = activityCoords.filter(
-      (a) => normDate(a.date) === normDate(selectedDate))
-    ;
-
-    const points = (filteredCoord || [])
-      .map((a) => a.coords)
-      .filter((c) => Number.isFinite(c?.lat) && Number.isFinite(c?.lng))
-      .map((c) => ({ lat: c.lat, lng: c.lng }));
-
-    //Clear previous day's route
-    clearDirections();
-
-    //Need min 2 markers
-    if (points.length < 2) {
-      if (points.length === 1) {
-        mapRef.current.setCenter(points[0]);
-        mapRef.current.setZoom(14);
-      }
-      return;
-    }
-
-    const origin = points[0];
-    const destination = points[points.length - 1];
-    const waypoints = points.slice(1, -1).map((p) => ({
-      location: p,
-      stopover: true,
-    }));
-
-    directionsServiceRef.current.route(
-      {
-        origin,
-        destination,
-        waypoints,
-        travelMode: window.google.maps.TravelMode.DRIVING,
-        optimizeWaypoints: false, //keep your activity order
-      },
-      (result, status) => {
-        if (status === "OK" && result) {
-          directionsRendererRef.current.setDirections(result);
-        } else {
-          console.error("Directions request failed:", status, result);
-        }
-      }
-    );
-  }, [activityCoords, selectedDate]);
 
   //Delete activity
   const handleDeleteActivity = async (index) => {
