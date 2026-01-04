@@ -49,6 +49,7 @@ io.on("connection", (socket) => {
   socket.on("joinTrip", (room) => {
     socket.join(room);
     console.log(`${socket.id} joined room ${room}`);
+  })
   socket.on("disconnect", () => console.log(`Client disconencted: ${socket.id}`));
   });
 
