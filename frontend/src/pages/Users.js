@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Users.css";
-import { mockUsers } from "../data/mockUsers";
+// import { mockUsers } from "../data/mockUsers";
+import axios from "axios";
+import { useEffect } from "react";
 
 /* ---- CONFIRM MODAL ---- */
 function ConfirmModal({ title, message, onConfirm, onClose }) {
@@ -59,7 +61,29 @@ export default function Users() {
   const navigate = useNavigate();
 
   // Data
-  const [users, setUsers] = useState(mockUsers);
+
+  // const [users, setUsers] = useState(mockUsers);
+  const [users, setUsers] = useState([]);
+
+  // Load Data from DB
+  useEffect(() => {
+    axios
+      .get("http://localhost:8080/api/users", {
+        withCredentials: true,
+      })
+      .then((response) => {
+        setUsers(response.data);
+      })
+      .catch((err) => {
+        if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+          const errorMsg =
+            err.response.status + ": " + err.response.data?.message;
+          navigate(`/login/${errorMsg}`);
+        } else {
+          console.error("Failed to load users", err);
+        }
+      });
+  }, [navigate]);
 
   // Filters / UI state
   const [statusFilter, setStatusFilter] = useState("All"); // All | Active | Suspended
@@ -156,9 +180,33 @@ export default function Users() {
       action: () => {
         const newStatus = user.status === "Active" ? "Suspended" : "Active";
 
-        setUsers((prev) =>
-          prev.map((u) => (u.id === user.id ? { ...u, status: newStatus } : u))
-        );
+        // setUsers((prev) =>
+        //   prev.map((u) => (u.id === user.id ? { ...u, status: newStatus } : u))
+        // );
+
+        axios
+          .patch(`http://localhost:8080/api/users/${user.id}/suspend`, {
+            withCredentials: true,
+          })
+          .then(() => {
+            setUsers((prev) =>
+              prev.map((u) =>
+                u.id === user.id
+                  ? { ...u, status: u.status === "Active" ? "Suspended" : "Active" }
+                  : u
+              )
+            );
+
+            addLog(
+              `user "${user.email}" ${
+                user.status === "Active" ? "suspended" : "activated"
+              }`
+            );
+
+            setShowToast(true);
+          })
+          .catch((err) => console.error("Suspend failed", err))
+          .finally(() => setModal(null));
 
         addLog(
           `user "${user.email}" ${
@@ -177,7 +225,19 @@ export default function Users() {
       title: "Delete User",
       message: `Delete ${user.name}? This action cannot be undone.`,
       action: () => {
-        setUsers((prev) => prev.filter((u) => u.id !== user.id));
+        // setUsers((prev) => prev.filter((u) => u.id !== user.id));
+        axios
+          .delete(`http://localhost:8080/api/users/${user.id}`, {
+            withCredentials: true,
+          })
+          .then(() => {
+            setUsers((prev) => prev.filter((u) => u.id !== user.id));
+            addLog(`user "${user.email}" deleted`);
+            setShowToast(true);
+          })
+          .catch((err) => console.error("Delete failed", err))
+          .finally(() => setModal(null));
+
         setSelectedIds((prev) => {
           const next = new Set(prev);
           next.delete(user.id);
