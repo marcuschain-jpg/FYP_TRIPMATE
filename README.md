@@ -19,21 +19,10 @@ and are stored in package.json for both frontend and backend. We cannot push nod
 it is too huge. So when u install node modules, it reads what modules to install from package.json and creates
 your own node_modules
 
-1. Get latest db.dump from telegram to update your postgres(fyp_tripmate table):
+1. Marcus will update all dbs:
     Create dump(for marcus only):
-    1. pg_dump -U postgres -Fc fyp_tripmate >db.dump
-
-    Macbook:
-    1. Ensure database is created for 'fyp_tripmate'
-    2. download and mydb.dump file place it in documents
-    3. pg_restore -U postgres -d fyp_tripmate /Documents/mydb.dump
-    4. Refresh and will be inside
-
-    Windows:
-    1. Ensure database is created for 'fyp_tripmate'
-    2. download and mydb.dump file place it in documents
-    3. pg_restore -U postgres -d fyp_tripmate /Documents/mydb.dump
-    4. Refresh and will be inside
+    1. pg_dump -h fyp-tripmate.c9i48eq6wffg.ap-southeast-2.rds.amazonaws.com -U postgres -Fc fyp_tripmate >db.dump
+    2. pg_restore -h fyp-tripmate.c9i48eq6wffg.ap-southeast-2.rds.amazonaws.com -U postgres -d fyp_tripmate_chris --no-owner --no-privileges db.dump
 
 2. Reinstall all node_modules:
     - left click and delete node_modules on frontend & backend
