@@ -67,7 +67,28 @@ router.post("/CreateItinerary", RequireAuth(["registered", "premium"]), async(re
 
 router.delete("/DeleteItinerary", RequireAuth(["registered", "premium"]), async(req, res) =>{
   const {itineraryid} = req.body;
+  let photoData = null;
+  console.log("itinerary", itineraryid);
 
+  // Delete photos of itinerary if have
+  try{
+    photoData = await pool.query(
+      `SELECT ap.photo_url FROM activity_photo ap
+       JOIN activity a ON ap.activity_id = a.activity_id
+       JOIN itinerary i on a.itinerary_id = i.itinerary_id
+       WHERE i.itinerary_id = $1`, [itineraryid]
+    );
+  }
+  catch(err) {photoData = null;}
+
+  if(photoData){
+    await Promise.all(
+      photoData.rows.map(data => {DeletePhotoS3(data.photo_url);
+    })
+    )
+  }
+
+  // Delete itinerary
   try{
     const data = await pool.query(
       `DELETE FROM itinerary
@@ -160,9 +181,10 @@ router.delete("/DeleteActivity", RequireAuth(["registered", "premium"]), async(r
   catch(err) {photoData = null;}
 
   if(photoData){
-    photoData.rows.map(data => {
-      photosDeleted = DeletePhotoS3(data.photo_url);
+    await Promise.all(
+      photoData.rows.map(data => {DeletePhotoS3(data.photo_url);
     })
+    )
   }
   
   
@@ -273,7 +295,6 @@ router.post("/CreateActivity", RequireAuth(["registered", "premium"]), InsertPho
     {
       createAct = true;
       a_id = payload.rows[0].activity_id;
-      console.log("a_id: ", payload.rows);
     }
   }
   catch(err){
@@ -474,7 +495,6 @@ router.post("/LocSearch", RequireAuth(["registered", "premium"]), async(req, res
       lng: r.location.longitude,
     }));
 
-    console.log(predictions)
     return res.json(predictions);
   } catch (err) {
     console.error("Places Text Search error:", err.response?.data || err.message);
