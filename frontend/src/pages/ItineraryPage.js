@@ -349,7 +349,7 @@ function ItineraryPage() {
 
     await axios
       .delete("http://localhost:8080/Itinerary/DeleteActivity", {
-        data: { activityid: index },
+        data: { activityid: index, i_id: tripId },
         withCredentials: true,
       })
       .then((response) => {
