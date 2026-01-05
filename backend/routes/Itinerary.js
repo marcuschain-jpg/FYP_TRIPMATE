@@ -4,11 +4,12 @@ const dotenv = require("dotenv");
 const axios = require("axios");
 // --- DB stuff ---
 const pool = require("../helper/db.js");
-// Path manipulation ---
+// Photo stuff ---
 const path = require("path") // photo path
 const fs = require("fs"); // to delete photos
 const InsertPhoto = require("../middlewares/PhotoImp.js"); // edit photo path and insert
 const Geotag = require("../helper/Geotag.js"); // geotag photo
+const { ExtractPhotoS3, ImportPhotoS3, DeletePhotoS3 } = require("../helper/S3FileSys.js"); // get link that may expire from AWS S3
 // Load custom env file
 dotenv.config({ path: "keys.env" });
 // --- Call other functions ---
@@ -38,6 +39,7 @@ router.get("/GetAllItineraries", RequireAuth(["registered", "premium"]), async(r
        WHERE user_host_id = $1
        ORDER BY completed ASC`, [userid]
     );
+
     return res.json(data.rows);
   }
 
@@ -147,7 +149,7 @@ router.delete("/DeleteActivity", RequireAuth(["registered", "premium"]), async(r
   let payload = null;
   const io = req.app.get("io");
 
-  // 1. Delete photos in storage
+  // 1. Delete photos in S3 storage
   try{
     photoData = await pool.query(
       `SELECT photo_url
@@ -158,20 +160,8 @@ router.delete("/DeleteActivity", RequireAuth(["registered", "premium"]), async(r
   catch(err) {photoData = null;}
 
   if(photoData){
-    console.log(photoData.rows);
     photoData.rows.map(data => {
-      const url = data.photo_url.replace("http://localhost:8080/images/","");
-
-      console.log("URL! ", url);
-      //Delete photo in storage
-      if(url) {
-        photoStoragePath = path.join(__dirname, "../../storage");
-        finalURL = path.join(photoStoragePath, url);
-        fs.unlink(finalURL, (err) => {
-          if(err) console.log("failed to remove from storage", err)
-        });
-        photosDeleted = true;
-      }
+      photosDeleted = DeletePhotoS3(data.photo_url);
     })
   }
   
@@ -296,32 +286,34 @@ router.post("/CreateActivity", RequireAuth(["registered", "premium"]), InsertPho
   if(havePhoto){
     // Geotag
     for (const file of req.files){
-      const filePath = path.join(__dirname, "../../storage", file.filename)
+      const filePath = path.join(__dirname, "../uploads", file.filename)
       try{ await Geotag(filePath, lng, lat); }
       catch(err) { console.log("failed to geotag"); } 
       fs.unlink((filePath + "_original"), (err) => {
-      if(err) console.log("failed to remove from storage", err)
+      if(err) console.log("failed to remove from media", err)
     });
     }
 
-    // Prepare photo content for upload in db
-    const photoRecRaw = req.files.map(file => [aName, `http://localhost:8080/images/${file.filename}`, lng, lat, a_id]);
-    const photoParams = req.files.map((_,i) => {
+    // Store in S3 then unlink, return link to S3
+    const s3URL = await ImportPhotoS3();
+
+    // Prepare for insert in db
+    const photoRecRaw = s3URL.map(file => [aName, file, lng, lat, a_id]);
+    const photoParams = s3URL.map((_,i) => {
       const counter = i*5;
       return(`($${counter+1}, $${counter+2}, $${counter+3}, $${counter+4}, $${counter+5})`);
     }).join(", ");
     const photoRec = photoRecRaw.flat();
 
-    // Upload photo content in db
+    // Insert photo in db
     try{
       const data = await pool.query(
       `INSERT INTO activity_photo (photo_title, photo_url, longitude, latitude, activity_id)
-       VALUES ${photoParams}
-      `, photoRec
+      VALUES ${photoParams}`, photoRec
       );
       if(data.rowCount > 0 && createAct === true) //successfully update
       {
-        io.to(`trip_${i_id}`).emit("notification", { message: "activity created!", payload:payload.rows });
+        io.to(`trip_${i_id}`).emit("notification", { message: "activity edited!", payload:payload.rows });
         return res.send(true);
       }
     }
@@ -377,18 +369,21 @@ router.patch("/EditActivity", RequireAuth(["registered", "premium"]), InsertPhot
 
     // Geotag
     for (const file of req.files){
-      const filePath = path.join(__dirname, "../../storage", file.filename)
+      const filePath = path.join(__dirname, "../uploads", file.filename)
       try{ await Geotag(filePath, lng, lat); }
       catch(err) { console.log("failed to geotag"); } 
       fs.unlink((filePath + "_original"), (err) => {
-      if(err) console.log("failed to remove from storage", err)
+      if(err) console.log("failed to remove from media", err)
     });
     }
-    
+
+    // Store in S3 then unlink, return link to S3
+    const s3URL = await ImportPhotoS3();
+    console.log(s3URL);
 
     // Prepare for insert in db
-    const photoRecRaw = req.files.map(file => [aName, `http://localhost:8080/images/${file.filename}`, lng, lat, a_id]);
-    const photoParams = req.files.map((_,i) => {
+    const photoRecRaw = s3URL.map(file => [aName, file, lng, lat, a_id]);
+    const photoParams = s3URL.map((_,i) => {
       const counter = i*5;
       return(`($${counter+1}, $${counter+2}, $${counter+3}, $${counter+4}, $${counter+5})`);
     }).join(", ");
@@ -434,7 +429,8 @@ router.get("/GetActivityToEdit", RequireAuth(["registered", "premium"]), async(r
 	     ON a.activity_id = ap.activity_id
        WHERE a.activity_id = $1`,[a_id]
     );
-    return res.json(data.rows);
+    const updatedData = await ExtractPhotoS3(data.rows);
+    return res.json(updatedData);
   }
   catch(err)
   {
@@ -487,21 +483,28 @@ router.post("/LocSearch", RequireAuth(["registered", "premium"]), async(req, res
 });
 
 router.delete("/DeleteActivityPhoto", RequireAuth(["registered", "premium"]), async(req, res) => {
-  const {photo_id, rawUrl} = req.body;
-  const url = rawUrl.replace("http://localhost:8080/images/","");
+  const {photo_id} = req.body;
+  let url = null;
+  let deleteFromS3 = false;
 
-  console.log("URL! ", url);
-  //Delete photo in storage
+  // 1. Take out real photo url from db
+  try{
+    const data = await pool.query(
+      `SELECT photo_url FROM activity_photo
+       WHERE photo_id=$1`, [photo_id]
+    );
+    url = data.rows[0].photo_url;
+  }
+  catch(err) {res.status(500).send("Error select photo url for deletion");}
+
+  // 2. Delete photo in S3
   if(url) {
-    photoStoragePath = path.join(__dirname, "../../storage");
-    finalURL = path.join(photoStoragePath, url);
-    fs.unlink(finalURL, (err) => {
-      if(err) console.log("failed to remove from storage", err)
-    });
+    deleteFromS3 = await DeletePhotoS3(url);
   }
   
-  //Delete photo in db
-  try{
+  //3. Delete photo in db
+  if(deleteFromS3){
+    try{
     const data = await pool.query(
       `DELETE FROM activity_photo
        WHERE photo_id = $1`, [photo_id]
@@ -510,9 +513,10 @@ router.delete("/DeleteActivityPhoto", RequireAuth(["registered", "premium"]), as
     {
       return res.send(true)
     }
-  }
-  catch(err){
-    return res.status(500).send("Error deleting photos from db");
+    }
+    catch(err){
+      return res.status(500).send("Error deleting photos from db");
+    }
   }
   
 });
