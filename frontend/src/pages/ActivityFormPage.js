@@ -206,7 +206,7 @@ function ActivityFormPage() {
   }
 
   const handlePhotoDelete = async(m) => {
-    await axios.delete("http://localhost:8080/Itinerary/DeleteActivityPhoto", {data:{photo_id:m.id, rawUrl:m.url}, withCredentials:true})
+    await axios.delete("http://localhost:8080/Itinerary/DeleteActivityPhoto", {data:{photo_id:m.id}, withCredentials:true})
     .then(response => {
       if(response.data === true) 
       {
