@@ -79,6 +79,8 @@ function TripDetailsPage() {
       start: formattedSDate,
       end: formattedEDate,
       status: res[0].completed,
+      type: res[0].type,
+      numPpl: res[0].num_ppl
     };
 
     setTrip(mapTrips);
@@ -207,9 +209,10 @@ function TripDetailsPage() {
         </div>
       </div>
 
-      <button className="floating-chat-btn" onClick={() => setShowChat(true)} title="Chat">
+      {(trip.type === "Shared" || trip.type === "Group") && 
+      (<button className="floating-chat-btn" onClick={() => setShowChat(true)} title="Chat">
         Chat
-      </button>
+      </button>)}
 
       {/*Collaborators modal*/}
       {showCollaborators && (

@@ -138,12 +138,15 @@ function ItineraryPage() {
       })
       .then((res) => {
         const data = res.data;
+        console.log(data);
 
         const mapTrips = {
           id: tripId,
           name: data?.[0]?.itinerary_name,
           start: data?.[0]?.start_date,
           end: data?.[0]?.end_date,
+          type: data[0].type,
+          numPpl: data?.[0].num_ppl
         };
         setTrip(mapTrips);
 
@@ -481,9 +484,10 @@ function ItineraryPage() {
         </div>
       </div>
 
-      <button className="floating-chat-btn" onClick={() => setShowChat(true)} title="Chat">
+      {(trip.type === "Shared" || trip.type === "Group") && 
+      (<button className="floating-chat-btn" onClick={() => setShowChat(true)} title="Chat">
         Chat
-      </button>
+      </button>)}
       {showChat && <ItineraryChat onClose={() => setShowChat(false)} />}
     </div>
   );

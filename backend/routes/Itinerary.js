@@ -34,7 +34,7 @@ router.get("/GetAllItineraries", RequireAuth(["registered", "premium"]), async(r
 
   try{
     const data = await pool.query(
-      `SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date, completed
+      `SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date, completed, type
        FROM itinerary
        WHERE user_host_id = $1
        ORDER BY completed ASC`, [userid]
@@ -49,14 +49,14 @@ router.get("/GetAllItineraries", RequireAuth(["registered", "premium"]), async(r
 });
 
 router.post("/CreateItinerary", RequireAuth(["registered", "premium"]), async(req, res) => {
-  const {iName, iDest, start, end} = req.body;
+  const {iName, iDest, start, end, type} = req.body;
   const userid = req.userid;
 
   try{
     const data = await pool.query(
-      `INSERT INTO itinerary (itinerary_name, itinerary_dest, start_date, end_date, user_host_id)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING itinerary_id`, [iName, iDest,start,end,userid]
+      `INSERT INTO itinerary (itinerary_name, itinerary_dest, start_date, end_date, user_host_id, type)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING itinerary_id`, [iName, iDest, start, end, userid, type]
     );
     return res.json(data.rows);
   }
@@ -110,7 +110,7 @@ router.get("/GetItinerary", RequireAuth(["registered", "premium"]), async(req, r
 
   try{
     const data = await pool.query(
-      `SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date, completed
+      `SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date, completed, type, num_ppl
        FROM itinerary WHERE itinerary_id = $1`, [i_id]
     );
     return res.json(data.rows);
@@ -145,7 +145,7 @@ router.get("/GetAllActivities", RequireAuth(["registered", "premium"]), async(re
 
   try{
     const data = await pool.query(
-      `SELECT a.activity_id, a.activity_name, a.activity_address, i.itinerary_name, a.activity_location, a.longitude, a.latitude,
+      `SELECT a.activity_id, a.activity_name, a.activity_address, i.itinerary_name, a.activity_location, a.longitude, a.latitude, i.type, i.num_ppl,
        TO_CHAR(i.start_date, 'DD/MM/YYYY') AS start_date,
        TO_CHAR(i.end_date, 'DD/MM/YYYY') AS end_date,
        TO_CHAR(a.activity_date, 'YYYY-MM-DD') AS activity_date
