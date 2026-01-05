@@ -34,7 +34,7 @@ router.get("/GetAllItineraries", RequireAuth(["registered", "premium"]), async(r
 
   try{
     const data = await pool.query(
-      `SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date, completed
+      `SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date, completed, type
        FROM itinerary
        WHERE user_host_id = $1
        ORDER BY completed ASC`, [userid]
@@ -49,14 +49,14 @@ router.get("/GetAllItineraries", RequireAuth(["registered", "premium"]), async(r
 });
 
 router.post("/CreateItinerary", RequireAuth(["registered", "premium"]), async(req, res) => {
-  const {iName, iDest, start, end} = req.body;
+  const {iName, iDest, start, end, type} = req.body;
   const userid = req.userid;
 
   try{
     const data = await pool.query(
-      `INSERT INTO itinerary (itinerary_name, itinerary_dest, start_date, end_date, user_host_id)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING itinerary_id`, [iName, iDest,start,end,userid]
+      `INSERT INTO itinerary (itinerary_name, itinerary_dest, start_date, end_date, user_host_id, type)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING itinerary_id`, [iName, iDest, start, end, userid, type]
     );
     return res.json(data.rows);
   }
@@ -67,7 +67,28 @@ router.post("/CreateItinerary", RequireAuth(["registered", "premium"]), async(re
 
 router.delete("/DeleteItinerary", RequireAuth(["registered", "premium"]), async(req, res) =>{
   const {itineraryid} = req.body;
+  let photoData = null;
+  console.log("itinerary", itineraryid);
 
+  // Delete photos of itinerary if have
+  try{
+    photoData = await pool.query(
+      `SELECT ap.photo_url FROM activity_photo ap
+       JOIN activity a ON ap.activity_id = a.activity_id
+       JOIN itinerary i on a.itinerary_id = i.itinerary_id
+       WHERE i.itinerary_id = $1`, [itineraryid]
+    );
+  }
+  catch(err) {photoData = null;}
+
+  if(photoData){
+    await Promise.all(
+      photoData.rows.map(data => {DeletePhotoS3(data.photo_url);
+    })
+    )
+  }
+
+  // Delete itinerary
   try{
     const data = await pool.query(
       `DELETE FROM itinerary
@@ -89,7 +110,7 @@ router.get("/GetItinerary", RequireAuth(["registered", "premium"]), async(req, r
 
   try{
     const data = await pool.query(
-      `SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date, completed
+      `SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date, completed, type, num_ppl
        FROM itinerary WHERE itinerary_id = $1`, [i_id]
     );
     return res.json(data.rows);
@@ -124,7 +145,7 @@ router.get("/GetAllActivities", RequireAuth(["registered", "premium"]), async(re
 
   try{
     const data = await pool.query(
-      `SELECT a.activity_id, a.activity_name, a.activity_address, i.itinerary_name, a.activity_location, a.longitude, a.latitude,
+      `SELECT a.activity_id, a.activity_name, a.activity_address, i.itinerary_name, a.activity_location, a.longitude, a.latitude, i.type, i.num_ppl,
        TO_CHAR(i.start_date, 'DD/MM/YYYY') AS start_date,
        TO_CHAR(i.end_date, 'DD/MM/YYYY') AS end_date,
        TO_CHAR(a.activity_date, 'YYYY-MM-DD') AS activity_date
@@ -160,9 +181,10 @@ router.delete("/DeleteActivity", RequireAuth(["registered", "premium"]), async(r
   catch(err) {photoData = null;}
 
   if(photoData){
-    photoData.rows.map(data => {
-      photosDeleted = DeletePhotoS3(data.photo_url);
+    await Promise.all(
+      photoData.rows.map(data => {DeletePhotoS3(data.photo_url);
     })
+    )
   }
   
   
@@ -273,7 +295,6 @@ router.post("/CreateActivity", RequireAuth(["registered", "premium"]), InsertPho
     {
       createAct = true;
       a_id = payload.rows[0].activity_id;
-      console.log("a_id: ", payload.rows);
     }
   }
   catch(err){
@@ -474,7 +495,6 @@ router.post("/LocSearch", RequireAuth(["registered", "premium"]), async(req, res
       lng: r.location.longitude,
     }));
 
-    console.log(predictions)
     return res.json(predictions);
   } catch (err) {
     console.error("Places Text Search error:", err.response?.data || err.message);

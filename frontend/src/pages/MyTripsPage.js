@@ -77,7 +77,7 @@ function MyTripsPage() {
       end: t.end_date,
       status: t.completed,
       isGroupTrip: false,
-      type: "Private",
+      type: t.type
     }));
 
     setTrips((prev) => {
@@ -140,6 +140,7 @@ function MyTripsPage() {
         iDest: newDestination,
         start: newStart,
         end: newEnd,
+        type: "Private"
       }, {withCredentials: true})
       .catch(err => {
         console.log(err)
@@ -351,13 +352,12 @@ function MyTripsPage() {
               <div>
                 <h2 className="trip-name">{trip.name}</h2>
 
-                <div
-                  className={`trip-status ${
-                    trip.status === true ? "completed" : "inprogress"
-                  }`}
-                >
+                <div className={`trip-status ${trip.status === true ? "completed" : "inprogress"}`}>
                   {trip.status && "Completed"}
                   {!trip.status && "In Progress"}
+                </div>
+                <div className={`trip-status ${trip.status === true ? "completed" : "inprogress"}`}>
+                  {trip.type}
                 </div>
               </div>
 

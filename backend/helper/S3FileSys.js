@@ -14,6 +14,9 @@ const myBucket = process.env.AWSBUCKET
 
 async function ExtractPhotoS3(data){
     const newData = data.map(d => {
+        if(d.photo_url === null){
+            return{...d, photo_url: null};
+        }
         const myKey = d.photo_url;
         const signedURLExpire = 30 * 60 * 1 // 30 mins
         
