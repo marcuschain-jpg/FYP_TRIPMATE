@@ -9,6 +9,7 @@ const pool = new Pool({
   password: process.env.PASSWORD,
   database: process.env.PGDATABASE,
   port: process.env.PGPORT,
+  ssl: {rejectUnauthorized: false}
 });
 
 pool.on('connect', ()=>{
