@@ -1,10 +1,13 @@
-//First page all users will see when they enter tripmate.com
+//Default page all users will see when they enter tripmate.com
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Landing.css";
 
-//Import background picture
+//Import images
 import landingImage from "../Assets/Landing.jpg";
+import marketing1 from "../Assets/Marketing1.jpg";
+import marketing2 from "../Assets/Marketing2.jpg";
+import marketing3 from "../Assets/Marketing3.jpg";
 
 function Landing() {
   const navigate = useNavigate();
@@ -17,69 +20,66 @@ function Landing() {
     }
   }, [navigate]);
 
-  //Dummy reviews data 
-  const reviews = [
+  //Feature cards--> dummy data and pics
+  const features = [
     {
-      name: "Ariana Grande",
-      text: "TripMate helped me plan my Japan itinerary in minutes! It optimized all my routes and saved me so much time.",
-      rating: 5,
+      image: marketing1,
+      title: "Integrated Chatbot",
+      description: "Integrated chatbot function to for Q&A as well as optimized trip planning"
     },
     {
-      name: "Gordon Ramsay",
-      text: "I love how my photos are automatically pinned to each location. The timeline feature made reliving my Bali trip special.",
-      rating: 5,
+      image: marketing2,
+      title: "Integrated Chatbot",
+      description: "Integrated chatbot function to for Q&A as well as optimized trip planning"
     },
     {
-      name: "Lee Min Ho",
-      text: "While exploring, I asked a question about a temple and TripMate answered instantly. It’s like having a travel guide!",
-      rating: 4,
-    },
-    {
-      name: "Lin Jun Jie",
-      text: "TripMate actually makes travel planning exciting. The interface is clean and the AI is smart.",
-      rating: 5,
-    },
-    
+      image: marketing3,
+      title: "Integrated Chatbot",
+      description: "Integrated chatbot function to for Q&A as well as optimized trip planning"
+    }
   ];
 
   return (
-    <div
-      className="landing-container"
-      style={{ backgroundImage: `url(${landingImage})` }}
-    >
-      {/*Inner content wrapper to prevent skewing to one side*/}
-      <div className="landing-content">
-        <section className="hero-section">
+    <div className="landing-container">
+      <section 
+        className="hero-section"
+        style={{ backgroundImage: `url(${landingImage})` }}
+      >
+        <div className="hero-overlay">
           <h1 className="hero-title">Trip Planning just got SIMPLER</h1>
-          <p className="hero-subtitle">
-            Take a quiz and find out what type of traveller you are now!
-          </p>
+          
+          {/*Temporary placeholder for marketing vid*/}
+          <div className="video-placeholder">
+            <div className="play-button">
+              <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+                <circle cx="30" cy="30" r="28" stroke="currentColor" strokeWidth="2"/>
+                <path d="M24 20L40 30L24 40V20Z" fill="currentColor"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </section>
 
-          {/*Button to bring users to take travel quiz*/}
-          <button className="hero-btn" onClick={() => navigate("/quiz")}>
-            Lets Go!
-          </button>
-        </section>
-
-        {/*Reviews section (dummy data)*/}
-        <section className="reviews-container">
-          {reviews.map((review, index) => (
-            <div className="review-card" key={index}>
-              <div className="review-header">
-                <div className="avatar">{review.name.charAt(0)}</div>
-                <div>
-                  <p className="review-name">{review.name}</p>
-                  <p className="review-stars">
-                    {"★".repeat(review.rating)}
-                    {"☆".repeat(5 - review.rating)}
-                  </p>
-                </div>
+      {/*Tripmate features*/}
+      <section className="features-section">
+        <div className="features-container">
+          {features.map((feature, index) => (
+            <div className="feature-card" key={index}>
+              <div className="feature-image-wrapper">
+                <img 
+                  src={feature.image} 
+                  alt={feature.title}
+                  className="feature-image"
+                />
               </div>
-              <p className="review-text">{review.text}</p>
+              <div className="feature-text">
+                <h3 className="feature-title">{feature.title}</h3>
+                <p className="feature-description">{feature.description}</p>
+              </div>
             </div>
           ))}
-        </section>
-      </div>
+        </div>
+      </section>
     </div>
   );
 }

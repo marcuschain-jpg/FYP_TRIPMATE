@@ -1,88 +1,292 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import InitMaps from "../components/InitMaps";
-import useMapData from "../hooks/FetchMapData";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import "../styles/Itinerary.css";
-import axios from 'axios';
+import axios from "axios";
 import { io } from "socket.io-client";
 import ItineraryChat from "../components/ItineraryChat";
 
-const socket = io("http://localhost:8080")
+const socket = io("http://localhost:8080");
+
+//Normalize any date string to YYYY-MM-DD--> connecting lines will reset when toggled to a diff day (wont connect all days together)
+function normDate(d) {
+  if (!d) return "";
+  return String(d).slice(0, 10);
+}
 
 function ItineraryPage() {
   const { tripId, firstdate } = useParams();
   const navigate = useNavigate();
 
-  const mapData = useMapData();
-
-  const [trips, setTrips] = useState([]); // to delete
   const [trip, setTrip] = useState(null);
   const [activities, setActivities] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
   const [Loading, setLoading] = useState(true);
-  const [isArranging, setIsArranging] = useState(false); 
-  const[showChat, setShowChat] = useState(false); // for chat component
+  const [isArranging, setIsArranging] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [activityCoords, setActivityCoords] = useState([]);
 
-  //Load trip & activities
+  //Get google maps key from backend
+  const [mapConfig, setMapConfig] = useState(null);
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:8080/Itinerary/maps")
+      .then((res) => {
+        if (!res.data?.apiKey) {
+          console.error("Maps endpoint returned no apiKey:", res.data);
+          return;
+        }
+        setMapConfig(res.data);
+      })
+      .catch((err) => {
+        console.error(
+          "Failed to retrieve Google Maps config:",
+          err?.response?.data || err.message
+        );
+      });
+  }, []);
+
+  //Google Maps (in this page)
+  const mapDivRef = useRef(null);
+  const mapRef = useRef(null);
+
+  //Directions refs 
+  const directionsServiceRef = useRef(null);
+  const directionsRendererRef = useRef(null);
+
+  function loadGoogleMaps(apiKey) {
+    return new Promise((resolve, reject) => {
+      if (window.google && window.google.maps) return resolve();
+
+      const existing = document.querySelector('script[data-google-maps="true"]');
+      if (existing) {
+        existing.addEventListener("load", () => resolve());
+        existing.addEventListener("error", reject);
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.dataset.googleMaps = "true";
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => resolve();
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
+
+  function clearDirections() {
+    if (directionsRendererRef.current) {
+      directionsRendererRef.current.setDirections({ routes: [] });
+    }
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        if (!mapConfig?.apiKey) return;
+
+        await loadGoogleMaps(mapConfig.apiKey);
+        if (cancelled) return;
+
+        if (!mapRef.current && mapDivRef.current) {
+          const center = mapConfig.center || { lat: 1.3521, lng: 103.8198 };
+
+          mapRef.current = new window.google.maps.Map(mapDivRef.current, {
+            center,
+            zoom: 12,
+            styles: [], //Force light mode--> so that line is not too dark
+            mapTypeControl: true,
+            streetViewControl: false,
+            fullscreenControl: true,
+          });
+
+          //Initialize directions objects
+          directionsServiceRef.current = new window.google.maps.DirectionsService();
+          directionsRendererRef.current = new window.google.maps.DirectionsRenderer({
+            map: mapRef.current,
+            suppressMarkers: false, // Google will show A/B/C markers
+            preserveViewport: false,
+
+            //Route line styling (color, opacity etc) 
+            polylineOptions: {
+              strokeColor: "#393F86", 
+              strokeOpacity: 0.9,
+              strokeWeight: 6,
+            },
+          });
+        }
+      } catch (e) {
+        console.error("Google Maps failed to load:", e);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [mapConfig]);
+
+  //Load trips and activities
   useEffect(() => {
     setLoading(true);
-    axios.get("http://localhost:8080/Itinerary/GetAllActivities", {params:{i_id: tripId}, withCredentials:true})
-    .then(res => {
-      renderLoadTrip(res.data);
-      renderLoadActivities(res.data);
-      const data = res.data
 
-      // load default earliest date
-      if(firstdate === "default")
-      {
-        const uniqueDates = Array.from(new Set(data.map(a => a.activity_date))).sort();
-        if(uniqueDates.length > 0) setSelectedDate(uniqueDates[0]);
+    axios
+      .get("http://localhost:8080/Itinerary/GetAllActivities", {
+        params: { i_id: tripId },
+        withCredentials: true,
+      })
+      .then((res) => {
+        const data = res.data;
+
+        //Trip
+        const mapTrips = {
+          id: tripId,
+          name: data?.[0]?.itinerary_name,
+          start: data?.[0]?.start_date,
+          end: data?.[0]?.end_date,
+        };
+        setTrip(mapTrips);
+
+        //Activities & location coords
+        const mapAct = data.map((a) => ({
+          id: a.activity_id,
+          name: a.activity_name,
+          date: normDate(a.activity_date),
+          address: a.activity_address,
+          location: a.activity_location,
+        }));
+
+        const coordAct = data.map((a) => ({
+          id: a.activity_id,
+          coords: {
+            lng: parseFloat(a.longitude),
+            lat: parseFloat(a.latitude),
+          },
+          date: normDate(a.activity_date),
+        }));
+
+        setActivities(mapAct);
+        setActivityCoords(coordAct);
+
+        //Set default date
+        if (firstdate === "default") {
+          const uniqueDates = Array.from(new Set(mapAct.map((x) => x.date))).sort();
+          if (uniqueDates.length > 0) setSelectedDate(uniqueDates[0]);
+        } else {
+          setSelectedDate(normDate(firstdate));
+        }
+
         setLoading(false);
-      }
-      else{
-        setSelectedDate(firstdate);
+      })
+      .catch((err) => {
         setLoading(false);
-      }
-    })
-    .catch(err =>{
-      if(err.response.status === 401)
-        {
+        if (err?.response?.status === 401 || err?.response?.status === 403) {
           const errData = err.response;
           const errorMsg = errData.status + ": " + errData.data.message;
           navigate(`/login/${errorMsg}`);
+        } else if (err?.response?.status === 500) {
+          const errData = err.response;
+          const errorMsg = errData.status + ": " + errData.data.message;
+          console.log(errorMsg);
+        } else {
+          console.log(err);
         }
-    })
-  }, [isArranging]);
+      });
+  }, [isArranging, tripId, firstdate, navigate]);
 
-  // Change arrange button state
   useEffect(() => {
-    //join room for trip
-    if(!socket) return;
+    if (!socket) return;
+
     socket.emit("joinTrip", `trip_${tripId}`);
-    
-    //listen for arranging event
+
     socket.on("Arranging", (data) => {
-      if(data.running) {
-        setIsArranging(true);
-      }
+      if (data.running) setIsArranging(true);
     });
 
-    //listen for arranged event
     socket.on("Arranged", (data) => {
       if(!data.running) {
         console.log("Arranged event received", data);
         setIsArranging(false);
-        //send data here too?
-        //if(data.updatedItinerary) {}
+      }
+    });
+
+    socket.on("notification", (data) => {
+      if(data.message){
+        console.log(data.message);
+        console.log("payload", data.payload);
+        renderUpdateActivities(data.payload, data.message);
       }
     });
 
     return () => {
       socket.off("Arranging");
       socket.off("Arranged");
+      socket.off("notification");
     };
-  }, []);
+  }, [tripId]);
 
+  //Draw driving route 
+  useEffect(() => {
+    if (!mapRef.current || !(window.google && window.google.maps)) return;
+    if (!selectedDate) return;
+    if (!directionsServiceRef.current || !directionsRendererRef.current) return;
+
+    const filteredCoord = activityCoords.filter(
+      (a) => normDate(a.date) === normDate(selectedDate))
+    ;
+
+    const points = (filteredCoord || [])
+      .map((a) => a.coords)
+      .filter((c) => Number.isFinite(c?.lat) && Number.isFinite(c?.lng))
+      .map((c) => ({ lat: c.lat, lng: c.lng }));
+
+    //Clear previous day's route
+    clearDirections();
+
+    //Need min 2 markers
+    if (points.length < 2) {
+      if (points.length === 1) {
+        mapRef.current.setCenter(points[0]);
+        mapRef.current.setZoom(14);
+      }
+      return;
+    }
+
+    const origin = points[0];
+    const destination = points[points.length - 1];
+    const waypoints = points.slice(1, -1).map((p) => ({
+      location: p,
+      stopover: true,
+    }));
+
+    directionsServiceRef.current.route(
+      {
+        origin,
+        destination,
+        waypoints,
+        travelMode: window.google.maps.TravelMode.DRIVING,
+        optimizeWaypoints: false, //keep your activity order
+      },
+      (result, status) => {
+        if (status === "OK" && result) {
+          directionsRendererRef.current.setDirections(result);
+        } else {
+          console.error("Directions request failed:", status, result);
+        }
+      }
+    );
+  }, [activityCoords, selectedDate]);
+
+  //List matches map date logic
+  const filteredActivities = useMemo(
+    () => activities.filter((a) => normDate(a.date) === normDate(selectedDate)),
+    [activities, selectedDate]
+  );
+
+  // Functions to load upon rendering ====
   const renderLoadTrip = (res) => {
     const mapTrips = {
       id: tripId,
@@ -103,69 +307,113 @@ function ItineraryPage() {
       location: a.activity_location,
     }));
 
+    const coordAct = res.map(a => ({
+      id: a.activity_id,
+      coords:{
+      lng: parseFloat(a.longitude),
+      lat: parseFloat(a.latitude)
+      },
+      date: a.activity_date
+    }))
+    setActivityCoords(coordAct);
     setActivities(mapAct);
+  };
+
+  // Functions to load upon receiving socket updates for REAL TIME ====
+  const renderUpdateActivities = (res, message) => {
+    if(message === "activity created!"){
+      const mapAct = res.map(a => ({
+      id: a.activity_id,
+      name: a.activity_name,
+      date: a.activity_date,
+      address: a.activity_address,
+      location: a.activity_location,
+    }));
+
+    const coordAct = res.map(a => ({
+      id: a.activity_id,
+      coords:{
+      lng: parseFloat(a.longitude),
+      lat: parseFloat(a.latitude)
+      },
+      date: a.activity_date
+    }))
+    setActivityCoords(prev =>[...prev, ...coordAct]);
+    setActivities(prev=>[...prev, ...mapAct]);
+    }
+
+    else if(message === "activity edited!"){
+      setActivities(prev => prev.map( a => {
+        const updated = res.find(r => r.activity_id === a.id);
+        if(updated){
+          return{
+            ...a,
+            name: updated.activity_name,
+            date: updated.activity_date,
+            address: updated.activity_address,
+            location: updated.activity_location
+          };
+        }
+        return a;
+      }));
+    }
+
+    else if(message === "activity deleted!"){
+      setActivities((prev) => prev.filter((a) => a.id !== res[0].activity_id));
+    }
   };
 
 
   if (!trip) return <p className="loading-text">Trip not found.</p>;
 
 
-  let filteredActivities = activities.filter(
+  /*let filteredActivities = activities.filter(
     (a) => a.date === selectedDate
-  );
+  );*/
 
-  //Delete actiity from itinerary
-  const handleDeleteActivity = async(index) => {
-    if (!window.confirm("Are you sure you want to delete this activity?")) { 
-      return;
-    }
 
-    /*const tripKey = getTripKey();
-    const updatedTrips = [...trips];
-    const thisTrip = updatedTrips.find((t) => t.id === Number(tripId));*/
+  //Delete activity
+  const handleDeleteActivity = async (index) => {
+    if (!window.confirm("Are you sure you want to delete this activity?")) return;
 
-    //if (!thisTrip) return;
+    await axios
+      .delete("http://localhost:8080/Itinerary/DeleteActivity", {
+        data: { activityid: index },
+        withCredentials: true,
+      })
+      .then((response) => {
+        if (response.data === true) {
+          setActivities((prev) => prev.filter((a) => a.id !== index));
+          setActivityCoords((prev) => prev.filter((a) => a.id !== index));
+        }
+      });
 
-    /*thisTrip.activities.splice(index, 1);
-
-    localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
-    setTrips(updatedTrips);
-    setTrip({ ...thisTrip });*/
-    await axios.delete("http://localhost:8080/Itinerary/DeleteActivity", {data:{activityid:index}, withCredentials:true})
-    .then(response => {
-      if(response.data === true) 
-      {
-        setActivities((prev) => prev.filter((a) => a.id !== index));
-      }
-    });
     alert("Activity deleted successfully!");
   };
 
-  const arrangeItinerary = async() => {
-    // 5 second countdown then arrange if not reset timer
-    await axios.get("http://localhost:8080/Itinerary/ArrangeItinerary", {params:{i_id:tripId}, withCredentials:true})
-    .then(res => {
-      if(res.data === true) 
-      {
-        console.log("function runned");
-      }
+  const arrangeItinerary = async () => {
+    await axios.get("http://localhost:8080/Itinerary/ArrangeItinerary", {
+      params: { i_id: tripId },
+      withCredentials: true,
     });
-  }
+  };
+
+  //Render
+  const tripName = trip?.name || "Trip";
+  const tripStart = trip?.start || "";
+  const tripEnd = trip?.end || "";
 
   return (
     <div className="itinerary-view">
-      <button
-        className="back-btn"
-        onClick={() => navigate(`/mytrips/trip/${tripId}`)}
-      >
+      <button className="back-btn" onClick={() => navigate(`/mytrips/trip/${tripId}`)}>
         ← Back
       </button>
 
       <div className="itinerary-top-row">
         <div>
-          <h1>{trip.name}</h1>
+          <h1>{tripName}</h1>
           <p className="date-text">
-            {trip.start} – {trip.end}
+            {tripStart} – {tripEnd}
           </p>
         </div>
       </div>
@@ -174,16 +422,14 @@ function ItineraryPage() {
         <div className="left-side">
           <h2>Activities</h2>
 
-          {/*Date drop down bar--> user can view activities for selected date*/}
-          {/* Date dropdown + Arrange button */}
-            {!Loading && activities.length > 0 && (
+          {!Loading && activities.length > 0 && (
             <div className="date-row">
               <select
                 className="date-filter-dropdown"
                 value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
+                onChange={(e) => setSelectedDate(normDate(e.target.value))}
               >
-                {Array.from(new Set(activities.map((a) => a.date)))
+                {Array.from(new Set(activities.map((a) => normDate(a.date))))
                   .sort()
                   .map((d) => (
                     <option key={d} value={d}>
@@ -196,63 +442,78 @@ function ItineraryPage() {
                   ))}
               </select>
 
-              <button className="arrange-btn" onClick={() => arrangeItinerary()} disabled={isArranging}>{isArranging ? "Arranging..." : "Arrange"}</button>
+              <button
+                className="arrange-btn"
+                onClick={() => arrangeItinerary()}
+                disabled={isArranging}
+              >
+                {isArranging ? "Arranging..." : "Arrange"}
+              </button>
             </div>
           )}
 
-          {/*Activity section*/}
           <div className="activities-section">
             {Loading && <p>Loading..</p>}
-            {!Loading && filteredActivities.length === 0 && (
-              <p>No activities for this day.</p>
-            )}
+            {!Loading && filteredActivities.length === 0 && <p>No activities for this day.</p>}
 
-            {!Loading && filteredActivities.map((act) => (
-              <div key={act.id} className="activity-card">
-                <h3>{act.name}</h3>
-                <p>
-                  <strong>{act.date}</strong>
-                </p>
-                <p>{act.location}</p>
-                {act.address && <p>{act.address}</p>}
+            {!Loading &&
+              filteredActivities.map((act) => (
+                <div key={act.id} className="activity-card">
+                  <h3>{act.name}</h3>
+                  <p>
+                    <strong>{act.date}</strong>
+                  </p>
+                  <p>{act.location}</p>
+                  {act.address && <p>{act.address}</p>}
 
-                <div className="activity-actions">
-                  <button className="activity-edit-btn" disabled={isArranging} onClick={() => navigate(`/mytrips/trip/activity/edit/${tripId}/${act.id}`)}>
-                    Edit
-                  </button>
+                  <div className="activity-actions">
+                    <button
+                      className="activity-edit-btn"
+                      disabled={isArranging}
+                      onClick={() =>
+                        navigate(`/mytrips/trip/activity/edit/${tripId}/${act.id}`)
+                      }
+                    >
+                      Edit
+                    </button>
 
-                  {/*Delete button*/}
-                  <button className="activity-delete-btn" disabled={isArranging} onClick={() => handleDeleteActivity(act.id)}> Delete </button>
+                    <button
+                      className="activity-delete-btn"
+                      disabled={isArranging}
+                      onClick={() => handleDeleteActivity(act.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
-          </div>
-          ))}
+              ))}
           </div>
 
-          {/*Add new activity*/}
           <button
             className="add-activity-big"
             disabled={isArranging}
-            onClick={() =>
-              navigate(`/mytrips/trip/activity/create/${trip.id}`)
-            }
+            onClick={() => navigate(`/mytrips/trip/activity/create/${tripId}`)}
           >
             Add Activity +
           </button>
         </div>
 
         <div className="right-side">
-          {mapData ? (
-            <InitMaps mapData={mapData} />
-          ) : (
+          {!mapConfig ? (
             <p className="map-loading-text">Loading map…</p>
+          ) : (
+            <div
+              ref={mapDivRef}
+              style={{ width: "100%", height: "600px", borderRadius: "12px" }}
+            />
           )}
-
         </div>
       </div>
+
       <button className="floating-chat-btn" onClick={() => setShowChat(true)} title="Chat">
         Chat
       </button>
-      {showChat && ( <ItineraryChat onClose={() => setShowChat(false)}/> )}
+      {showChat && <ItineraryChat onClose={() => setShowChat(false)} />}
     </div>
   );
 }

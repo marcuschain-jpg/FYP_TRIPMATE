@@ -1,0 +1,544 @@
+.edit-profile-page {
+    display: flex;
+    min-height: 100vh;
+    background: #f5f5f5;
+}
+
+/*Sidebar*/
+.edit-profile-sidebar {
+    width: 220px;
+    background: #0b4f6c;
+    padding: 20px 0;
+    position: fixed;
+    height: 100vh;
+    left: 0;
+    top: 60px;
+}
+
+.edit-profile-sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.edit-profile-sidebar li {
+    padding: 15px 30px;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.edit-profile-sidebar li:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.edit-profile-sidebar li.active {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    font-weight: 600;
+    border-left: 4px solid #fff;
+}
+
+/*Main content*/
+.edit-profile-main {
+    margin-left: 220px;
+    flex: 1;
+    padding: 40px 60px;
+    display: flex;
+    justify-content: center;
+}
+
+.edit-profile-container {
+    background: white;
+    border-radius: 16px;
+    padding: 40px 50px;
+    max-width: 700px;
+    width: 100%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.edit-profile-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+/*Profile picture*/
+.profile-pic-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.profile-pic-wrapper {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-bottom: 15px;
+    border: 4px solid #0b4f6c;
+}
+
+.profile-pic-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.change-pic-btn {
+    background: #0b4f6c;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.3s ease;
+}
+
+.change-pic-btn:hover {
+    background: #094561;
+}
+/*Edit user info form*/
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 15px;
+    font-weight: 600;
+    color: #0b4f6c;
+    margin-bottom: 8px;
+}
+
+.form-group input[type="text"] {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-group input[type="text"]:focus {
+    outline: none;
+    border-color: #0b4f6c;
+}
+
+/*User's interest checkboxes*/
+.interests-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.interest-checkbox {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 6px;
+    transition: background 0.2s ease;
+}
+
+.interest-checkbox:hover {
+    background: #f5f5f5;
+}
+
+.interest-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    cursor: pointer;
+    accent-color: #0b4f6c;
+}
+
+.interest-checkbox span {
+    font-size: 14px;
+    color: #333;
+}
+
+/*User account type button (premium/free)*/
+.account-type-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.account-type-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: 2px solid #ddd;
+    background: white;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.account-type-btn:hover {
+    border-color: #0b4f6c;
+    color: #0b4f6c;
+}
+
+.account-type-btn.active {
+    background: #0b4f6c;
+    border-color: #0b4f6c;
+    color: white;
+}
+
+/*Form actions*/
+.form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 35px;
+    padding-top: 25px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.save-btn,
+.cancel-btn {
+    flex: 1;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.save-btn {
+    background: #0b4f6c;
+    color: white;
+}
+
+.save-btn:hover {
+    background: #094561;
+}
+
+.cancel-btn {
+    background: #e0e0e0;
+    color: #666;
+}
+
+.cancel-btn:hover {
+    background: #d0d0d0;
+}
+
+@media (max-width: 768px) {
+    .edit-profile-sidebar {
+        width: 100%;
+        position: relative;
+        height: auto;
+    }
+
+    .edit-profile-main {
+        margin-left: 0;
+        padding: 20px;
+    }
+
+    .edit-profile-container {
+        padding: 30px 20px;
+    }
+
+    .interests-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+}
+
+/*Unsubscribe modal/ confirmation message*/
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.unsubscribe-modal {
+    background: white;
+    border-radius: 12px;
+    padding: 35px;
+    max-width: 480px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.unsubscribe-modal h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0b4f6c;
+    margin-bottom: 15px;
+}
+
+.unsubscribe-modal p {
+    font-size: 15px;
+    color: #666;
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.modal-warning {
+    font-size: 14px;
+    color: #444;
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.unsubscribe-confirm-btn,
+.unsubscribe-cancel-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.unsubscribe-confirm-btn {
+    background: #0b4f6c;
+    color: white;
+}
+
+.unsubscribe-confirm-btn:hover {
+    background: #094561;
+}
+
+.unsubscribe-cancel-btn {
+    background: #e0e0e0;
+    color: #666;
+}
+
+.unsubscribe-cancel-btn:hover {
+    background: #d0d0d0;
+}
+
+/*Upgrade to premium modal/ confirmation message*/
+.upgrade-modal {
+    background: white;
+    border-radius: 12px;
+    padding: 35px;
+    max-width: 450px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.upgrade-modal h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0b4f6c;
+    margin-bottom: 15px;
+}
+
+.upgrade-description {
+    font-size: 15px;
+    color: #666;
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+.subscribe-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #0b4f6c;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.subscribe-btn:hover {
+    background: #094561;
+}
+
+.modal-cancel-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #e0e0e0;
+    color: #666;
+    transition: all 0.3s ease;
+}
+
+.modal-cancel-btn:hover {
+    background: #d0d0d0;
+}
+
+/*Payment modal--> simulation*/
+.payment-modal {
+    background: white;
+    border-radius: 12px;
+    padding: 35px;
+    max-width: 480px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.payment-modal h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0b4f6c;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.payment-form-group {
+    margin-bottom: 20px;
+}
+
+.payment-form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #0b4f6c;
+    margin-bottom: 8px;
+}
+
+.payment-form-group input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+.payment-form-group input:focus {
+    outline: none;
+    border-color: #0b4f6c;
+}
+
+.card-input-wrapper {
+    position: relative;
+}
+
+.card-logos {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 6px;
+}
+
+.payment-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.payment-modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 30px;
+}
+
+.payment-cancel-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #e0e0e0;
+    color: #666;
+    transition: all 0.3s ease;
+}
+
+.payment-cancel-btn:hover {
+    background: #d0d0d0;
+}
+
+.payment-submit-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #0b4f6c;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.payment-submit-btn:hover {
+    background: #094561;
+}
+
+/*Payment successful*/
+.success-modal {
+    background: white;
+    border-radius: 12px;
+    padding: 40px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.success-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #4caf50;
+    color: white;
+    font-size: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.success-modal h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.success-modal p {
+    font-size: 15px;
+    color: #666;
+}
