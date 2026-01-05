@@ -10,7 +10,7 @@ const s3 = new AWS.S3({
     region: "ap-southeast-2",
     secretAccessKey: process.env.AWSSECRETKEY
 });
-const myBucket = 'fyp-tripmate-bucket'
+const myBucket = process.env.AWSBUCKET
 
 async function ExtractPhotoS3(data){
     const newData = data.map(d => {
