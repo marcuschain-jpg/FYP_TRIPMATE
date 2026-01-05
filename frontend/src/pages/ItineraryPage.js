@@ -7,7 +7,7 @@ import ItineraryChat from "../components/ItineraryChat";
 
 const socket = io("http://localhost:8080");
 
-//Normalize any date string to YYYY-MM-DD--> connecting lines will reset when toggled to a diff day (wont connect all days together)
+//Normalize any date string to YYYY-MM-DD
 function normDate(d) {
   if (!d) return "";
   return String(d).slice(0, 10);
@@ -98,7 +98,7 @@ function ItineraryPage() {
           mapRef.current = new window.google.maps.Map(mapDivRef.current, {
             center,
             zoom: 12,
-            styles: [], //Force light mode--> so that line is not too dark
+            styles: [],
             mapTypeControl: true,
             streetViewControl: false,
             fullscreenControl: true,
@@ -108,10 +108,8 @@ function ItineraryPage() {
           directionsServiceRef.current = new window.google.maps.DirectionsService();
           directionsRendererRef.current = new window.google.maps.DirectionsRenderer({
             map: mapRef.current,
-            suppressMarkers: false, // Google will show A/B/C markers
+            suppressMarkers: false,
             preserveViewport: false,
-
-            //Route line styling (color, opacity etc) 
             polylineOptions: {
               strokeColor: "#393F86", 
               strokeOpacity: 0.9,
@@ -141,7 +139,6 @@ function ItineraryPage() {
       .then((res) => {
         const data = res.data;
 
-        //Trip
         const mapTrips = {
           id: tripId,
           name: data?.[0]?.itinerary_name,
@@ -150,7 +147,6 @@ function ItineraryPage() {
         };
         setTrip(mapTrips);
 
-        //Activities & location coords
         const mapAct = data.map((a) => ({
           id: a.activity_id,
           name: a.activity_name,
@@ -197,6 +193,67 @@ function ItineraryPage() {
       });
   }, [isArranging, tripId, firstdate, navigate]);
 
+  // Functions to load upon receiving socket updates for REAL TIME
+  const renderUpdateActivities = (res, message) => {
+    if (message === "activity created!") {
+      const mapAct = res.map((a) => ({
+        id: a.activity_id,
+        name: a.activity_name,
+        date: normDate(a.activity_date),
+        address: a.activity_address,
+        location: a.activity_location,
+      }));
+
+      const coordAct = res.map((a) => ({
+        id: a.activity_id,
+        coords: {
+          lng: parseFloat(a.longitude),
+          lat: parseFloat(a.latitude),
+        },
+        date: normDate(a.activity_date),
+      }));
+
+      setActivityCoords((prev) => [...prev, ...coordAct]);
+      setActivities((prev) => [...prev, ...mapAct]);
+    } else if (message === "activity edited!") {
+      setActivities((prev) =>
+        prev.map((a) => {
+          const updated = res.find((r) => r.activity_id === a.id);
+          if (updated) {
+            return {
+              ...a,
+              name: updated.activity_name,
+              date: normDate(updated.activity_date),
+              address: updated.activity_address,
+              location: updated.activity_location,
+            };
+          }
+          return a;
+        })
+      );
+
+      setActivityCoords((prev) =>
+        prev.map((coord) => {
+          const updated = res.find((r) => r.activity_id === coord.id);
+          if (updated) {
+            return {
+              ...coord,
+              coords: {
+                lng: parseFloat(updated.longitude),
+                lat: parseFloat(updated.latitude),
+              },
+              date: normDate(updated.activity_date),
+            };
+          }
+          return coord;
+        })
+      );
+    } else if (message === "activity deleted!") {
+      setActivities((prev) => prev.filter((a) => a.id !== res[0].activity_id));
+      setActivityCoords((prev) => prev.filter((a) => a.id !== res[0].activity_id));
+    }
+  };
+
   useEffect(() => {
     if (!socket) return;
 
@@ -207,12 +264,24 @@ function ItineraryPage() {
     });
 
     socket.on("Arranged", (data) => {
-      if (!data.running) setIsArranging(false);
+      if (!data.running) {
+        console.log("Arranged event received", data);
+        setIsArranging(false);
+      }
+    });
+
+    socket.on("notification", (data) => {
+      if (data.message) {
+        console.log(data.message);
+        console.log("payload", data.payload);
+        renderUpdateActivities(data.payload, data.message);
+      }
     });
 
     return () => {
       socket.off("Arranging");
       socket.off("Arranged");
+      socket.off("notification");
     };
   }, [tripId]);
 
@@ -262,7 +331,7 @@ function ItineraryPage() {
         destination,
         waypoints,
         travelMode: window.google.maps.TravelMode.DRIVING,
-        optimizeWaypoints: false, //keep your activity order
+        optimizeWaypoints: false,
       },
       (result, status) => {
         if (status === "OK" && result) {
