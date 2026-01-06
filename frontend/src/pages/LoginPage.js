@@ -2,14 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../styles/Login.css";
 import axios from "axios";
-
 //Import background picture
 import LoginBG from "../Assets/Login.jpg";
 
-export default function LoginPage() {
+export default function LoginPage({ setCurrentUserProfile, markAsFirstTimeUser }) {
   const navigate = useNavigate();
   const { errorMsg } = useParams();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
@@ -23,9 +21,9 @@ export default function LoginPage() {
   useEffect(() => {
     if(errorMsg) {
       showToast(errorMsg, "error");
-      return
+      return;
     }
-  }, [])
+  }, []);
 
   const handleLogin = async() => {
     if (!email || !password || !role) {
@@ -33,23 +31,43 @@ export default function LoginPage() {
       return;
     }
 
+    try {
+      const res = await axios.post("http://localhost:8080/AuthService/Login", {email, password, role}, {withCredentials:true});
 
-    await axios.post("http://localhost:8080/AuthService/Login", {email, password, role}, {withCredentials:true})
-    .then(res => {
-      if(res.data.check === false)
-      {
+      if(res.data.check === false) {
         showToast(res.data.message, "error");
         return;
       }
-      else if(res.data.check === true)
-      {
+      else if(res.data.check === true) {
         const token = res.data.token;
-        console.log(res, document.cookie);
+        //Check if user has completed profile setup from backend
+        const isFirstLogin = res.data.isFirstLogin || false;
+        
+        console.log("Login successful. isFirstLogin:", isFirstLogin);
         showToast("Login successful! Redirecting...", "success");
-        if(role === "user") setTimeout(() => navigate(`/home`), 1200);
-        else if(role === "admin") setTimeout(() => navigate(`/admin/overview`), 1200);
+
+        //Mark if this is first-time user
+        markAsFirstTimeUser(isFirstLogin);
+
+        //Redirect based on isFirstLogin flag
+        if(role === "user") {
+          setTimeout(() => {
+            if (isFirstLogin) {
+              navigate("/setup-profile");
+            } else {
+              navigate("/home");
+            }
+          }, 1200);
+        }
+        else if(role === "admin") {
+          setTimeout(() => navigate("/admin/overview"), 1200);
+        }
       }
-    })
+    }
+    catch (err) {
+      console.error(err);
+      showToast("Login failed. Please try again.", "error");
+    }
   };
 
   return (
@@ -73,12 +91,12 @@ export default function LoginPage() {
         </p>
       </div>
 
-      {/*Login card section --> contais login fields*/}
+      {/*Login card section --> contains login fields*/}
       <div className="login-card">
         <h2 className="login-title">Welcome Back!</h2>
         <p className="login-subtitle">Login to continue your journey</p>
 
-        {/*User role dropdown */}
+        {/*User role dropdown*/}
         <label className="login-label">Role</label>
         <select
           className="login-input"
@@ -111,14 +129,14 @@ export default function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-         {/*Login button*/}
+        {/*Login button*/}
         <button className="login-btn" onClick={handleLogin}>
           Login
         </button>
 
-         {/*Takes user to create account oage if they do not have an account*/} 
+        {/*Takes user to create account page if they do not have an account*/}
         <p className="login-footer">
-          Don’t have an account?{" "}
+          Don't have an account?{" "}
           <span
             className="login-link"
             onClick={() => navigate("/register")}
