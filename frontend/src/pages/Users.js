@@ -46,16 +46,16 @@ function Notification({ onClose }) {
   );
 }
 
-function formatNowTimestamp() {
-  const d = new Date();
-  const pad = (n) => String(n).padStart(2, "0");
-  const yyyy = d.getFullYear();
-  const mm = pad(d.getMonth() + 1);
-  const dd = pad(d.getDate());
-  const hh = pad(d.getHours());
-  const min = pad(d.getMinutes());
-  return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
-}
+// function formatNowTimestamp() {
+//   const d = new Date();
+//   const pad = (n) => String(n).padStart(2, "0");
+//   const yyyy = d.getFullYear();
+//   const mm = pad(d.getMonth() + 1);
+//   const dd = pad(d.getDate());
+//   const hh = pad(d.getHours());
+//   const min = pad(d.getMinutes());
+//   return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+// }
 
 export default function Users() {
   const navigate = useNavigate();
@@ -65,6 +65,22 @@ export default function Users() {
   // const [users, setUsers] = useState(mockUsers);
   const [users, setUsers] = useState([]);
 
+  //Create Real Time Activity Logs
+  const [activityLog, setActivityLog] = useState([]);
+
+  const loadActivityLogs = () => {
+    axios
+      .get("http://localhost:8080/api/activity-logs", {
+        withCredentials: true,
+      })
+      .then((res) => setActivityLog(res.data))
+      .catch((err) => console.error("Failed to load activity logs", err));
+  };
+
+  useEffect(() => {
+    loadActivityLogs();
+  }, []);
+
   // Load Data from DB
   useEffect(() => {
     axios
@@ -73,9 +89,14 @@ export default function Users() {
       })
       .then((response) => {
         setUsers(response.data);
+        
+        loadActivityLogs();
       })
       .catch((err) => {
-        if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+        if (
+          err.response &&
+          (err.response.status === 401 || err.response.status === 403)
+        ) {
           const errorMsg =
             err.response.status + ": " + err.response.data?.message;
           navigate(`/login/${errorMsg}`);
@@ -93,44 +114,44 @@ export default function Users() {
   const [showToast, setShowToast] = useState(false);
 
   // Auto-generated Activity Log
-  const [activityLog, setActivityLog] = useState(() => [
-    {
-      id: 1,
-      timestamp: "2025-11-05 16:22",
-      message: 'user "garcia@example.com" suspended',
-    },
-    {
-      id: 2,
-      timestamp: "2025-11-05 13:42",
-      message: 'user "young@example.com" suspended',
-    },
-    {
-      id: 3,
-      timestamp: "2025-11-05 12:26",
-      message: 'user "carter@example.com" registered',
-    },
-    {
-      id: 4,
-      timestamp: "2025-11-05 12:01",
-      message: 'user "hernandez@example.com" deleted',
-    },
-    {
-      id: 5,
-      timestamp: "2025-11-05 12:26",
-      message: 'user "clark@example.com" registered',
-    },
-  ]);
+  // const [activityLog, setActivityLog] = useState(() => [
+  //   {
+  //     id: 1,
+  //     timestamp: "2025-11-05 16:22",
+  //     message: 'user "garcia@example.com" suspended',
+  //   },
+  //   {
+  //     id: 2,
+  //     timestamp: "2025-11-05 13:42",
+  //     message: 'user "young@example.com" suspended',
+  //   },
+  //   {
+  //     id: 3,
+  //     timestamp: "2025-11-05 12:26",
+  //     message: 'user "carter@example.com" registered',
+  //   },
+  //   {
+  //     id: 4,
+  //     timestamp: "2025-11-05 12:01",
+  //     message: 'user "hernandez@example.com" deleted',
+  //   },
+  //   {
+  //     id: 5,
+  //     timestamp: "2025-11-05 12:26",
+  //     message: 'user "clark@example.com" registered',
+  //   },
+  // ]);
 
-  const addLog = (message) => {
-    setActivityLog((prev) => [
-      {
-        id: Date.now() + Math.random(),
-        timestamp: formatNowTimestamp(),
-        message,
-      },
-      ...prev,
-    ]);
-  };
+  // const addLog = (message) => {
+  //   setActivityLog((prev) => [
+  //     {
+  //       id: Date.now() + Math.random(),
+  //       timestamp: formatNowTimestamp(),
+  //       message,
+  //     },
+  //     ...prev,
+  //   ]);
+  // };
 
   const filteredUsers = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -171,6 +192,7 @@ export default function Users() {
     });
   };
 
+  //Updated Suspend Function
   const confirmSuspend = (user) => {
     setModal({
       title: user.status === "Active" ? "Suspend User" : "Activate User",
@@ -178,76 +200,54 @@ export default function Users() {
         user.status === "Active" ? "suspend" : "activate"
       } ${user.name}?`,
       action: () => {
-        const newStatus = user.status === "Active" ? "Suspended" : "Active";
-
-        // setUsers((prev) =>
-        //   prev.map((u) => (u.id === user.id ? { ...u, status: newStatus } : u))
-        // );
-
         axios
-          .patch(`http://localhost:8080/api/users/${user.id}/suspend`, {
+          .patch(`http://localhost:8080/api/users/${user.id}/suspend`, null, {
             withCredentials: true,
           })
-          .then(() => {
+          .then((res) => {
             setUsers((prev) =>
               prev.map((u) =>
                 u.id === user.id
-                  ? { ...u, status: u.status === "Active" ? "Suspended" : "Active" }
+                  ? { ...u, status: res.data.status }
                   : u
               )
             );
 
-            addLog(
-              `user "${user.email}" ${
-                user.status === "Active" ? "suspended" : "activated"
-              }`
-            );
+            loadActivityLogs();
 
             setShowToast(true);
           })
           .catch((err) => console.error("Suspend failed", err))
           .finally(() => setModal(null));
-
-        addLog(
-          `user "${user.email}" ${
-            newStatus === "Suspended" ? "suspended" : "activated"
-          }`
-        );
-
-        setModal(null);
-        setShowToast(true);
       },
     });
   };
 
+  //Updated Delete Function
   const confirmDelete = (user) => {
     setModal({
       title: "Delete User",
       message: `Delete ${user.name}? This action cannot be undone.`,
       action: () => {
-        // setUsers((prev) => prev.filter((u) => u.id !== user.id));
         axios
           .delete(`http://localhost:8080/api/users/${user.id}`, {
             withCredentials: true,
           })
           .then(() => {
             setUsers((prev) => prev.filter((u) => u.id !== user.id));
-            addLog(`user "${user.email}" deleted`);
+
+            setSelectedIds((prev) => {
+              const next = new Set(prev);
+              next.delete(user.id);
+              return next;
+            });
+
+            loadActivityLogs();
+
             setShowToast(true);
           })
           .catch((err) => console.error("Delete failed", err))
           .finally(() => setModal(null));
-
-        setSelectedIds((prev) => {
-          const next = new Set(prev);
-          next.delete(user.id);
-          return next;
-        });
-
-        addLog(`user "${user.email}" deleted`);
-
-        setModal(null);
-        setShowToast(true);
       },
     });
   };
