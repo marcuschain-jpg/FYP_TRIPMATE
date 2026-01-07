@@ -485,7 +485,7 @@ function ItineraryPage() {
         </div>
       </div>
 
-      {(tripType === "Group") && 
+      {(trip.type === "Group") && 
       (<button className="floating-chat-btn" onClick={() => setShowChat(true)} title="Chat">
         Chat
       </button>)}
