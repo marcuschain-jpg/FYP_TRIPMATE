@@ -38,7 +38,7 @@ function MyTripsPage() {
   const [tripToDelete, setTripToDelete] = useState(null);
   const[showChat, setShowChat] = useState(false);
 
-  // ✅ helper to convert a group trip into MyTrips format
+  //Convert a group trip into MyTrips format with member counter
   const mapGroupTripToMyTrip = (t) => ({
     id: t.id,
     name: t.title,
@@ -48,6 +48,9 @@ function MyTripsPage() {
     status: false,
     isGroupTrip: true,
     type: "Group",
+    owner: t.owner,
+    currentMembers: t.currentMembers || 0, //Current members in the group trip-->synced with GroupTripsPage
+    maxCapacity: t.capacity || 0, //Max capacity from group trips-->synced with GroupTripsPage
   });
   
 
@@ -77,7 +80,8 @@ function MyTripsPage() {
       end: t.end_date,
       status: t.completed,
       isGroupTrip: false,
-      type: "Private",
+      type: "Private", //Marker for private trips
+      collaborators: [], //Initialize empty collaborators array
     }));
 
     setTrips((prev) => {
@@ -101,7 +105,7 @@ function MyTripsPage() {
     });
   };
 
-  //Whenever joined trips changes-->keep them in My rips list
+  //Whenever joined trips changes-->keep them in My trips list
   useEffect(() => {
     if (!joinedGroupTrips) return;
 
@@ -156,7 +160,8 @@ function MyTripsPage() {
           end: newEnd,
           status: false,
           isGroupTrip: false,
-          type: "Private",
+          type: "Private", //Marker for private trips
+          collaborators: [], //Initialize empty collaborators array
         };
 
         setTrips((prev) => [...prev, newTrip]);
@@ -223,6 +228,26 @@ function MyTripsPage() {
       setShowDeleteConfirm(false);
     }
   };
+
+  //Update collaborators for a trip
+  const updateTripCollaborators = (tripId, collaborators) => {
+    setTrips((prev) =>
+      prev.map((trip) =>
+        trip.id === tripId ? { ...trip, collaborators } : trip
+      )
+    );
+  };
+
+  //Listen for collaborator updates from TripDetailsPage
+  useEffect(() => {
+    const handleUpdateCollaborators = (event) => {
+      const { tripId, collaborators } = event.detail;
+      updateTripCollaborators(tripId, collaborators);
+    };
+
+    window.addEventListener("updateCollaborators", handleUpdateCollaborators);
+    return () => window.removeEventListener("updateCollaborators", handleUpdateCollaborators);
+  }, []);
 
   //Apply filters
   const filteredTrips = trips.filter((t) => {
@@ -349,7 +374,36 @@ function MyTripsPage() {
           filteredTrips.map((trip) => (
             <div key={trip.id} className="trip-card">
               <div>
-                <h2 className="trip-name">{trip.name}</h2>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <h2 className="trip-name">{trip.name}</h2>
+                  {/*Marker for trip type*/}
+                  <span 
+                    style={{
+                      padding: "4px 8px",
+                      borderRadius: "4px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      color: trip.isGroupTrip ? "#fff" : "#333",
+                      backgroundColor: trip.isGroupTrip ? "#FF6B6B" : "#4ECDC4"
+                    }}
+                  >
+                    {trip.type}
+                  </span>
+                </div>
+
+                {/*Member counter for group trips*/}
+                {trip.isGroupTrip && (
+                  <p style={{ fontSize: "14px", color: "#666", marginTop: "5px" }}>
+                    Members: {trip.currentMembers}/{trip.maxCapacity}
+                  </p>
+                )}
+
+                {/*Collaborator counter for private trips*/}
+                {!trip.isGroupTrip && trip.collaborators && trip.collaborators.length > 0 && (
+                  <p style={{ fontSize: "14px", color: "#666", marginTop: "5px" }}>
+                    Collaborators: {trip.collaborators.length}
+                  </p>
+                )}
 
                 <div
                   className={`trip-status ${

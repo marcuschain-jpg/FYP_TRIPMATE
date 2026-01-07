@@ -122,6 +122,19 @@ function TripDetailsPage() {
     }
   };
 
+  //Save collaborators and update parent component
+  const handleSaveCollaborators = () => {
+    //Dispatch event to notify MyTripsPage of the update
+    const event = new CustomEvent("updateCollaborators", {
+      detail: {
+        tripId: trip.id,
+        collaborators: collaborators
+      }
+    });
+    window.dispatchEvent(event);
+    setShowCollaborators(false);
+  };
+
   if (loading) return <p>Loading..</p>;
 
   return (
@@ -215,7 +228,14 @@ function TripDetailsPage() {
       {showCollaborators && (
         <div className="collab-overlay">
           <div className="collab-card">
-            {isPremium && <h3 className="collab-title">Add Collaborators</h3>}
+            {isPremium && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                <h3 className="collab-title">Add Collaborators</h3>
+                <div style={{ background: "#e3f2fd", color: "#0a3d62", padding: "4px 12px", borderRadius: "20px", fontSize: "13px", fontWeight: "600" }}>
+                  {collaborators.length} member{collaborators.length !== 1 ? "s" : ""}
+                </div>
+              </div>
+            )}
 
             {/*Input row*/}
             {isPremium && <div className="collab-input-row">
@@ -276,7 +296,7 @@ function TripDetailsPage() {
               </button>
               {isPremium && <button
                 className="save-btn"
-                onClick={() => setShowCollaborators(false)}
+                onClick={handleSaveCollaborators}
               >
                 Save
               </button>}

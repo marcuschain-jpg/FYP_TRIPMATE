@@ -7,14 +7,15 @@ function GroupTripsPage() {
   //Shared state from Routes.js
   const { myTrips, joinTrip, exitTrip } = useOutletContext();
 
-  //Dummy data
+  //Dummy data--> groups with member count
   const [groupTrips, setGroupTrips] = useState([
     {
       id: 1,
       owner: "JohnWick123",
       title: "Egypt Sightseeing Tour",
       date: "22 Jan 2026 – 31 Jan 2026",
-      capacity: "8 Pax",
+      capacity: 5, //Max capacity - capped at 5
+      currentMembers: 1, //Current members in the trip
       description:
         "Explore the wonders of Egypt including iconic pyramids and indulge in countless delicacies.",
       joinedByYou: false,
@@ -24,7 +25,8 @@ function GroupTripsPage() {
       owner: "MileyCyrus",
       title: "Majestic Maldives",
       date: "13 Dec 2025 – 29 Dec 2025",
-      capacity: "4 Pax",
+      capacity: 5, //Max capacity --> capped at 5 for now
+      currentMembers: 2, //Current members in the trip
       description:
         "Perfect getaway from the city. Rest, relax, and enjoy the beautiful beaches in Maldives.",
       joinedByYou: false,
@@ -34,7 +36,8 @@ function GroupTripsPage() {
       owner: "DylanWang",
       title: "Italy Adventures!",
       date: "1 Feb 2026 – 20 Feb 2026",
-      capacity: "10 Pax",
+      capacity: 5, //Max capacity--> capped at 5 for now
+      currentMembers: 5, //Current members in the trip (full)
       description:
         "Explore local hotspots in Italy, perfect for those traveling to Europe for the first time.",
       joinedByYou: false,
@@ -53,7 +56,7 @@ function GroupTripsPage() {
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  //Mpdal state
+  //Modal state
   const [showModal, setShowModal] = useState(false);
 
   //form state (dummy)
@@ -63,16 +66,23 @@ function GroupTripsPage() {
   const [endDate, setEndDate] = useState("");
   const [description, setDescription] = useState("");
 
-  //joine handler
+  //Join handler
   const handleJoin = (trip) => {
-    // local UI update (your original logic)
+    //Check if trip is full
+    if (trip.currentMembers >= trip.capacity) {
+      alert("This trip is full!");
+      return;
+    }
+
     setGroupTrips((prev) =>
       prev.map((t) =>
-        t.id === trip.id ? { ...t, joinedByYou: true } : t
+        t.id === trip.id 
+          ? { ...t, joinedByYou: true, currentMembers: t.currentMembers + 1 }
+          : t
       )
     );
 
-    
+    //Pass trip to parent
     joinTrip(trip);
   };
 
@@ -83,9 +93,13 @@ function GroupTripsPage() {
     );
     if (!confirmExit) return;
 
-   
+    //Update local state-->decrease member count
     setGroupTrips((prev) =>
-      prev.filter((trip) => trip.id !== tripId)
+      prev.map((trip) =>
+        trip.id === tripId
+          ? { ...trip, joinedByYou: false, currentMembers: Math.max(0, trip.currentMembers - 1) }
+          : trip
+      )
     );
 
     exitTrip(tripId);
@@ -98,12 +112,16 @@ function GroupTripsPage() {
       return;
     }
 
+    //Cap pax at 5 max
+    const maxCapacity = Math.min(parseInt(pax) || 5, 5);
+
     const newTrip = {
       id: Date.now(),
       owner: "You",
       title: tripName,
       date: `${startDate} – ${endDate}`,
-      capacity: `${pax} Pax`,
+      capacity: maxCapacity, //Capped at 5
+      currentMembers: 1, //Creator is automatically a member
       description,
       joinedByYou: true,
     };
@@ -158,11 +176,12 @@ function GroupTripsPage() {
 
                 <h3>{trip.title}</h3>
                 <p><strong>Date:</strong> {trip.date}</p>
-                <p><strong>Capacity:</strong> {trip.capacity}</p>
+                {/*Member counter - showing current/max members*/}
+                <p><strong>Members:</strong> {trip.currentMembers}/{trip.capacity}</p>
                 <p className="trip-desc">{trip.description}</p>
               </div>
 
-              {/*Join or exit group tips*/}
+              {/*Join or exit group trips*/}
               <div className="group-trip-right">
                 {trip.joinedByYou ? (
                   <button
@@ -175,8 +194,13 @@ function GroupTripsPage() {
                   <button
                     className="join-btn-text"
                     onClick={() => handleJoin(trip)}
+                    disabled={trip.currentMembers >= trip.capacity} //Disable if full
+                    style={{
+                      opacity: trip.currentMembers >= trip.capacity ? 0.5 : 1,
+                      cursor: trip.currentMembers >= trip.capacity ? "not-allowed" : "pointer"
+                    }}
                   >
-                    Join
+                    {trip.currentMembers >= trip.capacity ? "Full" : "Join"}
                   </button>
                 )}
               </div>
@@ -199,10 +223,17 @@ function GroupTripsPage() {
               </div>
 
               <div className="modal-field">
-                <label>No. of pax</label>
+                <label>No. of pax (Max 5)</label>
                 <input
+                  type="number"
+                  min="1"
+                  max="5"
                   value={pax}
-                  onChange={(e) => setPax(e.target.value)}
+                  onChange={(e) => {
+                    //Cap at 5
+                    const value = Math.min(parseInt(e.target.value) || 0, 5);
+                    setPax(value);
+                  }}
                 />
               </div>
             </div>
@@ -211,6 +242,7 @@ function GroupTripsPage() {
               <div className="modal-field">
                 <label>Start Date</label>
                 <input
+                  type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                 />
@@ -219,6 +251,7 @@ function GroupTripsPage() {
               <div className="modal-field">
                 <label>End Date</label>
                 <input
+                  type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                 />
