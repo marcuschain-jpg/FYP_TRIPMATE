@@ -12,11 +12,13 @@ const Geotag = require("../helper/Geotag.js"); // geotag photo
 const { ExtractPhotoS3, ImportPhotoS3, DeletePhotoS3 } = require("../helper/S3FileSys.js"); // get link that may expire from AWS S3
 // Load custom env file
 dotenv.config({ path: "keys.env" });
-// --- Call other functions ---
-const InitRealtime = require("../helper/Realtime.js");
-const TSPAlgo = require("../helper/TSPAlgo.js"); // Arrange activity
+// --- Arrange activity functions ---
+const InitRealtime = require("../helper/Realtime.js"); 
+const TSPAlgo = require("../helper/TSPAlgo.js");
 // --- Authenticate ---
 const RequireAuth = require("../middlewares/RequireAuths.js"); // Authenticate and authorize user
+// --- Collaboration Invitation ---
+const SendEmail = require("../helper/SendEmail.js");
 
 // Default key and center coord to initialize maps
 router.get("/maps", (req, res) => {
@@ -34,9 +36,14 @@ router.get("/GetAllItineraries", RequireAuth(["registered", "premium"]), async(r
 
   try{
     const data = await pool.query(
-      `SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date, completed, type
+      `SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date, completed, type, 'host' as usertype
        FROM itinerary
        WHERE user_host_id = $1
+       UNION
+       SELECT i.itinerary_id, i.itinerary_name, i.itinerary_dest, i.start_date, i.end_date, i.completed, i.type, 'visitor' as usertype
+       FROM itinerary i
+       JOIN shared_itinerary si ON i.itinerary_id = si.itinerary_id  
+       WHERE si.user_id = $1
        ORDER BY completed ASC`, [userid]
     );
 
@@ -44,7 +51,7 @@ router.get("/GetAllItineraries", RequireAuth(["registered", "premium"]), async(r
   }
 
   catch(err){
-    return res.status(500).send('View all itineraries failed');
+    return res.status(500).send({message: 'View all itineraries failed'});
   }
 });
 
@@ -100,7 +107,26 @@ router.delete("/DeleteItinerary", RequireAuth(["registered", "premium"]), async(
     }
   }
   catch(err){
-    return res.status(500).send("Create itinerary failed");
+    return res.status(500).send("Delete itinerary failed");
+  }
+});
+
+router.delete("/ExitItinerary", RequireAuth(["registered", "premium"]), async(req, res) =>{
+  const {itineraryid} = req.body;
+
+  // Exit itinerary
+  try{
+    const data = await pool.query(
+      `DELETE FROM shared_itinerary
+       WHERE itinerary_id = $1`, [itineraryid]
+    );
+    if(data.rowCount === 1) //successfully delete
+    {
+      return res.send(true);
+    }
+  }
+  catch(err){
+    return res.status(500).send({message: "Exit itinerary failed"});
   }
 });
 
@@ -110,8 +136,12 @@ router.get("/GetItinerary", RequireAuth(["registered", "premium"]), async(req, r
 
   try{
     const data = await pool.query(
-      `SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date, completed, type, num_ppl
-       FROM itinerary WHERE itinerary_id = $1`, [i_id]
+      `SELECT i.itinerary_id, i.itinerary_name, i.itinerary_dest, i.start_date, i.end_date, i.completed, i.type, i.num_ppl,
+       u.first_name, u.last_name, u.email
+       FROM itinerary i
+       LEFT JOIN shared_itinerary si ON i.itinerary_id = si.itinerary_id
+       LEFT JOIN users u ON si.user_id = u.userid
+       WHERE i.itinerary_id = $1`, [i_id]
     );
     return res.json(data.rows);
   }
@@ -136,6 +166,74 @@ router.patch("/UpdateItineraryComplete", RequireAuth(["registered", "premium"]),
   }
   catch(err){
     return res.status(500).send("UpdateCompleteFailed");
+  }
+});
+
+router.post("/AddCollaborator", RequireAuth(["premium"]), async(req,res) => {
+  const {i_id, email, i_name} = req.body;
+  const host_userid = req.userid;
+  let userid_collab = null;
+  let inv_id = null;
+  let host_name = "";
+  let sentEmail = false;
+
+  try{
+    const data = await pool.query(
+      `SELECT userid, type, first_name, last_name FROM users WHERE email = $1 OR userid = $2`, [email, host_userid]
+    )
+    if(data.rowCount === 0) return res.status(500).send({message: "No user found with this email"});
+    data.rows.forEach(element => {
+      if (element.type !== "premium") return res.status(500).send({message: "Invitee needs to be a premium user"});
+      else if(element.userid === host_userid) host_name = `${element.first_name} ${element.last_name}`;
+      else if(element.userid !== host_userid) userid_collab = data.rows[0].userid;
+    });
+  }
+  catch(err) {return res.status(500).send({message: "Query Failed"});}
+
+  if(userid_collab){
+    try{
+      const data = await pool.query(
+        `INSERT INTO invitation(itinerary_id, user_id)
+         VALUES($1, $2)
+         RETURNING inv_id`, [i_id, userid_collab]
+      );
+      if(data.rowCount > 0) inv_id = data.rows[0].inv_id;
+    }
+    catch(err) {return res.status(500).send({message: "AddCollaboratorFailed"});}
+
+    const content = {
+      recipient: email,
+      subject: `Tripmate Collaborative Invitation`,
+      text: `Collaborate with ${host_name} on "${i_name}"! Click me to accept your invitation!`
+    };
+    sentEmail = await SendEmail(content);
+    if(!sentEmail) return res.status(500).send({message: "Failed to send email"});
+    return res.send(true);
+  }
+});
+
+router.delete("/DeleteCollaborator", RequireAuth(["premium"]), async(req,res) => {
+  const {i_id, email} = req.body;
+  let userid_collab = null;
+
+  try{
+    const data = await pool.query(
+      `SELECT userid FROM users WHERE email = $1`, [email]
+    )
+    if (data.rowCount > 0) userid_collab = data.rows[0].userid;
+    else if(data.rowCount === 0) return res.status(500).send({message: "No user found with this email"});
+  }
+  catch(err) {return res.status(500).send({message: "No user found with this email"});}
+  
+  if(userid_collab){
+    try{
+      const data = await pool.query(
+        `DELETE FROM shared_itinerary
+        WHERE itinerary_id = $1 AND user_id = $2`, [i_id, userid_collab]
+      );
+      if(data.rowCount > 0) return res.send(true);
+    }
+    catch(err) {return res.status(500).send({message: "DeleteCollaboratorFailed"});}
   }
 });
 
