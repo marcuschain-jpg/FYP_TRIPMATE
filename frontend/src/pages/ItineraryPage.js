@@ -129,7 +129,6 @@ function ItineraryPage() {
 
   //Load trips and activities
   useEffect(() => {
-    setLoading(true);
 
     axios
       .get("http://localhost:8080/Itinerary/GetAllActivities", {
@@ -138,6 +137,7 @@ function ItineraryPage() {
       })
       .then((res) => {
         const data = res.data;
+        setLoading(true);
         console.log(data);
 
         const mapTrips = {
@@ -145,8 +145,8 @@ function ItineraryPage() {
           name: data?.[0]?.itinerary_name,
           start: data?.[0]?.start_date,
           end: data?.[0]?.end_date,
-          type: data[0].type,
-          numPpl: data?.[0].num_ppl
+          type: data?.[0]?.type,
+          numPpl: data?.[0]?.num_ppl
         };
         setTrip(mapTrips);
 
@@ -376,6 +376,7 @@ function ItineraryPage() {
   const tripName = trip?.name || "Trip";
   const tripStart = trip?.start || "";
   const tripEnd = trip?.end || "";
+  const tripType = trip?.type || "";
 
   return (
     <div className="itinerary-view">
@@ -484,7 +485,7 @@ function ItineraryPage() {
         </div>
       </div>
 
-      {(trip.type === "Shared" || trip.type === "Group") && 
+      {(tripType === "Group") && 
       (<button className="floating-chat-btn" onClick={() => setShowChat(true)} title="Chat">
         Chat
       </button>)}
