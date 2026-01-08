@@ -70,7 +70,7 @@ export default function Users() {
 
   const loadActivityLogs = () => {
     axios
-      .get("http://localhost:8080/api/activity-logs", {
+      .get("http://localhost:8080/api/users/activity", {
         withCredentials: true,
       })
       .then((res) => setActivityLog(res.data))
@@ -265,10 +265,8 @@ export default function Users() {
         <div className="tm-card">
           <h3>User Activity Log</h3>
           <ul className="um-log">
-            {activityLog.slice(0, 6).map((log) => (
-              <li key={log.id}>
-                {log.timestamp} | {log.message}
-              </li>
+            {activityLog.slice(0, 6).map((log, index) => (
+              <li key={index}>{log}</li>
             ))}
             {activityLog.length === 0 && (
               <li style={{ color: "#64748b" }}>No recent activity</li>
