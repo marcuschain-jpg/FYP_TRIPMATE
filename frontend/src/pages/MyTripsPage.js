@@ -85,9 +85,9 @@ function MyTripsPage() {
       status: t.completed,
       isGroupTrip: false,
       type: "Private", //Marker for private trips
-      collaborators: [], //Initialize empty collaborators array
+      collaborators: ["a", "b"], //Initialize empty collaborators array
       //type: t.type,
-      //userItineraryType: t.usertype
+      userItineraryType: t.usertype
     }));
 
     setTrips((prev) => {
@@ -448,9 +448,6 @@ function MyTripsPage() {
                 <div className={`trip-status ${trip.status === true ? "completed" : "inprogress"}`}>
                   {trip.status && "Completed"}
                   {!trip.status && "In Progress"}
-                </div>
-                <div className={`trip-status ${trip.status === true ? "completed" : "inprogress"}`}>
-                  {trip.type}
                 </div>
               </div>
 
