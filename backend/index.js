@@ -12,6 +12,7 @@ const timelineRouter = require("./routes/Timeline");
 const mediaRouter = require("./routes/Media");
 const RequireAuths = require('./middlewares/RequireAuths.js');
 const usersRoute = require("./routes/users");
+const groupTripsRouter = require("./routes/GroupTrip.js");
 
 const app = express();
 const server = http.createServer(app);
@@ -28,6 +29,7 @@ app.use("/Itinerary", itineraryRouter); // Itinerary related pages
 app.use("/AuthService", authServiceRouter); // Login & create account
 app.use("/Timeline", timelineRouter); // Timeline page
 app.use("/Media", mediaRouter); // Media page
+app.use("/GroupTrips", groupTripsRouter); // Group trips related + chat
 
 // Admin routes
 //Realtime Update for User in Admin Page

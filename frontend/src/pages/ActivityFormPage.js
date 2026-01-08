@@ -71,7 +71,7 @@ function ActivityFormPage() {
         setLoading(false);
       })
       .catch(err => {
-        if(err.response.status === 401 || 403){
+        if(err.response.status === 401 || err.response.status === 403){
           const errData = err.response;
           const errorMsg = errData.status + ": " + errData.data.message;
           navigate(`/login/${errorMsg}`);

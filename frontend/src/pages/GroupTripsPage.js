@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { useOutletContext } from "react-router-dom"; // ✅ ADDED
+import { useOutletContext, useNavigate } from "react-router-dom"; // ✅ ADDED
 import "../styles/GroupTrip.css";
+import axios from 'axios';
 
 function GroupTripsPage() {
 
   //Shared state from Routes.js
   const { myTrips, joinTrip, exitTrip } = useOutletContext();
+  const navigate = useNavigate();
 
   //Dummy data--> groups with member count
   const [groupTrips, setGroupTrips] = useState([
@@ -20,29 +22,8 @@ function GroupTripsPage() {
         "Explore the wonders of Egypt including iconic pyramids and indulge in countless delicacies.",
       joinedByYou: false,
     },
-    {
-      id: 2,
-      owner: "MileyCyrus",
-      title: "Majestic Maldives",
-      date: "13 Dec 2025 – 29 Dec 2025",
-      capacity: 5, //Max capacity --> capped at 5 for now
-      currentMembers: 2, //Current members in the trip
-      description:
-        "Perfect getaway from the city. Rest, relax, and enjoy the beautiful beaches in Maldives.",
-      joinedByYou: false,
-    },
-    {
-      id: 3,
-      owner: "DylanWang",
-      title: "Italy Adventures!",
-      date: "1 Feb 2026 – 20 Feb 2026",
-      capacity: 5, //Max capacity--> capped at 5 for now
-      currentMembers: 5, //Current members in the trip (full)
-      description:
-        "Explore local hotspots in Italy, perfect for those traveling to Europe for the first time.",
-      joinedByYou: false,
-    },
   ]);
+  const [loading, setLoading] = useState(true);
 
   //Sync join state
   useEffect(() => {
@@ -65,6 +46,47 @@ function GroupTripsPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [description, setDescription] = useState("");
+
+  useEffect(() => {
+    const getAllGroupTrips = async() => {
+      try{
+        const res = await axios.get("http://localhost:8080/GroupTrips/GetGroupTrips", {withCredentials:true})
+        await renderGroupTrips(res.data);
+      }
+      catch(err){
+        if(err.response)
+      {
+        if(err.response.status === 401 || err.response.status === 403){
+          const errData = err.response;
+          const errorMsg = errData.status + ": " + errData.data.message;
+          navigate(`/login/${errorMsg}`);
+        }
+        else if(err.response.status === 500){
+          console.log(err.response.data.message);
+        }
+      }
+      else console.log(err);
+      }
+    };
+    getAllGroupTrips();
+  },[])
+
+  const renderGroupTrips = async(res) =>{
+    console.log('data: ', res);
+    const result = res.map(item => ({
+      id: item.itinerary_id,
+      owner: item.owner,
+      title: item.title,
+      date: `${item.start_date} - ${item.end_date}`,
+      capacity: item.capacity, //Max capacity - capped at 5
+      currentMembers: item.num_ppl, //Current members in the trip
+      description: item.description,
+      joinedByYou: item.joinedByYou,
+    }));
+
+    setGroupTrips(result);
+    setLoading(false);
+  };
 
   //Join handler
   const handleJoin = (trip) => {
@@ -106,7 +128,7 @@ function GroupTripsPage() {
   };
 
   //Upload handler
-  const handleUpload = () => {
+  const handleUpload = async() => {
     if (!tripName || !pax || !startDate || !endDate) {
       alert("Please fill in all required fields");
       return;
@@ -115,20 +137,40 @@ function GroupTripsPage() {
     //Cap pax at 5 max
     const maxCapacity = Math.min(parseInt(pax) || 5, 5);
 
-    const newTrip = {
-      id: Date.now(),
-      owner: "You",
-      title: tripName,
-      date: `${startDate} – ${endDate}`,
-      capacity: maxCapacity, //Capped at 5
-      currentMembers: 1, //Creator is automatically a member
-      description,
-      joinedByYou: true,
-    };
+    try{
+      const res = await axios.post("http://localhost:8080/GroupTrips/CreateGroupTrip",
+      {iName:tripName, start: startDate, end: endDate, num_ppl:maxCapacity},{withCredentials:true});
+        if(res.data){
+          const newTrip = {
+          id: res.data.itinerary_id, 
+          owner: "You",
+          title: tripName,
+          date: `${startDate} – ${endDate}`,
+          capacity: maxCapacity, //Capped at 5
+          currentMembers: 1, //Creator is automatically a member
+          description,
+          joinedByYou: true,
+        };
 
-    setGroupTrips([newTrip, ...groupTrips]);
+        setGroupTrips(prev => [...prev, newTrip]);
 
-    joinTrip(newTrip);
+        //joinTrip(newTrip);
+      }
+    }
+    catch(err){
+      if(err.response)
+      {
+        if(err.response.status === 401 || err.response.status === 403){
+          const errData = err.response;
+          const errorMsg = errData.status + ": " + errData.data.message;
+          navigate(`/login/${errorMsg}`);
+        }
+        else if(err.response.status === 500){
+          console.log(err.response.data.message);
+        }
+      }
+      else console.log(err);
+    }
 
     setTripName("");
     setPax("");
@@ -141,6 +183,7 @@ function GroupTripsPage() {
   return (
     <div className="group-trips-page">
       <div className="group-trips-container">
+        {loading && <p>Loading..</p>}
 
         {/*Search & create*/}
         <div className="group-trips-header">
@@ -160,16 +203,16 @@ function GroupTripsPage() {
         </div>
 
         {/*Trip cards*/}
-        {groupTrips
+        {!loading && groupTrips
           .filter((trip) =>
-            trip.title.toLowerCase().includes(searchTerm.toLowerCase())
+            (trip.title ?? "").toLowerCase().includes(searchTerm.toLowerCase())
           )
           .map((trip) => (
             <div key={trip.id} className="group-trip-card">
               <div className="group-trip-left">
                 <div className="trip-owner-row">
                   <div className="owner-avatar">
-                    {trip.owner.charAt(0)}
+                    {(trip.owner ?? "").charAt(0)}
                   </div>
                   <p className="trip-owner">{trip.owner}</p>
                 </div>
