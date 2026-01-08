@@ -62,11 +62,15 @@ function MyTripsPage() {
         setLoading(false);
       })
       .catch((err) => {
-        if(err.response.status === 401 || 403)
+        if(err.response.status === 401 || err.response.status === 403)
         {
           const errData = err.response;
           const errorMsg = errData.status + ": " + errData.data.message;
           navigate(`/login/${errorMsg}`);
+        }
+        else if(err.response.status === 500)
+        {
+          console.log(err.response.data.message);
         }
       });
   }, []);
@@ -82,6 +86,8 @@ function MyTripsPage() {
       isGroupTrip: false,
       type: "Private", //Marker for private trips
       collaborators: [], //Initialize empty collaborators array
+      //type: t.type,
+      //userItineraryType: t.usertype
     }));
 
     setTrips((prev) => {
@@ -144,6 +150,7 @@ function MyTripsPage() {
         iDest: newDestination,
         start: newStart,
         end: newEnd,
+        type: "Private"
       }, {withCredentials: true})
       .catch(err => {
         console.log(err)
@@ -192,6 +199,7 @@ function MyTripsPage() {
   const deleteTripConfirmed = async () => {
     if (!tripToDelete) return;
 
+    // For group trips
     if (tripToDelete.isGroupTrip === true) {
       setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
       setShowDeleteConfirm(false);
@@ -202,7 +210,10 @@ function MyTripsPage() {
       return;
     }
 
-    try {
+    // If button is delete
+    if(tripToDelete.userItineraryType === "host")
+    {
+      try {
       const response = await axios.delete(
         "http://localhost:8080/Itinerary/DeleteItinerary",
         {
@@ -222,10 +233,39 @@ function MyTripsPage() {
         setErrorMsg("Delete failed.");
         setShowDeleteConfirm(false);
       }
-    } catch (err) {
-      console.error(err);
-      setErrorMsg("Delete failed (server error).");
-      setShowDeleteConfirm(false);
+      } catch (err) {
+        console.error(err);
+        setErrorMsg("Delete failed (server error).");
+        setShowDeleteConfirm(false);
+      }
+    }
+    // If button is exit
+    else if(tripToDelete.userItineraryType === "visitor"){
+      try {
+      const response = await axios.delete(
+        "http://localhost:8080/Itinerary/ExitItinerary",
+        {
+          data: { itineraryid: tripToDelete.id },
+          withCredentials: true
+        }
+      );
+
+      if (response.data === true) {
+        setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
+        setShowDeleteConfirm(false);
+        setTripToDelete(null);
+
+        setSuccessMsg("Trip deleted successfully!");
+        setTimeout(() => setSuccessMsg(""), 1500);
+      } else {
+        setErrorMsg("Delete failed.");
+        setShowDeleteConfirm(false);
+      }
+      } catch (err) {
+        console.error(err);
+        setErrorMsg("Delete failed (server error).");
+        setShowDeleteConfirm(false);
+      }
     }
   };
 
@@ -405,13 +445,12 @@ function MyTripsPage() {
                   </p>
                 )}
 
-                <div
-                  className={`trip-status ${
-                    trip.status === true ? "completed" : "inprogress"
-                  }`}
-                >
+                <div className={`trip-status ${trip.status === true ? "completed" : "inprogress"}`}>
                   {trip.status && "Completed"}
                   {!trip.status && "In Progress"}
+                </div>
+                <div className={`trip-status ${trip.status === true ? "completed" : "inprogress"}`}>
+                  {trip.type}
                 </div>
               </div>
 
@@ -432,12 +471,13 @@ function MyTripsPage() {
                   View
                 </button>
 
-                <button
-                  className="delete-btn"
-                  onClick={() => requestDeleteTrip(trip.id)}
-                >
+                {trip.userItineraryType === "host" && <button className="delete-btn" onClick={() => requestDeleteTrip(trip.id)}>
                   Delete
-                </button>
+                </button>}
+
+                {trip.userItineraryType === "visitor" && <button className="delete-btn" onClick={() => requestDeleteTrip(trip.id)}>
+                  Exit
+                </button>}
               </div>
             </div>
           ))}
@@ -522,12 +562,12 @@ function MyTripsPage() {
         <div className="modal-overlay">
           <div className="modal-box small">
             <h2 className="modal-title">
-              {tripToDelete?.isGroupTrip ? "Leave Group Trip" : "Confirm Delete"}
+              {(tripToDelete?.isGroupTrip || tripToDelete.userItineraryType === "visitor") ? "Exit Group Trip" : "Confirm Delete"}
             </h2>
 
             <p>
-              {tripToDelete?.isGroupTrip
-                ? "Are you sure you want to leave this group trip?"
+              {(tripToDelete?.isGroupTrip || tripToDelete.userItineraryType === "visitor")
+                ? "Are you sure you want to exit this group trip?"
                 : "Are you sure you want to delete this trip?"}
             </p>
 
@@ -540,7 +580,7 @@ function MyTripsPage() {
               </button>
 
               <button className="modal-delete" onClick={deleteTripConfirmed}>
-                {tripToDelete?.isGroupTrip ? "Leave" : "Delete"}
+                {(tripToDelete?.isGroupTrip || tripToDelete.userItineraryType === "visitor") ? "Exit" : "Delete"}
               </button>
             </div>
           </div>

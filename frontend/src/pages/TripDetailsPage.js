@@ -21,11 +21,7 @@ function TripDetailsPage() {
   const [showCollaborators, setShowCollaborators] = useState(false);
 
   //Dummy collaborators (UI only)
-  const [collaborators, setCollaborators] = useState([
-    "Williwonka",
-    "Chris Pratt",
-    "Kylie",
-  ]);
+  const [collaborators, setCollaborators] = useState([]);
 
   //Input value
   const [newCollaborator, setNewCollaborator] = useState("");
@@ -72,6 +68,8 @@ function TripDetailsPage() {
     const dateObj2 = new Date(tempEDate);
     const formattedEDate = dateObj2.toLocaleDateString("en-GB");
 
+    let mapCollab = "";
+
     const mapTrips = {
       id: res[0].itinerary_id,
       name: res[0].itinerary_name,
@@ -79,8 +77,18 @@ function TripDetailsPage() {
       start: formattedSDate,
       end: formattedEDate,
       status: res[0].completed,
+      type: res[0].type,
+      numPpl: res[0].num_ppl
     };
 
+    if(res[0].email){
+      mapCollab = res.map(item => ({
+        name: item.first_name + " " + item.last_name,
+        email: item.email
+      }));
+    }
+    
+    setCollaborators(mapCollab);
     setTrip(mapTrips);
   };
 
@@ -99,26 +107,70 @@ function TripDetailsPage() {
   };
 
   //Add collaborator (dummy only)
-  const handleAddCollaborator = () => {
+  const handleAddCollaborator = async() => {
     if (newCollaborator.trim() === "") return;
 
     //Prevent duplicates
     if (collaborators.includes(newCollaborator)) return;
+    let collabAdded = false;
 
-    setCollaborators([...collaborators, newCollaborator]);
-    setNewCollaborator("");
+    try{
+      const res = await axios.post("http://localhost:8080/Itinerary/AddCollaborator", {i_id:tripId, email:newCollaborator, i_name: trip.name}, {withCredentials:true})
+      if(res.data){
+      //setCollaborators(prev => [...prev, {name: `${res.data[0].first_name} ${res.data[0].last_name}`, email: res.data[0].email}]);
+      alert("Email invitation sent!")
+      setNewCollaborator("");
+    }
+    }
+    catch(err) {
+      if(err.response.status === 401 || err.response.status === 403)
+      {
+        const errData = err.response;
+        const errorMsg = errData.status + ": " + errData.data.message;
+        navigate(`/login/${errorMsg}`);
+      }      
+      if(err.response.status === 500)
+      {
+        const errData = err.response;
+        const errorMsg = errData.data.message;
+        setNewCollaborator("");
+        alert(errorMsg);
+      }
+    }
   };
 
   //Delete collaborator with confirmation
-  const handleDeleteCollaborator = (name) => {
+  const handleDeleteCollaborator = async(item) => {
     const confirmDelete = window.confirm(
-      `Are you sure you want to remove ${name} as a collaborator?`
+      `Are you sure you want to remove ${item.name} as a collaborator?`
     );
 
     if (confirmDelete) {
-      setCollaborators(
-        collaborators.filter((member) => member !== name)
-      );
+      let deleteConfirm = false; // Check if db returns true if already deleted
+      try{
+        const res = await axios.delete("http://localhost:8080/Itinerary/DeleteCollaborator", {data:{i_id:tripId, email:item.email}, withCredentials:true})
+        deleteConfirm = res.data;
+      }
+      catch(err){
+        if(err.response.status === 401 || err.response.status === 403)
+        {
+          const errData = err.response;
+          const errorMsg = errData.status + ": " + errData.data.message;
+          navigate(`/login/${errorMsg}`);
+        }      
+        if(err.response.status === 500)
+        {
+          const errData = err.response;
+          const errorMsg = errData.data.message;
+          alert(errorMsg);
+        }
+      }
+
+      if(deleteConfirm){
+        setCollaborators(
+          collaborators.filter(member => member.email !== item.email)
+        );
+      }
     }
   };
 
@@ -220,9 +272,10 @@ function TripDetailsPage() {
         </div>
       </div>
 
-      <button className="floating-chat-btn" onClick={() => setShowChat(true)} title="Chat">
+      {(trip.type === "Group") && 
+      (<button className="floating-chat-btn" onClick={() => setShowChat(true)} title="Chat">
         Chat
-      </button>
+      </button>)}
 
       {/*Collaborators modal*/}
       {showCollaborators && (
@@ -238,7 +291,7 @@ function TripDetailsPage() {
             )}
 
             {/*Input row*/}
-            {isPremium && <div className="collab-input-row">
+            {(isPremium) && <div className="collab-input-row">
               <input
                 type="text"
                 className="collab-input"
@@ -260,17 +313,17 @@ function TripDetailsPage() {
             <div className="members-section">
               {isPremium && <p className="members-title">Members</p>}
 
-              {isPremium && collaborators.map((name, index) => (
+              {(isPremium && collaborators) && collaborators.map((item, index) => (
                 <div key={index} className="member-item">
                   <div className="avatar">
-                    {name.charAt(0).toUpperCase()}
+                    {item.name.charAt(0).toUpperCase()}
                   </div>
 
-                  <span className="member-name">{name}</span>
+                  <span className="member-name">{item.name}</span>
 
                   <button
                     className="delete-btn"
-                    onClick={() => handleDeleteCollaborator(name)}
+                    onClick={() => handleDeleteCollaborator(item)}
                     title="Remove collaborator"
                   >
                     ✕
@@ -278,6 +331,13 @@ function TripDetailsPage() {
 
                 </div>
               ))}
+              {(isPremium && !collaborators) &&
+                <div className="member-item">
+
+                  <span className="member-name">No collaborators found!</span>
+
+                </div>
+              }
               <p className="members-title">Share</p>
               <div className="share-icons">
                 <img src={link} alt="link.img" className="collab-img" />
