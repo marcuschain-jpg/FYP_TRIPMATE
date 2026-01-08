@@ -29,6 +29,7 @@ import ProfilePage from "./pages/ProfilePage";
 import EditProfilePage from "./pages/EditProfilePage";
 import ReviewsPage from "./pages/ReviewsPage";
 import HelpPage from "./pages/HelpPage";
+import ConfirmationFromEmail from "./pages/ConfirmationFromEmail";
 
 //import admin pages
 import Overview from "./pages/Overview";
@@ -180,7 +181,9 @@ function AppRoutes() {
           <Route path="/quiz" element={<QuizPage />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/reviews" element={<ReviewsPage />} />
+          
         </Route>
+        <Route path="/confirm/:invID" element={<ConfirmationFromEmail/>}/>
 
         {/* ================= LOGGED-IN ================= */}
         <Route
