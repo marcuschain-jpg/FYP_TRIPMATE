@@ -36,11 +36,11 @@ router.get("/GetAllItineraries", RequireAuth(["registered", "premium"]), async(r
 
   try{
     const data = await pool.query(
-      `SELECT itinerary_id, itinerary_name, itinerary_dest, start_date, end_date, completed, type, 'host' as usertype
-       FROM itinerary
-       WHERE user_host_id = $1
+      `SELECT i.itinerary_id, i.itinerary_name, i.itinerary_dest, i.start_date, i.end_date, i.completed, i.type, 'host' as userIType
+       FROM itinerary i
+       WHERE i.user_host_id = $1
        UNION
-       SELECT i.itinerary_id, i.itinerary_name, i.itinerary_dest, i.start_date, i.end_date, i.completed, i.type, 'visitor' as usertype
+       SELECT i.itinerary_id, i.itinerary_name, i.itinerary_dest, i.start_date, i.end_date, i.completed, i.type, 'visitor' as userIType
        FROM itinerary i
        JOIN shared_itinerary si ON i.itinerary_id = si.itinerary_id  
        WHERE si.user_id = $1
@@ -63,7 +63,7 @@ router.post("/CreateItinerary", RequireAuth(["registered", "premium"]), async(re
     const data = await pool.query(
       `INSERT INTO itinerary (itinerary_name, itinerary_dest, start_date, end_date, user_host_id, type)
        VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING itinerary_id`, [iName, iDest, start, end, userid, type]
+       RETURNING itinerary_id, 'host' as useritype`, [iName, iDest, start, end, userid, type]
     );
     return res.json(data.rows);
   }
@@ -113,12 +113,13 @@ router.delete("/DeleteItinerary", RequireAuth(["registered", "premium"]), async(
 
 router.delete("/ExitItinerary", RequireAuth(["registered", "premium"]), async(req, res) =>{
   const {itineraryid} = req.body;
+  const userid = req.userid
 
   // Exit itinerary
   try{
     const data = await pool.query(
       `DELETE FROM shared_itinerary
-       WHERE itinerary_id = $1`, [itineraryid]
+       WHERE itinerary_id = $1 AND user_id =$2`, [itineraryid, userid]
     );
     if(data.rowCount === 1) //successfully delete
     {
@@ -181,30 +182,44 @@ router.post("/AddCollaborator", RequireAuth(["premium"]), async(req,res) => {
     const data = await pool.query(
       `SELECT userid, type, first_name, last_name FROM users WHERE email = $1 OR userid = $2`, [email, host_userid]
     )
-    if(data.rowCount === 0) return res.status(500).send({message: "No user found with this email"});
+    if(data.rowCount === 1) return res.status(500).send({message: "No user found with this email"});
     data.rows.forEach(element => {
       if (element.type !== "premium") return res.status(500).send({message: "Invitee needs to be a premium user"});
       else if(element.userid === host_userid) host_name = `${element.first_name} ${element.last_name}`;
-      else if(element.userid !== host_userid) userid_collab = data.rows[0].userid;
+      else if(element.userid !== host_userid) userid_collab = element.userid;
     });
   }
   catch(err) {return res.status(500).send({message: "Query Failed"});}
 
+  await pool.query("BEGIN");
   if(userid_collab){
     try{
-      const data = await pool.query(
+      await pool.query( // Delete previous invitations
+        `DELETE FROM invitation
+         WHERE itinerary_id = $1 AND user_id = $2`, [i_id, userid_collab]
+      );
+
+      const data = await pool.query( // Create new invitation
         `INSERT INTO invitation(itinerary_id, user_id)
          VALUES($1, $2)
          RETURNING inv_id`, [i_id, userid_collab]
       );
+      await pool.query("COMMIT");
+
       if(data.rowCount > 0) inv_id = data.rows[0].inv_id;
     }
-    catch(err) {return res.status(500).send({message: "AddCollaboratorFailed"});}
+    catch(err) {
+      await pool.query("ROLLBACK");
+      return res.status(500).send({message: "AddCollaboratorFailed"});
+    }
 
     const content = {
       recipient: email,
       subject: `Tripmate Collaborative Invitation`,
-      text: `Collaborate with ${host_name} on "${i_name}"! Click me to accept your invitation!`
+      text: `Collaborate with ${host_name} on "${i_name}"! Accept your invitation!`,
+      html: `
+      <p>Collaborate with ${host_name} on "${i_name}" with TripMate! Accept your invitation to start planning together!</p>
+      <p><a href=http://localhost:3000/confirm/${inv_id}>Click me!</a></p>`
     };
     sentEmail = await SendEmail(content);
     if(!sentEmail) return res.status(500).send({message: "Failed to send email"});
@@ -234,6 +249,53 @@ router.delete("/DeleteCollaborator", RequireAuth(["premium"]), async(req,res) =>
       if(data.rowCount > 0) return res.send(true);
     }
     catch(err) {return res.status(500).send({message: "DeleteCollaboratorFailed"});}
+  }
+});
+
+router.post("/AcceptCollabInv", async(req,res) => {
+  const {inv_id} = req.body;
+  let data = null;
+  let numPpl = 0;
+
+
+  try{
+    const rawData = await pool.query(
+      `SELECT num_ppl FROM itinerary WHERE itinerary_id = (SELECT itinerary_id FROM invitation WHERE inv_id =$1)`, [inv_id]
+    );
+    if(rawData.rows[0].num_ppl >= 5) return res.send({check: false, message: "Itinerary has already reached max capacity!"})
+  }
+  catch(err) {console.log(err); return res.status(500).send({message: "error"});}
+
+  // Insert record in shared itinerary
+  await pool.query("BEGIN");
+  try{
+    await pool.query(
+      `INSERT INTO shared_itinerary(itinerary_id, user_id)
+       SELECT itinerary_id, user_id FROM invitation
+       WHERE inv_id =$1
+       ON CONFLICT DO NOTHING`, [inv_id]
+    );
+
+    await pool.query(
+      `UPDATE itinerary i
+       SET num_ppl=(SELECT count(*) + 1 FROM shared_itinerary si
+       WHERE si.itinerary_id = i.itinerary_id)
+       WHERE i.itinerary_id = (SELECT itinerary_id FROM invitation WHERE inv_id =$1)`, [inv_id]
+    );
+
+    data = await pool.query(
+      `DELETE FROM invitation
+       WHERE inv_id = $1`, [inv_id]
+    );
+    await pool.query("COMMIT")
+
+    if(data.rowCount > 0) return res.send(true);
+    else return res.send({check:false, message: "Invitation link expired or invalid. Please get the host to resend the invitation"});
+  }
+  catch(err) { 
+    await pool.query("ROLLBACK");
+    console.log(err);
+    res.status(500).send({message: "Invitation Expired"});
   }
 });
 

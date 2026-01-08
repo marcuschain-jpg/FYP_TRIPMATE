@@ -13,6 +13,7 @@ function MyTripsPage() {
   //Load all existing trips  
   const [trips, setTrips] = useState([]);
   const [Loading, setLoading] = useState(true);
+  const [usertype, setUsertype] = useState("");
 
   //Modal states
   const [showAddTripModal, setShowAddTripModal] = useState(false);
@@ -56,6 +57,19 @@ function MyTripsPage() {
 
   //Load from backend (private trips)
   useEffect(() => {
+    const getUserType = async() => {
+      try{
+        const res = await axios.post("http://localhost:8080/GetRoleForUser", {}, {withCredentials:true})
+        setUsertype(res.data.role)
+      }
+      catch(err){
+        if(err.response.status === 401 || 403){
+          const errData = err.response;
+          const errorMsg = errData.status + ": " + errData.data.message;
+          navigate(`/login/${errorMsg}`);
+        }
+      }
+    }
     axios.get("http://localhost:8080/Itinerary/GetAllItineraries", {withCredentials: true})
       .then((response) => {
         renderLoadTrip(response.data);
@@ -73,6 +87,7 @@ function MyTripsPage() {
           console.log(err.response.data.message);
         }
       });
+      getUserType();
   }, []);
 
   const renderLoadTrip = (res) => {
@@ -87,7 +102,7 @@ function MyTripsPage() {
       type: "Private", //Marker for private trips
       collaborators: ["a", "b"], //Initialize empty collaborators array
       //type: t.type,
-      userItineraryType: t.usertype
+      userItineraryType: t.useritype
     }));
 
     setTrips((prev) => {
@@ -144,8 +159,9 @@ function MyTripsPage() {
 
     try {
       let newTripID;
+      let response;
 
-      const response = await axios.post("http://localhost:8080/Itinerary/CreateItinerary", {
+      response = await axios.post("http://localhost:8080/Itinerary/CreateItinerary", {
         iName: newTripName,
         iDest: newDestination,
         start: newStart,
@@ -167,6 +183,7 @@ function MyTripsPage() {
           end: newEnd,
           status: false,
           isGroupTrip: false,
+          userItineraryType: response.data[0].useritype,
           type: "Private", //Marker for private trips
           collaborators: [], //Initialize empty collaborators array
         };
@@ -329,7 +346,7 @@ function MyTripsPage() {
 
           {showFilters && (
             <div className="filter-panel">
-              <div className="filter-section">
+              {usertype === "premium" && <div className="filter-section">
                 <label className="filter-title">Trip Type</label>
 
                 <label className="filter-option">
@@ -358,7 +375,7 @@ function MyTripsPage() {
                   />
                   Group Trips
                 </label>
-              </div>
+              </div>}
 
               <div className="filter-section">
                 <label className="filter-title">Trip Status</label>
@@ -417,7 +434,7 @@ function MyTripsPage() {
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                   <h2 className="trip-name">{trip.name}</h2>
                   {/*Marker for trip type*/}
-                  <span 
+                  {usertype === "premium" && <span 
                     style={{
                       padding: "4px 8px",
                       borderRadius: "4px",
@@ -428,7 +445,7 @@ function MyTripsPage() {
                     }}
                   >
                     {trip.type}
-                  </span>
+                  </span>}
                 </div>
 
                 {/*Member counter for group trips*/}
@@ -439,7 +456,7 @@ function MyTripsPage() {
                 )}
 
                 {/*Collaborator counter for private trips*/}
-                {!trip.isGroupTrip && trip.collaborators && trip.collaborators.length > 0 && (
+                {usertype === "premium" && !trip.isGroupTrip && trip.collaborators && trip.collaborators.length > 0 && (
                   <p style={{ fontSize: "14px", color: "#666", marginTop: "5px" }}>
                     Collaborators: {trip.collaborators.length}
                   </p>

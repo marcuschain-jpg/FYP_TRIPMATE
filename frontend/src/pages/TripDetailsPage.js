@@ -40,7 +40,7 @@ function TripDetailsPage() {
         setLoading(false);
       })
       .catch(err =>{
-        if(err.response.status === 401 || 403)
+        if(err.response.status === 401 || err.response.status === 403)
           {
             const errData = err.response;
             const errorMsg = errData.status + ": " + errData.data.message;
@@ -109,6 +109,11 @@ function TripDetailsPage() {
   //Add collaborator (dummy only)
   const handleAddCollaborator = async() => {
     if (newCollaborator.trim() === "") return;
+    if (trip.numPpl >= 5){
+      console.log(trip.numPpl)
+      alert("Max amount of collaborators reached!");
+      return;
+    }
 
     //Prevent duplicates
     if (collaborators.includes(newCollaborator)) return;

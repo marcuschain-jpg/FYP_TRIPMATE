@@ -4,7 +4,6 @@ const dotenv = require("dotenv");
 dotenv.config({ path: "keys.env" });
 
 async function SendEmail(content){
-    console.log(content);
 
     const transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -19,6 +18,7 @@ async function SendEmail(content){
         to: content.recipient,
         subject: content.subject,
         text: content.text,
+        html: content.html,
     };
 
     try{
