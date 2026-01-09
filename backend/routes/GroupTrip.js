@@ -8,7 +8,7 @@ const RequireAuth = require("../middlewares/RequireAuths.js"); // Authenticate a
 
 router.post("/CreateGroupTrip", RequireAuth(["premium"]), async(req,res) => {
     const {iName, start, end, num_ppl, description} = req.body;
-    const iDest = iName;
+    const iDest = iName; //will replace after text box is there
     const userid = req.userid
     const triptype = "Group"
 
@@ -53,7 +53,6 @@ router.get("/GetGroupTrips", RequireAuth(["premium"]), async(req,res)=>{
             joinedByYou: (item.userid === userid) || (item.gt_user_id !== null) ? true : false,
             isHost: (item.userid === userid) ? true : false
         }));
-        console.log(data);
         return res.send(data);
     }
     catch(err){
@@ -101,6 +100,75 @@ router.patch("/JoinGroupTrip", RequireAuth(["premium"]), async(req,res) => {
 });
 
 
+router.delete("/ExitGroupTrip", RequireAuth(["premium"]), async(req,res) => {
+    const {i_id, isHost} = req.body;
+    const userid = req.userid;
+    let num_ppl = 0;
+    console.log(i_id);
+
+    // Retrieve num of ppl for update later
+    try {
+        const data = await pool.query(`SELECT num_ppl, capacity FROM itinerary WHERE itinerary_id = $1`, [i_id])
+        num_ppl = data.rows[0].num_ppl;
+    }
+    catch(err) { console.log(err); return res.status(500).send({message: "Failed to add user in group trips"});}
+
+    // If only 1 ppl/host > delete itinerary
+    if(num_ppl === 1){
+        try{
+            const data = await pool.query(
+                `DELETE FROM itinerary
+                 WHERE itinerary_id=$1`, [i_id]
+            );
+            if(data.rowCount > 0) return res.send({deleteItinerary: true})
+        }
+        catch(err) {console.log(err); return res.send({message: "Fail to remove itinerary"});}
+    }
+
+    // else if more than 1 person 
+    else if(isHost && num_ppl > 1){
+        // Remove record from group_trip returning user_id
+        // Update user_host_id in itinerary
+        // Update num_ppl in db
+        try{
+            const data = await pool.query(
+            `WITH selectrandom AS(
+             SELECT user_id
+             FROM group_trip
+             WHERE itinerary_id=$1
+             ORDER BY random()
+             LIMIT 1
+             ),
+             transferhost AS(
+             DELETE FROM group_trip
+             WHERE itinerary_id=$1 AND user_id=(SELECT user_id from selectrandom)
+             )
+             UPDATE itinerary
+             SET user_host_id = (SELECT user_id from selectrandom),
+             num_ppl = $2
+             WHERE itinerary_id = $1
+             RETURNING num_ppl`, [i_id, num_ppl - 1]
+            );
+            if(data.rowCount > 0) return res.send(data.rows[0].num_ppl);
+        }
+        catch(err) {console.log(err); return res.send({message: "Fail to delegate new host"});}
+    }
+    else if(!isHost && num_ppl > 1){
+        // Remove user from group_trips table
+        try{
+            const data = await pool.query(
+                `WITH deleteuser AS(
+                 DELETE FROM group_trip
+                 WHERE itinerary_id=$1 AND user_id=$2
+                 )
+                 UPDATE itinerary
+                 SET num_ppl = $3`, [i_id, userid, num_ppl-1]
+            );
+            if(data.rowCount > 0) return res.send(data.rows[0].num_ppl);
+        }
+        catch(err) {console.log(err); return res.send({message: "Fail to delegate new host"});}
+    }
+})
 
 
 module.exports = router

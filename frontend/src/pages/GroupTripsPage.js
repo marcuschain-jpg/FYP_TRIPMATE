@@ -101,7 +101,7 @@ function GroupTripsPage() {
     try{
       let newCurrMembers = 0;
       const res = await axios.patch("http://localhost:8080/GroupTrips/JoinGroupTrip", {i_id:trip.id}, {withCredentials:true})
-      newCurrMembers = res.data[0].num_ppl // updated number of ppl from db
+      newCurrMembers = res.data[0] // updated number of ppl from db
       setGroupTrips((prev) => prev.map((t) =>
         t.id === trip.id ? { ...t, joinedByYou: true, currentMembers: newCurrMembers, isHost: false}: t
         )
@@ -127,22 +127,44 @@ function GroupTripsPage() {
   };
 
   //Exit handler
-  const handleExit = (tripId) => {
+  const handleExit = async(trip) => {
     const confirmExit = window.confirm(
       "Are you sure you want to exit this trip?"
     );
     if (!confirmExit) return;
+    const tripId = trip.id;
 
-    //Update local state-->decrease member count
-    setGroupTrips((prev) =>
-      prev.map((trip) =>
-        trip.id === tripId
-          ? { ...trip, joinedByYou: false, currentMembers: Math.max(0, trip.currentMembers - 1) }
-          : trip
-      )
-    );
-
-    exitTrip(tripId);
+    try{
+      const res = await axios.delete("http://localhost:8080/GroupTrips/ExitGroupTrip", {data:{i_id:tripId, isHost:trip.isHost}, withCredentials:true})
+      if(res.data.deleteItinerary){
+        setGroupTrips(prev => prev.filter(item => item.id !== tripId))
+      }
+      else{
+        //Update local state-->decrease member count
+        setGroupTrips((prev) =>
+          prev.map((trip) =>
+            trip.id === tripId
+              ? { ...trip, joinedByYou: false, currentMembers: Math.max(0, trip.currentMembers - 1) }
+              : trip
+          )
+        );   
+      }
+    }
+    catch(err){
+      if(err.response)
+        {
+          if(err.response.status === 401 || err.response.status === 403){ // Auth error
+            const errData = err.response;
+            const errorMsg = errData.status + ": " + errData.data.message;
+            navigate(`/login/${errorMsg}`);
+          }
+          else if(err.response.status === 500){ // DB/Backend error
+            console.log(err.response.data.message);
+          }
+        }
+          else console.log(err); // General error
+    }
+    //exitTrip(tripId);
   };
 
   //Upload handler
@@ -157,11 +179,12 @@ function GroupTripsPage() {
 
     try{
       const res = await axios.post("http://localhost:8080/GroupTrips/CreateGroupTrip",
-      {iName:tripName, start: startDate, end: endDate, num_ppl:maxCapacity},{withCredentials:true});
+      {iName:tripName, start: startDate, end: endDate, num_ppl:maxCapacity, description:description},{withCredentials:true});
         if(res.data){
           const newTrip = {
           id: res.data.itinerary_id, 
           owner: "You",
+          //location: location,
           title: tripName,
           date: `${startDate} – ${endDate}`,
           capacity: maxCapacity, //Capped at 5
@@ -249,7 +272,7 @@ function GroupTripsPage() {
                 {trip.joinedByYou ? (
                   <button
                     className="exit-btn"
-                    onClick={() => handleExit(trip.id)}
+                    onClick={() => handleExit(trip)}
                   >
                     Exit
                   </button>
