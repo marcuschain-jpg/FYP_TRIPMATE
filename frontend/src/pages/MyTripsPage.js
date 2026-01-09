@@ -98,10 +98,8 @@ function MyTripsPage() {
       start: t.start_date,
       end: t.end_date,
       status: t.completed,
-      isGroupTrip: false,
-      type: "Private", //Marker for private trips
+      isGroupTrip: t.type === "Group" ? true : false,
       collaborators: ["a", "b"], //Initialize empty collaborators array
-      //type: t.type,
       userItineraryType: t.useritype
     }));
 
@@ -444,12 +442,12 @@ function MyTripsPage() {
                       backgroundColor: trip.isGroupTrip ? "#FF6B6B" : "#4ECDC4"
                     }}
                   >
-                    {trip.type}
+                    {trip.isGroupTrip ? "Group / Public" : "Private"}
                   </span>}
                 </div>
 
                 {/*Member counter for group trips*/}
-                {trip.isGroupTrip && (
+                {usertype === "premium" && trip.isGroupTrip && (
                   <p style={{ fontSize: "14px", color: "#666", marginTop: "5px" }}>
                     Members: {trip.currentMembers}/{trip.maxCapacity}
                   </p>
