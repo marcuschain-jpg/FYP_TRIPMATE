@@ -55,18 +55,18 @@ function GroupTripsPage() {
       }
       catch(err){
         if(err.response)
-      {
-        if(err.response.status === 401 || err.response.status === 403){
-          const errData = err.response;
-          const errorMsg = errData.status + ": " + errData.data.message;
-          navigate(`/login/${errorMsg}`);
+        {
+          if(err.response.status === 401 || err.response.status === 403){ // Auth error
+            const errData = err.response;
+            const errorMsg = errData.status + ": " + errData.data.message;
+            navigate(`/login/${errorMsg}`);
+          }
+          else if(err.response.status === 500){ // DB/Backend error
+            console.log(err.response.data.message);
+          }
         }
-        else if(err.response.status === 500){
-          console.log(err.response.data.message);
+          else console.log(err); // General error
         }
-      }
-      else console.log(err);
-      }
     };
     getAllGroupTrips();
   },[])
@@ -78,10 +78,12 @@ function GroupTripsPage() {
       owner: item.owner,
       title: item.title,
       date: `${item.start_date} - ${item.end_date}`,
-      capacity: item.capacity, //Max capacity - capped at 5
-      currentMembers: item.num_ppl, //Current members in the trip
+      capacity: item.capacity, // Default 5 but will change on user input
+      currentMembers: item.num_ppl, // Current members in the trip
       description: item.description,
       joinedByYou: item.joinedByYou,
+      location: item.location,
+      isHost: item.isHost,
     }));
 
     setGroupTrips(result);
@@ -89,23 +91,39 @@ function GroupTripsPage() {
   };
 
   //Join handler
-  const handleJoin = (trip) => {
+  const handleJoin = async(trip) => {
     //Check if trip is full
     if (trip.currentMembers >= trip.capacity) {
       alert("This trip is full!");
       return;
     }
 
-    setGroupTrips((prev) =>
-      prev.map((t) =>
-        t.id === trip.id 
-          ? { ...t, joinedByYou: true, currentMembers: t.currentMembers + 1 }
-          : t
-      )
-    );
+    try{
+      let newCurrMembers = 0;
+      const res = await axios.patch("http://localhost:8080/GroupTrips/JoinGroupTrip", {i_id:trip.id}, {withCredentials:true})
+      newCurrMembers = res.data[0].num_ppl // updated number of ppl from db
+      setGroupTrips((prev) => prev.map((t) =>
+        t.id === trip.id ? { ...t, joinedByYou: true, currentMembers: newCurrMembers, isHost: false}: t
+        )
+      );
+    }
+    catch(err){
+      if(err.response)
+        {
+          if(err.response.status === 401 || err.response.status === 403){ // Auth error
+            const errData = err.response;
+            const errorMsg = errData.status + ": " + errData.data.message;
+            navigate(`/login/${errorMsg}`);
+          }
+          else if(err.response.status === 500){ // DB/Backend error
+            console.log(err.response.data.message);
+          }
+        }
+          else console.log(err); // General error
+    }
 
     //Pass trip to parent
-    joinTrip(trip);
+    //joinTrip(trip);
   };
 
   //Exit handler
@@ -150,6 +168,7 @@ function GroupTripsPage() {
           currentMembers: 1, //Creator is automatically a member
           description,
           joinedByYou: true,
+          isHost: true,
         };
 
         setGroupTrips(prev => [...prev, newTrip]);
@@ -218,6 +237,7 @@ function GroupTripsPage() {
                 </div>
 
                 <h3>{trip.title}</h3>
+                <p><strong>Location:</strong> {trip.location}</p>
                 <p><strong>Date:</strong> {trip.date}</p>
                 {/*Member counter - showing current/max members*/}
                 <p><strong>Members:</strong> {trip.currentMembers}/{trip.capacity}</p>
