@@ -7,8 +7,7 @@ const RequireAuth = require("../middlewares/RequireAuths.js"); // Authenticate a
 
 
 router.post("/CreateGroupTrip", RequireAuth(["premium"]), async(req,res) => {
-    const {iName, start, end, num_ppl, description} = req.body;
-    const iDest = iName; //will replace after text box is there
+    const {iName, iDest ,start, end, num_ppl, description} = req.body;
     const userid = req.userid
     const triptype = "Group"
 
@@ -162,7 +161,8 @@ router.delete("/ExitGroupTrip", RequireAuth(["premium"]), async(req,res) => {
                  WHERE itinerary_id=$1 AND user_id=$2
                  )
                  UPDATE itinerary
-                 SET num_ppl = $3`, [i_id, userid, num_ppl-1]
+                 SET num_ppl = $3
+                 RETURNING num_ppl`, [i_id, userid, num_ppl-1]
             );
             if(data.rowCount > 0) return res.send(data.rows[0].num_ppl);
         }

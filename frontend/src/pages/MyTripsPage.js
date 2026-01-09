@@ -99,8 +99,10 @@ function MyTripsPage() {
       end: t.end_date,
       status: t.completed,
       isGroupTrip: t.type === "Group" ? true : false,
-      collaborators: ["a", "b"], //Initialize empty collaborators array
-      userItineraryType: t.useritype
+      userItineraryType: t.useritype,
+      collaborators: t.num_ppl,
+      currentMembers: t.num_ppl,
+      maxCapacity: t.capacity
     }));
 
     setTrips((prev) => {
@@ -442,7 +444,7 @@ function MyTripsPage() {
                       backgroundColor: trip.isGroupTrip ? "#FF6B6B" : "#4ECDC4"
                     }}
                   >
-                    {trip.isGroupTrip ? "Group / Public" : "Private"}
+                    {trip.isGroupTrip ? "Public" : "Private"}
                   </span>}
                 </div>
 
@@ -454,9 +456,9 @@ function MyTripsPage() {
                 )}
 
                 {/*Collaborator counter for private trips*/}
-                {usertype === "premium" && !trip.isGroupTrip && trip.collaborators && trip.collaborators.length > 0 && (
+                {usertype === "premium" && !trip.isGroupTrip && trip.collaborators  && (
                   <p style={{ fontSize: "14px", color: "#666", marginTop: "5px" }}>
-                    Collaborators: {trip.collaborators.length}
+                    Collaborators: {trip.collaborators}/{trip.maxCapacity}
                   </p>
                 )}
 

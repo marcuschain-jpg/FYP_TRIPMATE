@@ -102,7 +102,7 @@ function GroupTripsPage() {
     try{
       let newCurrMembers = 0;
       const res = await axios.patch("http://localhost:8080/GroupTrips/JoinGroupTrip", {i_id:trip.id}, {withCredentials:true})
-      newCurrMembers = res.data[0] // updated number of ppl from db
+      newCurrMembers = res.data // updated number of ppl from db
       setGroupTrips((prev) => prev.map((t) =>
         t.id === trip.id ? { ...t, joinedByYou: true, currentMembers: newCurrMembers, isHost: false}: t
         )
@@ -180,12 +180,12 @@ function GroupTripsPage() {
 
     try{
       const res = await axios.post("http://localhost:8080/GroupTrips/CreateGroupTrip",
-      {iName:tripName, location: location, start: startDate, end: endDate, num_ppl:maxCapacity, description:description},{withCredentials:true});
+      {iName:tripName, iDest: location, start: startDate, end: endDate, num_ppl:maxCapacity, description:description},{withCredentials:true});
         if(res.data){
           const newTrip = {
           id: res.data.itinerary_id, 
           owner: "You",
-          //location: location,
+          location: location,
           title: tripName,
           date: `${startDate} – ${endDate}`,
           capacity: maxCapacity, //Capped at 5
