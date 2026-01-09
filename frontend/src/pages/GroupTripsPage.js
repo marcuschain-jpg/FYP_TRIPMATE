@@ -42,6 +42,7 @@ function GroupTripsPage() {
 
   //form state (dummy)
   const [tripName, setTripName] = useState("");
+  const [location, setLocation] = useState("");
   const [pax, setPax] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -169,7 +170,7 @@ function GroupTripsPage() {
 
   //Upload handler
   const handleUpload = async() => {
-    if (!tripName || !pax || !startDate || !endDate) {
+    if (!tripName || !location || !pax || !startDate || !endDate) {
       alert("Please fill in all required fields");
       return;
     }
@@ -179,7 +180,7 @@ function GroupTripsPage() {
 
     try{
       const res = await axios.post("http://localhost:8080/GroupTrips/CreateGroupTrip",
-      {iName:tripName, start: startDate, end: endDate, num_ppl:maxCapacity, description:description},{withCredentials:true});
+      {iName:tripName, location: location, start: startDate, end: endDate, num_ppl:maxCapacity, description:description},{withCredentials:true});
         if(res.data){
           const newTrip = {
           id: res.data.itinerary_id, 
@@ -215,6 +216,7 @@ function GroupTripsPage() {
     }
 
     setTripName("");
+    setLocation("");
     setPax("");
     setStartDate("");
     setEndDate("");
@@ -340,6 +342,16 @@ function GroupTripsPage() {
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="modal-row">
+              <div className="modal-field">
+                <label>Location</label>
+                <input
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
                 />
               </div>
             </div>
