@@ -1,41 +1,13 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/Profile.css";
-import "../styles/ItineraryFeed.css"; 
-
-import FeedPic1 from "../Assets/FeedPic1.jpg";
-import FeedPic2 from "../Assets/FeedPic2.jpg";
+import axios from "axios";
 
 const BookmarkIcon = ({ active }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={active ? "#333" : "#aaa"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
   </svg>
 );
-
-const BookmarkHollow = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="action-icon">
-    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-  </svg>
-);
-
-const BookmarkFilled = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#0b4f6c" stroke="#0b4f6c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="action-icon">
-    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-  </svg>
-);
-
-const CloseIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="18" y1="6" x2="6" y2="18"></line>
-    <line x1="6" y1="6" x2="18" y2="18"></line>
-  </svg>
-);
-
-//Dummy info
-const allPosts = [
-  { id: 1, username: "ChrisMartin123", avatarInitials: "CM", title: "10-Day Switzerland Itinerary", image: FeedPic1, text: "Planning to visit Switzerland soon? Here's the ultimate 10-day itinerary you need! From accommodations to transport, I've got you covered.", likes: 15, comments: 3, date: new Date("2025-01-20"), destination: "Switzerland" },
-  { id: 2, username: "DomToretto", avatarInitials: "DT", title: "Thailand Group Trip", image: FeedPic2, text: "Had the most amazing time in Thailand with this bunch! Here's the itinerary we followed with some money-saving hacks.", likes: 25, comments: 2, date: new Date("2024-12-10"), destination: "Thailand" },
-];
 
 //Current user profile
 const initialProfile = {
@@ -52,25 +24,68 @@ const initialProfile = {
   profilePic: "",
 };
 
-const getGlobalBookmarks = () => window.__TRIPMATE_BOOKMARKS__ || {};
-const setGlobalBookmarks = (obj) => {
-  window.__TRIPMATE_BOOKMARKS__ = obj;
-  window.dispatchEvent(new CustomEvent("bookmarksUpdated", { detail: obj }));
-};
-
 function ProfilePage() {
   const navigate = useNavigate();
   const location = useLocation();
 
   const [profile, setProfile] = useState(initialProfile);
+  const [currentDate, setCurrentDate] = useState(new Date(2026, 0, 1)); // Jan 2026
+  const [trips, setTrips] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  //Bookkmark state
-  const [bookmarkedPosts, setBookmarkedPosts] = useState(() => getGlobalBookmarks());
+  //Load trips data
+  useEffect(() => {
+    const loadTrips = async () => {
+      try {
+        //Get private trips
+        const privateRes = await axios.get(
+          "http://localhost:8080/Itinerary/GetAllItineraries",
+          { withCredentials: true }
+        );
 
-  // ✅ Modal state
-  const [activePost, setActivePost] = useState(null);
+        //Get group trips
+        const groupRes = await axios.get(
+          "http://localhost:8080/GroupTrips/GetGroupTrips",
+          { withCredentials: true }
+        );
 
-  //Syncing profile info--> when edits are made in EditProfilePage --> sync to ProfilePage
+        //Format private trips
+        const privateTrips = privateRes.data.map((trip) => ({
+          id: trip.itinerary_id,
+          title: trip.itinerary_name,
+          startDate: trip.start_date,
+          endDate: trip.end_date,
+          type: "private",
+          destination: trip.itinerary_dest,
+        }));
+
+        //Format group trips
+        const groupTrips = groupRes.data.map((trip) => ({
+          id: trip.itinerary_id,
+          title: trip.title,
+          startDate: trip.start_date,
+          endDate: trip.end_date,
+          type: "group",
+          destination: trip.title,
+        }));
+
+        //Combine all trips
+        setTrips([...privateTrips, ...groupTrips]);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error loading trips:", err);
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          const errorMsg = `${err.response.status}: ${err.response.data.message}`;
+          navigate(`/login/${errorMsg}`);
+        }
+        setLoading(false);
+      }
+    };
+
+    loadTrips();
+  }, [navigate]);
+
+  //Sync profile info when edits are made
   useEffect(() => {
     if (location.state?.updatedProfile) {
       setProfile(location.state.updatedProfile);
@@ -78,43 +93,67 @@ function ProfilePage() {
     }
   }, [location.state, navigate]);
 
-  //Listen for bookmark changes coming from Feed page ( when you bookark/unbookmark a post)
-  useEffect(() => {
-    const handler = (e) => {
-      if (e?.detail) setBookmarkedPosts(e.detail);
-      else setBookmarkedPosts(getGlobalBookmarks());
-    };
-    window.addEventListener("bookmarksUpdated", handler);
-    return () => window.removeEventListener("bookmarksUpdated", handler);
-  }, []);
+  //Calendar functions
+  const getDaysInMonth = (date) =>
+    new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
 
-  const isPremium = profile.accountType === "Premium";
+  const getFirstDayOfMonth = (date) =>
+    new Date(date.getFullYear(), date.getMonth(), 1).getDay();
 
-  const bookmarkedList = useMemo(() => {
-    return allPosts.filter((p) => bookmarkedPosts[p.id]);
-  }, [bookmarkedPosts]);
-
-  const openPostModal = (post) => setActivePost(post);
-  const closePostModal = () => setActivePost(null);
-
-  const handleToggleBookmark = (id) => {
-    const updated = { ...bookmarkedPosts, [id]: !bookmarkedPosts[id] };
-    setBookmarkedPosts(updated);
-    setGlobalBookmarks(updated);
-    //Unbookmarking post 
-    if (activePost?.id === id && updated[id] === false) setActivePost(null);
+  const getTripsOnDate = (day) => {
+    return trips.filter((trip) => {
+      const tripStart = new Date(trip.startDate);
+      const tripEnd = new Date(trip.endDate);
+      const checkDate = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        day
+      );
+      return checkDate >= tripStart && checkDate <= tripEnd;
+    });
   };
+
+  const generateCalendarDays = () => {
+    const daysInMonth = getDaysInMonth(currentDate);
+    const firstDay = getFirstDayOfMonth(currentDate);
+    const days = [];
+
+    for (let i = 0; i < firstDay; i++) days.push(null);
+    for (let day = 1; day <= daysInMonth; day++) days.push(day);
+
+    return days;
+  };
+
+  const handlePrevMonth = () =>
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1)
+    );
+
+  const handleNextMonth = () =>
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1)
+    );
+
+  const handleToday = () => setCurrentDate(new Date());
+
+  const monthNames = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December",
+  ];
+
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const calendarDays = generateCalendarDays();
+  const today = new Date();
+  const isCurrentMonth =
+    today.getFullYear() === currentDate.getFullYear() &&
+    today.getMonth() === currentDate.getMonth();
+  const isPremium = profile.accountType === "Premium";
 
   return (
     <div className="profile-page">
-      <div className="profile-sidebar">
-        <ul>
-          <li onClick={() => navigate("/feed")}>Feed</li>
-          <li className="active">My Profile</li>
-        </ul>
-      </div>
+      <div className="profile-main-full">
 
-      <div className="profile-main">
+        {/*Profile Header*/}
         <div className="profile-header-container">
           <div className="profile-avatar-large">
             {profile.profilePic ? (
@@ -138,95 +177,107 @@ function ProfilePage() {
             <p className="profile-bio">{profile.bio}</p>
 
             <div className="profile-actions">
-              <button className="profile-btn edit-btn" onClick={() => navigate("/edit-profile", { state: { profile } })}>
+              <button
+                className="profile-btn edit-btn"
+                onClick={() => navigate("/edit-profile", { state: { profile } })}
+              >
                 Edit Profile
               </button>
-              <button className="profile-btn help-btn" onClick={() => navigate("/help")}>
+              <button
+                className="profile-btn help-btn"
+                onClick={() => navigate("/help")}
+              >
                 Help
               </button>
             </div>
           </div>
         </div>
 
-        <div className="profile-tabs">
-          <div className="tab-item active">
-            <BookmarkIcon active={true} />
-          </div>
-        </div>
+        {/*Calendar Section*/}
+        <div className="calendar-section">
+          <h2>Trip Calendar</h2>
 
-        {/*Bookmarked posts grid*/}
-        {bookmarkedList.length > 0 ? (
-          <div className="profile-grid">
-            {bookmarkedList.map((post) => (
-              <div key={post.id} className="grid-item" onClick={() => openPostModal(post)}>
-                <img src={post.image} alt={post.title} />
-                <div className="grid-overlay">
-                  <div className="bookmark-indicator">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#0b4f6c" stroke="#0b4f6c" strokeWidth="2">
-                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="no-bookmarks">
-            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="2">
-              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-            </svg>
-            <p>No bookmarked posts yet</p>
-            <button className="browse-feed-btn" onClick={() => navigate("/feed")}>
-              Browse Feed
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/*Expanded post modal--> when you click on a post to view*/}
-      {activePost && (
-        <div className="post-modal-overlay" onClick={closePostModal}>
-          <div className="post-modal-container" onClick={(e) => e.stopPropagation()}>
-            <div className="post-modal-image" style={{ backgroundImage: `url(${activePost.image})` }} />
-
-            <div className="post-modal-sidebar">
-              <div className="post-sidebar-header">
-                <div className="feed-user">
-                  <div className="user-avatar-placeholder">{activePost.avatarInitials}</div>
-                  <strong>{activePost.username}</strong>
-                </div>
-
-                <button className="modal-close-btn-sidebar" onClick={closePostModal}>
-                  <CloseIcon />
+          {loading ? (
+            <p className="loading">Loading calendar...</p>
+          ) : (
+            <>
+              {/*Calendar Controls*/}
+              <div className="calendar-controls">
+                <button className="today-btn" onClick={handleToday}>
+                  Today
+                </button>
+                <button className="nav-btn" onClick={handlePrevMonth}>
+                  ←
+                </button>
+                <h3>
+                  {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                </h3>
+                <button className="nav-btn" onClick={handleNextMonth}>
+                  →
                 </button>
               </div>
 
-              <div className="post-sidebar-body">
-                <div className="post-caption-box">
-                  <p>{activePost.text}</p>
-                  <span className="post-date">{activePost.date.toDateString()}</span>
+              {/*Legend*/}
+              <div className="calendar-legend">
+                <div className="legend-item">
+                  <div className="legend-color private"></div>
+                  <span>Private Trips</span>
                 </div>
-                <hr className="divider" />
+                <div className="legend-item">
+                  <div className="legend-color group"></div>
+                  <span>Group Trips</span>
+                </div>
               </div>
 
-              <div className="post-sidebar-footer">
-                <div className="action-icons-row">
-                  <div
-                    className="action-group bookmark-group"
-                    style={{ marginLeft: "auto", cursor: "pointer" }}
-                    onClick={() => handleToggleBookmark(activePost.id)}
-                  >
-                    {bookmarkedPosts[activePost.id] ? <BookmarkFilled /> : <BookmarkHollow />}
-                  </div>
+              {/*Calendar Grid*/}
+              <div className="calendar-grid">
+                <div className="day-names-row">
+                  {dayNames.map((day) => (
+                    <div key={day} className="day-name">
+                      {day}
+                    </div>
+                  ))}
                 </div>
-                <div className="likes-summary">
-                  <strong>{activePost.likes} likes</strong>
+
+                <div className="calendar-days">
+                  {calendarDays.map((day, index) => {
+                    const tripsOnDay = day ? getTripsOnDate(day) : [];
+                    const isToday =
+                      isCurrentMonth && day === today.getDate();
+
+                    return (
+                      <div
+                        key={index}
+                        className={`calendar-day ${day ? "" : "empty"} ${
+                          isToday ? "today" : ""
+                        }`}
+                      >
+                        {day && (
+                          <>
+                            <div className="day-number">{day}</div>
+                            <div className="trips-container">
+                              {tripsOnDay.map((trip) => (
+                                <div
+                                  key={trip.id}
+                                  className={`trip-badge ${trip.type}`}
+                                  title={trip.title}
+                                >
+                                  {trip.title}
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            </div>
-          </div>
+            </>
+          )}
         </div>
-      )}
+
+      </div>
     </div>
   );
 }

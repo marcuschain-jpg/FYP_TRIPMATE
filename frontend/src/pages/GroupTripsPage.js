@@ -221,7 +221,7 @@ function GroupTripsPage() {
 
                 <h3>{trip.title}</h3>
                 <p><strong>Date:</strong> {trip.date}</p>
-                {/*Member counter - showing current/max members*/}
+                {/*Member counter-->showing current/max members*/}
                 <p><strong>Members:</strong> {trip.currentMembers}/{trip.capacity}</p>
                 <p className="trip-desc">{trip.description}</p>
               </div>
