@@ -40,15 +40,6 @@ import Content from "./pages/Content";
 import Support from "./pages/Support";
 
 
-//Placeholder
-function Placeholder({ title }) {
-  return (
-    <div style={{ padding: "40px" }}>
-      <h1>{title}</h1>
-      <p>This page will be created later.</p>
-    </div>
-  );
-}
 
 function AppRoutes() {
   //Track if user is a first-time user
@@ -82,7 +73,6 @@ function AppRoutes() {
   const [groupTrips, setGroupTrips] = useState([]);
 
   //trips that appear on My Trips page (group trips you joined/created)
-  //THIS IS THE SOURCE OF TRUTH for join/exit button state
   const [myTrips, setMyTrips] = useState([]);
   const [groupChats, setGroupChats] = useState({});
 
@@ -137,12 +127,12 @@ function AppRoutes() {
     }));
   };
 
-  //Join trip/add to My trips page - SOURCE OF TRUTH for button state
+  //Join trip/add to My trips page 
   const joinTrip = async (trip) => {
     try {
       console.log("Joining trip:", trip);
       
-      //Add to myTrips immediately (optimistic update)
+      //Add to myTrips immediately 
       setMyTrips((prev) => {
         if (prev.find((t) => t.id === trip.id)) return prev;
         return [...prev, trip];
@@ -160,7 +150,7 @@ function AppRoutes() {
         console.log("Backend endpoint not available (expected), using local state");
       }
 
-      //Update groupTrips member count
+      //Update group trip member count
       setGroupTrips((prev) =>
         prev.map((t) =>
           t.id === trip.id ? { ...t, joined: t.joined + 1 } : t
@@ -178,12 +168,12 @@ function AppRoutes() {
     }
   };
 
-  //Exit trip - remove from My Trips - SOURCE OF TRUTH for button state
+  //Exit trip--> remove from my trips
   const exitTrip = async (tripId) => {
     try {
       console.log("Exiting trip:", tripId);
       
-      //Remove from myTrips immediately (optimistic update)
+      //Remove from my trips immediately 
       setMyTrips((prev) => prev.filter((t) => t.id !== tripId));
 
       //Try to call backend if endpoints exist
@@ -198,7 +188,7 @@ function AppRoutes() {
         console.log("Backend endpoint not available (expected), using local state");
       }
 
-      //Update groupTrips member count
+      //Update group trip member count
       setGroupTrips((prev) =>
         prev.map((t) =>
           t.id === tripId ? { ...t, joined: Math.max(0, t.joined - 1) } : t

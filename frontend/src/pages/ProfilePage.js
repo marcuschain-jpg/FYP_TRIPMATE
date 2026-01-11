@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import "../styles/Profile.css";
 import axios from "axios";
 
@@ -28,6 +28,9 @@ function ProfilePage() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  //Shared joined group trips from Routes.js
+  const { myTrips } = useOutletContext();
+
   const [profile, setProfile] = useState(initialProfile);
   const [currentDate, setCurrentDate] = useState(new Date(2026, 0, 1)); // Jan 2026
   const [trips, setTrips] = useState([]);
@@ -43,12 +46,6 @@ function ProfilePage() {
           { withCredentials: true }
         );
 
-        //Get group trips
-        const groupRes = await axios.get(
-          "http://localhost:8080/GroupTrips/GetGroupTrips",
-          { withCredentials: true }
-        );
-
         //Format private trips
         const privateTrips = privateRes.data.map((trip) => ({
           id: trip.itinerary_id,
@@ -59,18 +56,41 @@ function ProfilePage() {
           destination: trip.itinerary_dest,
         }));
 
-        //Format group trips
-        const groupTrips = groupRes.data.map((trip) => ({
-          id: trip.itinerary_id,
-          title: trip.title,
-          startDate: trip.start_date,
-          endDate: trip.end_date,
-          type: "group",
-          destination: trip.title,
-        }));
+        //Format joined group trips 
+        const groupTrips = (myTrips || []).map((trip) => {
+          let startDate;
+          let endDate;
 
-        //Combine all trips
-        setTrips([...privateTrips, ...groupTrips]);
+          //Trip joined from GroupTripsPage.js 
+          if (trip.date) {
+            const parts = trip.date.split(" - ");
+            startDate = parts[0];
+            endDate = parts[1];
+          }
+
+          //Trip loaded earlier from backend
+          else if (trip.start_date && trip.end_date) {
+            startDate = trip.start_date;
+            endDate = trip.end_date;
+          }
+
+          return {
+            id: trip.id,
+            title: trip.title,
+            startDate,
+            endDate,
+            type: "group",
+            destination: trip.location,
+          };
+        });
+
+        //Combine all trips (avoid duplicates)
+        const mergedTrips = [...privateTrips, ...groupTrips].filter(
+          (trip, index, arr) =>
+            arr.findIndex((t) => t.id === trip.id) === index
+        );
+
+        setTrips(mergedTrips);
         setLoading(false);
       } catch (err) {
         console.error("Error loading trips:", err);
@@ -83,7 +103,7 @@ function ProfilePage() {
     };
 
     loadTrips();
-  }, [navigate]);
+  }, [navigate, myTrips]); 
 
   //Sync profile info when edits are made
   useEffect(() => {
@@ -153,18 +173,13 @@ function ProfilePage() {
     <div className="profile-page">
       <div className="profile-main-full">
 
-        {/*Profile Header*/}
+        {/*Profile header*/}
         <div className="profile-header-container">
           <div className="profile-avatar-large">
             {profile.profilePic ? (
               <img src={profile.profilePic} alt="User Avatar" />
             ) : (
-              <div className="avatar-placeholder-empty">
-                <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="1.5">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-              </div>
+              <div className="avatar-placeholder-empty" />
             )}
           </div>
 
@@ -193,7 +208,7 @@ function ProfilePage() {
           </div>
         </div>
 
-        {/*Calendar Section*/}
+        {/*Calendar section*/}
         <div className="calendar-section">
           <h2>Trip Calendar</h2>
 
@@ -201,7 +216,7 @@ function ProfilePage() {
             <p className="loading">Loading calendar...</p>
           ) : (
             <>
-              {/*Calendar Controls*/}
+              {/*Calendar controls--> navigate between months*/}
               <div className="calendar-controls">
                 <button className="today-btn" onClick={handleToday}>
                   Today
@@ -217,7 +232,7 @@ function ProfilePage() {
                 </button>
               </div>
 
-              {/*Legend*/}
+              {/*Legends--> blue for private, red for group/public*/}
               <div className="calendar-legend">
                 <div className="legend-item">
                   <div className="legend-color private"></div>
@@ -229,7 +244,7 @@ function ProfilePage() {
                 </div>
               </div>
 
-              {/*Calendar Grid*/}
+              {/*Calendar grid*/}
               <div className="calendar-grid">
                 <div className="day-names-row">
                   {dayNames.map((day) => (
