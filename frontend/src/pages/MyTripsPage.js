@@ -500,7 +500,7 @@ function MyTripsPage() {
                       backgroundColor: trip.isGroupTrip ? "#FF6B6B" : "#4ECDC4"
                     }}
                   >
-                    {trip.isGroupTrip ? "Public" : "Private"}
+                    {trip.isGroupTrip ? "Public" : "Group"}
                   </span>}
                   {usertype === "premium" && <span 
                     style={{
