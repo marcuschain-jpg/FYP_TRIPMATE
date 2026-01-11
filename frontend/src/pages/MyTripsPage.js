@@ -17,8 +17,13 @@ function MyTripsPage() {
 
   //Modal states
   const [showAddTripModal, setShowAddTripModal] = useState(false);
+  const [firstLoad, setFirstLoad] = useState(true);
+  const [searchResult, setSearchResult]= useState([])
+
+  const [showLocSearch, setShowLocSearch] = useState(false);
   const [newTripName, setNewTripName] = useState("");
-  const [newDestination, setNewDestination] = useState("");
+  const [newDestination, setNewDestination] = useState(""); // Plain search
+  const [newFullDest, setNewFullDest] = useState({});
   const [newStart, setNewStart] = useState("");
   const [newEnd, setNewEnd] = useState("");
 
@@ -142,6 +147,49 @@ function MyTripsPage() {
     });
   }, [joinedGroupTrips]);
 
+  // For location search
+  useEffect(() => {
+    if(!newDestination) return;
+    if(firstLoad) //When first load page dont search for anything
+      {
+        setFirstLoad(false);
+        return;
+      }
+
+      const locTimer = setTimeout(async() => {
+      console.log("Send to backend", newDestination);
+      await axios.post("http://localhost:8080/Itinerary/CitySearch", {input:newDestination}, {withCredentials:true})
+      .then(res=>{
+        renderLoadSearchResult(res.data);
+      })
+      .catch(err => {console.log(err);});
+
+    }, 1000);
+
+    return () => {
+      clearTimeout(locTimer);
+    };
+  }, [newDestination])
+
+  useEffect(() => {
+    if(searchResult.length > 0)
+      {
+        console.log(searchResult);
+        setShowLocSearch(true);
+      }
+  }, [searchResult])
+
+  const renderLoadSearchResult = (res) => {
+    const mapResults = res.map(t => ({
+      placeid: t.id,
+      name: t.name,
+      lat: t.lat,
+      lng: t.lng,
+    }));
+
+    setSearchResult(mapResults);
+  };
+
   //Create a new trip
   const handleSaveTrip = async () => {
     const missing = [];
@@ -149,6 +197,7 @@ function MyTripsPage() {
     if (!newDestination) missing.push("destination");
     if (!newStart) missing.push("start");
     if (!newEnd) missing.push("end");
+    if (!newFullDest) missing.push("destination");
 
     setInvalidFields(missing);
 
@@ -163,7 +212,7 @@ function MyTripsPage() {
 
       response = await axios.post("http://localhost:8080/Itinerary/CreateItinerary", {
         iName: newTripName,
-        iDest: newDestination,
+        iDest: newFullDest,
         start: newStart,
         end: newEnd,
         type: "Private",
@@ -197,6 +246,7 @@ function MyTripsPage() {
         setNewStart("");
         setNewEnd("");
         setErrorMsg("");
+        setNewFullDest({});
         setTimeout(() => setShowAddTripModal(false), 300);
       } else {
         setErrorMsg("Insert Failed");
@@ -315,6 +365,19 @@ function MyTripsPage() {
 
     return matchSearch && matchType && matchStatus;
   });
+
+  const updateFormBasedOnLoc = async(res) => {
+    setNewFullDest({
+      placeid: res.placeid,
+      name: res.name,
+      lat: res.lat,
+      lng: res.lng
+    });
+    setNewDestination(res.name);
+
+    setFirstLoad(true);
+    setShowLocSearch(false);
+  };
 
   return (
     <div className="mytrips-page">
@@ -529,9 +592,21 @@ function MyTripsPage() {
                     invalidFields.includes("destination") ? "invalid-input" : ""
                   }`}
                   value={newDestination}
-                  onChange={(e) => setNewDestination(e.target.value)}
+                  onChange={(e) => {
+                    setNewDestination(e.target.value);
+                    setShowLocSearch(false);
+                  }}
                 />
               </div>
+              { showLocSearch && (
+                <div className="form-input-search">
+                  {searchResult.map(res => (
+                    <div key={res.placeid} className="form-input-search-res" onClick={() => updateFormBasedOnLoc(res)}>
+                      {res.name}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="modal-row">

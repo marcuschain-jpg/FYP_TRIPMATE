@@ -65,16 +65,18 @@ router.get("/GetAllItineraries", RequireAuth(["registered", "premium"]), async(r
 router.post("/CreateItinerary", RequireAuth(["registered", "premium"]), async(req, res) => {
   const {iName, iDest, start, end, type} = req.body;
   const userid = req.userid;
+  console.log("Dest!!", iDest)
 
   try{
     const data = await pool.query(
-      `INSERT INTO itinerary (itinerary_name, itinerary_dest, start_date, end_date, user_host_id, type)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING itinerary_id, 'host' as useritype`, [iName, iDest, start, end, userid, type]
+      `INSERT INTO itinerary (itinerary_name, itinerary_dest, start_date, end_date, user_host_id, type, placeid, latitude, longitude)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING itinerary_id, 'host' as useritype`, [iName, iDest.name, start, end, userid, type, iDest.placeid, iDest.lat, iDest.lng]
     );
     return res.json(data.rows);
   }
   catch(err){
+    console.log(err);
     return res.status(500).send("Create itinerary failed");
   }
 });
@@ -173,6 +175,58 @@ router.delete("/DeleteItinerary", RequireAuth(["registered", "premium"]), async(
     catch(err) {console.log(err); return res.send({message: "Fail to delegate new host"});}
   }
 
+});
+
+router.post("/CitySearch", RequireAuth(["registered", "premium"]), async(req, res) => {
+  const {input} = req.body;
+
+  // 1. Search in autocomplete to only get cities
+  try {
+    const acRawResponse = await axios.post(
+      "https://places.googleapis.com/v1/places:autocomplete",
+      {
+        input: input,  // matches curl example
+        includedPrimaryTypes: "(cities)",
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "X-Goog-Api-Key": process.env.gMapsApiKey,
+          "X-Goog-FieldMask": "suggestions.placePrediction.placeId"
+        },
+      }
+    );
+    // response.data.results contains the search results
+    const acResponse = acRawResponse.data.suggestions.slice(0,4);
+
+    // 2. Search in place details with place id to get coordinates
+    const response = await Promise.all(
+      acResponse.map(async (item) => {
+      const r = await axios.get(
+        `https://places.googleapis.com/v1/places/${item.placePrediction.placeId}`,
+        
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": process.env.gMapsApiKey,
+            "X-Goog-FieldMask": "id,formattedAddress,location"
+          },
+        }
+      );
+      //console.log(r.data);
+      return {
+        id: r.data.id,
+        name: r.data.formattedAddress,
+        lat: r.data.location.latitude,
+        lng: r.data.location.longitude
+      };
+    })
+   );
+   return res.json(response);
+  } catch (err) {
+    console.error("Places Text Search error:", err.response?.data || err.message);
+    return res.status(500).json({ error: "Failed to fetch autocomplete" });
+  }
 });
 
 // ================================== TripDetailsPage ============================================
