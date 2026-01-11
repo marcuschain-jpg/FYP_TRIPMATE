@@ -78,7 +78,8 @@ function TripDetailsPage() {
       end: formattedEDate,
       status: res[0].completed,
       type: res[0].type,
-      numPpl: res[0].num_ppl
+      numPpl: res[0].num_ppl,
+      isHost: res[0].isHost
     };
 
     if(res[0].email){
@@ -288,7 +289,7 @@ function TripDetailsPage() {
           <div className="collab-card">
             {isPremium && (
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-                <h3 className="collab-title">Add Collaborators</h3>
+                <h3 className="collab-title">Collaborators</h3>
                 <div style={{ background: "#e3f2fd", color: "#0a3d62", padding: "4px 12px", borderRadius: "20px", fontSize: "13px", fontWeight: "600" }}>
                   {collaborators.length} member{collaborators.length !== 1 ? "s" : ""}
                 </div>
@@ -296,7 +297,7 @@ function TripDetailsPage() {
             )}
 
             {/*Input row*/}
-            {(isPremium) && <div className="collab-input-row">
+            {(isPremium && trip.isHost && trip.type === "Private") && <div className="collab-input-row">
               <input
                 type="text"
                 className="collab-input"
@@ -326,13 +327,9 @@ function TripDetailsPage() {
 
                   <span className="member-name">{item.name}</span>
 
-                  <button
-                    className="delete-btn"
-                    onClick={() => handleDeleteCollaborator(item)}
-                    title="Remove collaborator"
-                  >
+                  {trip.isHost && <button className="delete-btn" onClick={() => handleDeleteCollaborator(item)} title="Remove collaborator">
                     ✕
-                  </button>
+                  </button>}
 
                 </div>
               ))}

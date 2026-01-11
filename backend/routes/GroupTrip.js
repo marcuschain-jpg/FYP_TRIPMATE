@@ -4,6 +4,8 @@ const router = express.Router();
 const pool = require("../helper/db.js");
 // --- Authenticate ---
 const RequireAuth = require("../middlewares/RequireAuths.js"); // Authenticate and authorize user
+// --- S3 File Storage ---
+const DeletePhotoS3 = require("../helper/S3FileSys.js");
 
 
 router.post("/CreateGroupTrip", RequireAuth(["premium"]), async(req,res) => {
@@ -103,7 +105,6 @@ router.delete("/ExitGroupTrip", RequireAuth(["premium"]), async(req,res) => {
     const {i_id, isHost} = req.body;
     const userid = req.userid;
     let num_ppl = 0;
-    console.log(i_id);
 
     // Retrieve num of ppl for update later
     try {
@@ -113,7 +114,24 @@ router.delete("/ExitGroupTrip", RequireAuth(["premium"]), async(req,res) => {
     catch(err) { console.log(err); return res.status(500).send({message: "Failed to add user in group trips"});}
 
     // If only 1 ppl/host > delete itinerary
-    if(num_ppl === 1){
+    if(num_ppl === 1 && isHost){
+        try{
+            // Delete photos of itinerary if have
+            photoData = await pool.query(
+                `SELECT ap.photo_url FROM activity_photo ap
+                JOIN activity a ON ap.activity_id = a.activity_id
+                JOIN itinerary i on a.itinerary_id = i.itinerary_id
+                WHERE i.itinerary_id = $1`, [i_id]
+            );
+            }
+            catch(err) {photoData = null;}
+
+            if(photoData){
+            await Promise.all(
+                photoData.rows.map(data => {DeletePhotoS3(data.photo_url);
+            })
+            );
+        }
         try{
             const data = await pool.query(
                 `DELETE FROM itinerary
@@ -162,13 +180,14 @@ router.delete("/ExitGroupTrip", RequireAuth(["premium"]), async(req,res) => {
                  )
                  UPDATE itinerary
                  SET num_ppl = $3
+                 WHERE itinerary_id = $1
                  RETURNING num_ppl`, [i_id, userid, num_ppl-1]
             );
             if(data.rowCount > 0) return res.send(data.rows[0].num_ppl);
         }
         catch(err) {console.log(err); return res.send({message: "Fail to delegate new host"});}
     }
-})
+});
 
 
 module.exports = router

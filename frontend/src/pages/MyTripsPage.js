@@ -166,7 +166,7 @@ function MyTripsPage() {
         iDest: newDestination,
         start: newStart,
         end: newEnd,
-        type: "Private"
+        type: "Private",
       }, {withCredentials: true})
       .catch(err => {
         console.log(err)
@@ -185,7 +185,8 @@ function MyTripsPage() {
           isGroupTrip: false,
           userItineraryType: response.data[0].useritype,
           type: "Private", //Marker for private trips
-          collaborators: [], //Initialize empty collaborators array
+          collaborators: 1,
+          maxCapacity: 5, //Initialize empty collaborators array
         };
 
         setTrips((prev) => [...prev, newTrip]);
@@ -216,68 +217,59 @@ function MyTripsPage() {
   const deleteTripConfirmed = async () => {
     if (!tripToDelete) return;
 
+    const isHost = tripToDelete.userItineraryType === "host" ? true:false;
+
     // For group trips
     if (tripToDelete.isGroupTrip === true) {
-      setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
-      setShowDeleteConfirm(false);
-      setTripToDelete(null);
-
-      setSuccessMsg("Left group trip successfully!");
-      setTimeout(() => setSuccessMsg(""), 1500);
-      return;
-    }
-
-    // If button is delete
-    if(tripToDelete.userItineraryType === "host")
-    {
       try {
-      const response = await axios.delete(
-        "http://localhost:8080/Itinerary/DeleteItinerary",
-        {
-          data: { itineraryid: tripToDelete.id },
-          withCredentials: true
+        const response = await axios.delete("http://localhost:8080/GroupTrips/ExitGroupTrip",{data: { i_id: tripToDelete.id, isHost:isHost}, withCredentials: true});
+        if (response.data.deleteItinerary) {
+          setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
+          setShowDeleteConfirm(false);
+          setTripToDelete(null);
+
+          setSuccessMsg("Trip deleted successfully!");
+          setTimeout(() => setSuccessMsg(""), 1500);
+          return;
         }
-      );
+        else{
+          setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
+          setShowDeleteConfirm(false);
+          setTripToDelete(null);
 
-      if (response.data === true) {
-        setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
-        setShowDeleteConfirm(false);
-        setTripToDelete(null);
-
-        setSuccessMsg("Trip deleted successfully!");
-        setTimeout(() => setSuccessMsg(""), 1500);
-      } else {
-        setErrorMsg("Delete failed.");
-        setShowDeleteConfirm(false);
-      }
+          setSuccessMsg("Public group trip exited successfully!");
+          setTimeout(() => setSuccessMsg(""), 1500);
+          return;
+        }
       } catch (err) {
         console.error(err);
         setErrorMsg("Delete failed (server error).");
         setShowDeleteConfirm(false);
       }
     }
-    // If button is exit
-    else if(tripToDelete.userItineraryType === "visitor"){
+
+    // Use shared_itinerary backend
+    else{
       try {
-      const response = await axios.delete(
-        "http://localhost:8080/Itinerary/ExitItinerary",
-        {
-          data: { itineraryid: tripToDelete.id },
-          withCredentials: true
+        const response = await axios.delete("http://localhost:8080/Itinerary/DeleteItinerary",{data: { i_id: tripToDelete.id, isHost:isHost}, withCredentials: true});
+        if (response.data.deleteItinerary) {
+          setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
+          setShowDeleteConfirm(false);
+          setTripToDelete(null);
+
+          setSuccessMsg("Trip deleted successfully!");
+          setTimeout(() => setSuccessMsg(""), 1500);
+          return;
         }
-      );
+        else{
+          setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
+          setShowDeleteConfirm(false);
+          setTripToDelete(null);
 
-      if (response.data === true) {
-        setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
-        setShowDeleteConfirm(false);
-        setTripToDelete(null);
-
-        setSuccessMsg("Trip deleted successfully!");
-        setTimeout(() => setSuccessMsg(""), 1500);
-      } else {
-        setErrorMsg("Delete failed.");
-        setShowDeleteConfirm(false);
-      }
+          setSuccessMsg("Private group trip exited successfully!");
+          setTimeout(() => setSuccessMsg(""), 1500);
+          return;
+        }
       } catch (err) {
         console.error(err);
         setErrorMsg("Delete failed (server error).");
@@ -285,6 +277,7 @@ function MyTripsPage() {
       }
     }
   };
+
 
   //Update collaborators for a trip
   const updateTripCollaborators = (tripId, collaborators) => {
@@ -445,6 +438,18 @@ function MyTripsPage() {
                     }}
                   >
                     {trip.isGroupTrip ? "Public" : "Private"}
+                  </span>}
+                  {usertype === "premium" && <span 
+                    style={{
+                      padding: "4px 8px",
+                      borderRadius: "4px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      color: trip.isGroupTrip ? "#fff" : "#333",
+                      backgroundColor: trip.userItineraryType === "host" ? "#FF6B6B" : "#4ECDC4"
+                    }}
+                  >
+                    {trip.userItineraryType === "host" ? "Host" : "Collaborator"}
                   </span>}
                 </div>
 
