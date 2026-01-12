@@ -19,7 +19,7 @@ router.post("/CreateGroupTrip", RequireAuth(["premium"]), async(req,res) => {
       `INSERT INTO itinerary (itinerary_name, itinerary_dest, start_date, end_date, user_host_id, type, capacity, description
       , placeid, longitude, latitude)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-       RETURNING itinerary_id`, [iName, iDest.name, start, end, userid, triptype, num_ppl, description, iDest.placeid, iDest.lat, iDest.lng]
+       RETURNING itinerary_id`, [iName, iDest.name, start, end, userid, triptype, num_ppl, description, iDest.placeid, iDest.lng, iDest.lat]
     );
     if(data.rowCount > 0) return res.json(data.rows);
   }
