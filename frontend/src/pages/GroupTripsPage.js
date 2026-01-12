@@ -100,6 +100,9 @@ function GroupTripsPage() {
     }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> parent of 42db5de (Merge pull request #38 from marcuschain-jpg/mari-branch-2)
     try{
       let newCurrMembers = 0;
       const res = await axios.patch("http://localhost:8080/GroupTrips/JoinGroupTrip", {i_id:trip.id}, {withCredentials:true})
@@ -128,6 +131,7 @@ function GroupTripsPage() {
     //joinTrip(trip);
   };
 
+<<<<<<< HEAD
 =======
     const optimisticTrip = {
       ...trip,
@@ -156,6 +160,8 @@ function GroupTripsPage() {
   };
 
 >>>>>>> parent of 4a6b617 (Merge branch 'main' into mari-branch-2)
+=======
+>>>>>>> parent of 42db5de (Merge pull request #38 from marcuschain-jpg/mari-branch-2)
   //Exit handler
   const handleExit = async(trip) => {
     const confirmExit = window.confirm(
@@ -165,6 +171,9 @@ function GroupTripsPage() {
     const tripId = trip.id;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> parent of 42db5de (Merge pull request #38 from marcuschain-jpg/mari-branch-2)
     try{
       const res = await axios.delete("http://localhost:8080/GroupTrips/ExitGroupTrip", {data:{i_id:tripId, isHost:trip.isHost}, withCredentials:true})
       if(res.data.deleteItinerary){
