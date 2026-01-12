@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useOutletContext, useNavigate } from "react-router-dom"; // ✅ ADDED
+import { useOutletContext, useNavigate } from "react-router-dom"; // âœ… ADDED
 import "../styles/GroupTrip.css";
 import axios from 'axios';
 
@@ -237,7 +237,7 @@ function GroupTripsPage() {
           owner: "You",
           location: location,
           title: tripName,
-          date: `${startDate} – ${endDate}`,
+          date: `${startDate} â€“ ${endDate}`,
           capacity: maxCapacity, //Capped at 5
           currentMembers: 1, //Creator is automatically a member
           description,

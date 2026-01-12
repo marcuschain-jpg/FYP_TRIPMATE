@@ -8,6 +8,27 @@ import whatsapp from "../Assets/Whatsapp.png"
 import telegram from "../Assets/Telegram.png"
 import ItineraryChat from "../components/ItineraryChat";
 
+//Date formatter function--> so that correct data appears across all pages and can be updatd through edit button
+const formatDateForDisplay = (dateValue) => {
+  if (!dateValue) return "";
+  
+  let date;
+  
+  if (typeof dateValue === "string") {
+    date = new Date(dateValue);
+  } else if (dateValue instanceof Date) {
+    date = dateValue;
+  } else {
+    return "";
+  }
+  
+  if (isNaN(date.getTime())) {
+    return "";
+  }
+  
+  return date.toLocaleDateString("en-GB");
+};
+
 function TripDetailsPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
@@ -59,14 +80,9 @@ function TripDetailsPage() {
   }, [userRole])
 
   const renderLoadTrip = (res) => {
-    // format date from timestamp to dd/mm/yyyy
-    const tempSDate = res[0].start_date.split("T")[0];
-    const dateObj = new Date(tempSDate);
-    const formattedSDate = dateObj.toLocaleDateString("en-GB");
-
-    const tempEDate = res[0].start_date.split("T")[0];
-    const dateObj2 = new Date(tempEDate);
-    const formattedEDate = dateObj2.toLocaleDateString("en-GB");
+    //Format dates using the formatter function
+    const formattedSDate = formatDateForDisplay(res[0].start_date);
+    const formattedEDate = formatDateForDisplay(res[0].end_date);
 
     let mapCollab = "";
 

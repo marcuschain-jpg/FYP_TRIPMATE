@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/Profile.css";
 import "../styles/ItineraryFeed.css"; 
@@ -63,14 +63,50 @@ function ProfilePage() {
   const location = useLocation();
 
   const [profile, setProfile] = useState(initialProfile);
+  const [currentDate, setCurrentDate] = useState(new Date(2026, 0, 1)); // Jan 2026
+  const [trips, setTrips] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  //Bookkmark state
-  const [bookmarkedPosts, setBookmarkedPosts] = useState(() => getGlobalBookmarks());
+  //Load trips data
+  useEffect(() => {
+    const loadTrips = async () => {
+      try {
+        //Get private trips
+        const privateRes = await axios.get(
+          "http://localhost:8080/Itinerary/GetAllItineraries",
+          { withCredentials: true }
+        );
 
-  // ✅ Modal state
-  const [activePost, setActivePost] = useState(null);
+        console.log("Private trips from backend:", privateRes.data);
 
-  //Syncing profile info--> when edits are made in EditProfilePage --> sync to ProfilePage
+        //Format private trips
+        const privateTrips = privateRes.data.map((trip) => ({
+          id: trip.itinerary_id,
+          title: trip.itinerary_name,
+          startDate: trip.start_date,
+          endDate: trip.end_date,
+          type: "private",
+          destination: trip.itinerary_dest,
+        }));
+
+        console.log("Formatted private trips:", privateTrips);
+
+        setTrips(privateTrips);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error loading trips:", err);
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          const errorMsg = `${err.response.status}: ${err.response.data.message}`;
+          navigate(`/login/${errorMsg}`);
+        }
+        setLoading(false);
+      }
+    };
+
+    loadTrips();
+  }, [navigate]); 
+
+  //Sync profile info when edits are made
   useEffect(() => {
     if (location.state?.updatedProfile) {
       setProfile(location.state.updatedProfile);
@@ -209,18 +245,38 @@ function ProfilePage() {
                 <hr className="divider" />
               </div>
 
-              <div className="post-sidebar-footer">
-                <div className="action-icons-row">
-                  <div
-                    className="action-group bookmark-group"
-                    style={{ marginLeft: "auto", cursor: "pointer" }}
-                    onClick={() => handleToggleBookmark(activePost.id)}
-                  >
-                    {bookmarkedPosts[activePost.id] ? <BookmarkFilled /> : <BookmarkHollow />}
-                  </div>
-                </div>
-                <div className="likes-summary">
-                  <strong>{activePost.likes} likes</strong>
+                <div className="calendar-days">
+                  {calendarDays.map((day, index) => {
+                    const tripsOnDay = day ? getTripsOnDate(day) : [];
+                    const isToday =
+                      isCurrentMonth && day === today.getDate();
+
+                    return (
+                      <div
+                        key={index}
+                        className={`calendar-day ${day ? "" : "empty"} ${
+                          isToday ? "today" : ""
+                        }`}
+                      >
+                        {day && (
+                          <>
+                            <div className="day-number">{day}</div>
+                            <div className="trips-container">
+                              {tripsOnDay.map((trip, tripIndex) => (
+                                <div
+                                  key={`${trip.id}-${tripIndex}`}
+                                  className={`trip-badge ${trip.type}`}
+                                  title={trip.title}
+                                >
+                                  {trip.title}
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
