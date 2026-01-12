@@ -36,21 +36,14 @@ router.get("/GetAllItineraries", RequireAuth(["registered", "premium"]), async(r
 
   try{
     const data = await pool.query(
-      `SELECT i.itinerary_id, i.itinerary_name, i.itinerary_dest, i.start_date, i.end_date, i.completed, i.type, 'host' as userIType,
-       i.num_ppl, i.capacity
+      `SELECT i.itinerary_id, i.itinerary_name, i.itinerary_dest, i.start_date, i.end_date, i.completed, i.type, 'host' as userIType
        FROM itinerary i
        WHERE i.user_host_id = $1
        UNION
-       SELECT i.itinerary_id, i.itinerary_name, i.itinerary_dest, i.start_date, i.end_date, i.completed, i.type, 'visitor' as userIType,
-       i.num_ppl, i.capacity
+       SELECT i.itinerary_id, i.itinerary_name, i.itinerary_dest, i.start_date, i.end_date, i.completed, i.type, 'visitor' as userIType
        FROM itinerary i
        JOIN shared_itinerary si ON i.itinerary_id = si.itinerary_id  
        WHERE si.user_id = $1
-       UNION
-       SELECT i.itinerary_id, i.itinerary_name, i.itinerary_dest, i.start_date, i.end_date, i.completed, i.type, 'visitor' as userIType,
-       i.num_ppl, i.capacity
-       FROM itinerary i
-       JOIN group_trip gt ON i.itinerary_id = gt.itinerary_id
        ORDER BY completed ASC`, [userid]
     );
 
@@ -65,188 +58,93 @@ router.get("/GetAllItineraries", RequireAuth(["registered", "premium"]), async(r
 router.post("/CreateItinerary", RequireAuth(["registered", "premium"]), async(req, res) => {
   const {iName, iDest, start, end, type} = req.body;
   const userid = req.userid;
-  console.log("Dest!!", iDest)
 
   try{
     const data = await pool.query(
-      `INSERT INTO itinerary (itinerary_name, itinerary_dest, start_date, end_date, user_host_id, type, placeid, latitude, longitude)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       RETURNING itinerary_id, 'host' as useritype`, [iName, iDest.name, start, end, userid, type, iDest.placeid, iDest.lat, iDest.lng]
+      `INSERT INTO itinerary (itinerary_name, itinerary_dest, start_date, end_date, user_host_id, type)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING itinerary_id, 'host' as useritype`, [iName, iDest, start, end, userid, type]
     );
     return res.json(data.rows);
   }
   catch(err){
-    console.log(err);
     return res.status(500).send("Create itinerary failed");
   }
 });
 
 router.delete("/DeleteItinerary", RequireAuth(["registered", "premium"]), async(req, res) =>{
-  // For Private Trips
-  const {i_id, isHost} = req.body;
+  const {itineraryid} = req.body;
   let photoData = null;
-  const userid = req.userid;
-  console.log("itineraryid: ", i_id);
-  console.log("isHost: ", isHost);
+  console.log("itinerary", itineraryid);
 
-  // Retrieve num of ppl for update later
-    try {
-        const data = await pool.query(`SELECT num_ppl, capacity FROM itinerary WHERE itinerary_id = $1`, [i_id])
-        num_ppl = data.rows[0].num_ppl;
-    }
-    catch(err) { console.log(err); return res.status(500).send({message: "Failed to get num_ppl in ExitItinerary"});}
+  // Delete photos of itinerary if have
+  try{
+    photoData = await pool.query(
+      `SELECT ap.photo_url FROM activity_photo ap
+       JOIN activity a ON ap.activity_id = a.activity_id
+       JOIN itinerary i on a.itinerary_id = i.itinerary_id
+       WHERE i.itinerary_id = $1`, [itineraryid]
+    );
+  }
+  catch(err) {photoData = null;}
 
-  // Only 1 person, safe to delete itinerary & media
-  if(num_ppl === 1){
-    try{
-      // Delete photos of itinerary if have
-      photoData = await pool.query(
-        `SELECT ap.photo_url FROM activity_photo ap
-        JOIN activity a ON ap.activity_id = a.activity_id
-        JOIN itinerary i on a.itinerary_id = i.itinerary_id
-        WHERE i.itinerary_id = $1`, [i_id]
-      );
-    }
-    catch(err) {photoData = null;}
-
-    if(photoData){
-      await Promise.all(
-        photoData.rows.map(data => {DeletePhotoS3(data.photo_url);
-      })
-      );
-    }
-
-    // Delete itinerary
-    try{
-      const data = await pool.query(
-        `DELETE FROM itinerary
-         WHERE itinerary_id=$1`, [i_id]
-      );
-      if(data.rowCount > 0) return res.send({deleteItinerary: true})
-    }
-    catch(err) {console.log(err); return res.send({message: "Fail to remove itinerary"});}
+  if(photoData){
+    await Promise.all(
+      photoData.rows.map(data => {DeletePhotoS3(data.photo_url);
+    })
+    )
   }
 
-  // person > 1, if host - re-assign host
-  else if(isHost && num_ppl > 1){
-    // Remove record from shared_itinerary returning user_id
-    // Update user_host_id in itinerary
-    // Update num_ppl in db
-    try{
-        const data = await pool.query(
-        `WITH selectrandom AS(
-          SELECT user_id
-          FROM shared_itinerary
-          WHERE itinerary_id=$1
-          ORDER BY random()
-          LIMIT 1
-          ),
-          transferhost AS(
-          DELETE FROM shared_itinerary
-          WHERE itinerary_id=$1 AND user_id=(SELECT user_id from selectrandom)
-          )
-          UPDATE itinerary
-          SET user_host_id = (SELECT user_id from selectrandom),
-          num_ppl = $2
-          WHERE itinerary_id = $1
-          RETURNING num_ppl`, [i_id, num_ppl - 1]
-        );
-        if(data.rowCount > 0) return res.send(data.rows[0].num_ppl);
-      }
-      catch(err) {console.log(err); return res.send({message: "Fail to delegate new host"});}
+  // Delete itinerary
+  try{
+    const data = await pool.query(
+      `DELETE FROM itinerary
+       WHERE itinerary_id = $1`, [itineraryid]
+    );
+    if(data.rowCount === 1) //successfully delete
+    {
+      return res.send(true);
     }
-  
-  // person > 1, if visitor - exit
-  else if(!isHost && num_ppl > 1){
-    // Remove user from group_trips table
-    try{
-      const data = await pool.query(
-        `WITH deleteuser AS(
-         DELETE FROM shared_itinerary
-         WHERE itinerary_id=$1 AND user_id=$2
-         )
-         UPDATE itinerary
-         SET num_ppl = $3
-         WHERE itinerary_id=$1
-         RETURNING num_ppl`, [i_id, userid, num_ppl-1]
-      );
-      if(data.rowCount > 0) return res.send(data.rows[0].num_ppl);
-    }
-    catch(err) {console.log(err); return res.send({message: "Fail to delegate new host"});}
   }
-
+  catch(err){
+    return res.status(500).send("Delete itinerary failed");
+  }
 });
 
-router.post("/CitySearch", RequireAuth(["registered", "premium"]), async(req, res) => {
-  const {input} = req.body;
+router.delete("/ExitItinerary", RequireAuth(["registered", "premium"]), async(req, res) =>{
+  const {itineraryid} = req.body;
+  const userid = req.userid
 
-  // 1. Search in autocomplete to only get cities
-  try {
-    const acRawResponse = await axios.post(
-      "https://places.googleapis.com/v1/places:autocomplete",
-      {
-        input: input,  // matches curl example
-        includedPrimaryTypes: "(cities)",
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "X-Goog-Api-Key": process.env.gMapsApiKey,
-          "X-Goog-FieldMask": "suggestions.placePrediction.placeId"
-        },
-      }
+  // Exit itinerary
+  try{
+    const data = await pool.query(
+      `DELETE FROM shared_itinerary
+       WHERE itinerary_id = $1 AND user_id =$2`, [itineraryid, userid]
     );
-    // response.data.results contains the search results
-    const acResponse = acRawResponse.data.suggestions.slice(0,4);
-
-    // 2. Search in place details with place id to get coordinates
-    const response = await Promise.all(
-      acResponse.map(async (item) => {
-      const r = await axios.get(
-        `https://places.googleapis.com/v1/places/${item.placePrediction.placeId}`,
-        
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "X-Goog-Api-Key": process.env.gMapsApiKey,
-            "X-Goog-FieldMask": "id,formattedAddress,location"
-          },
-        }
-      );
-      //console.log(r.data);
-      return {
-        id: r.data.id,
-        name: r.data.formattedAddress,
-        lat: r.data.location.latitude,
-        lng: r.data.location.longitude
-      };
-    })
-   );
-   return res.json(response);
-  } catch (err) {
-    console.error("Places Text Search error:", err.response?.data || err.message);
-    return res.status(500).json({ error: "Failed to fetch autocomplete" });
+    if(data.rowCount === 1) //successfully delete
+    {
+      return res.send(true);
+    }
+  }
+  catch(err){
+    return res.status(500).send({message: "Exit itinerary failed"});
   }
 });
 
 // ================================== TripDetailsPage ============================================
 router.get("/GetItinerary", RequireAuth(["registered", "premium"]), async(req, res) => {
   const i_id = req.query["i_id"];
-  const userid = req.userid;
 
   try{
-    const rawdata = await pool.query(
+    const data = await pool.query(
       `SELECT i.itinerary_id, i.itinerary_name, i.itinerary_dest, i.start_date, i.end_date, i.completed, i.type, i.num_ppl,
-       u.first_name, u.last_name, u.email, i.user_host_id
+       u.first_name, u.last_name, u.email
        FROM itinerary i
        LEFT JOIN shared_itinerary si ON i.itinerary_id = si.itinerary_id
        LEFT JOIN users u ON si.user_id = u.userid
        WHERE i.itinerary_id = $1`, [i_id]
     );
-    let data = rawdata.rows.map(({user_host_id,...item}) => {
-      return{...item, isHost: user_host_id === userid}
-    })
-    return res.json(data);
+    return res.json(data.rows);
   }
   catch(err){ //error running sql
     return res.status(500).send('Load itinerary failed');
@@ -332,18 +230,12 @@ router.post("/AddCollaborator", RequireAuth(["premium"]), async(req,res) => {
 router.delete("/DeleteCollaborator", RequireAuth(["premium"]), async(req,res) => {
   const {i_id, email} = req.body;
   let userid_collab = null;
-  let num_ppl = 0;
 
   try{
     const data = await pool.query(
-      `SELECT
-      (SELECT userid FROM users WHERE email = $1) AS userid,
-      (SELECT num_ppl FROM itinerary WHERE itinerary_id = $2) as num_ppl;`, [email, i_id]
+      `SELECT userid FROM users WHERE email = $1`, [email]
     )
-    if (data.rowCount > 0) {
-      userid_collab = data.rows[0].userid;
-      num_ppl = data.rows[0].num_ppl;
-    }
+    if (data.rowCount > 0) userid_collab = data.rows[0].userid;
     else if(data.rowCount === 0) return res.status(500).send({message: "No user found with this email"});
   }
   catch(err) {return res.status(500).send({message: "No user found with this email"});}
@@ -351,13 +243,8 @@ router.delete("/DeleteCollaborator", RequireAuth(["premium"]), async(req,res) =>
   if(userid_collab){
     try{
       const data = await pool.query(
-        `WITH updatenumppl AS(
-         UPDATE itinerary
-         SET num_ppl = $3
-         WHERE itinerary_id = $1
-        )
-         DELETE FROM shared_itinerary
-         WHERE itinerary_id = $1 AND user_id = $2`, [i_id, userid_collab, num_ppl - 1]
+        `DELETE FROM shared_itinerary
+        WHERE itinerary_id = $1 AND user_id = $2`, [i_id, userid_collab]
       );
       if(data.rowCount > 0) return res.send(true);
     }
