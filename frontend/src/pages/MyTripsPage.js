@@ -4,6 +4,34 @@ import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import axios from 'axios';
 import ItineraryChat from "../components/ItineraryChat";
 
+//Date formatter function--> for date editing
+const formatDateForInput = (dateValue) => {
+  if (!dateValue) return "";
+  
+  let date;
+  
+  if (typeof dateValue === "string" && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+    return dateValue;
+  }
+  
+  if (typeof dateValue === "string") {
+    date = new Date(dateValue);
+  } else if (dateValue instanceof Date) {
+    date = dateValue;
+  } else {
+    return "";
+  }
+  
+  if (isNaN(date.getTime())) {
+    return "";
+  }
+  
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  
+  return `${year}-${month}-${day}`;
+};
 
 function MyTripsPage() {
   const navigate = useNavigate();
@@ -17,6 +45,8 @@ function MyTripsPage() {
 
   //Modal states
   const [showAddTripModal, setShowAddTripModal] = useState(false);
+  const [isEditingTrip, setIsEditingTrip] = useState(false);
+  const [editingTripId, setEditingTripId] = useState(null);
   const [newTripName, setNewTripName] = useState("");
   const [newDestination, setNewDestination] = useState("");
   const [newStart, setNewStart] = useState("");
@@ -50,8 +80,8 @@ function MyTripsPage() {
     isGroupTrip: true,
     type: "Group",
     owner: t.owner,
-    currentMembers: t.currentMembers || 0, //Current members in the group trip-->synced with GroupTripsPage
-    maxCapacity: t.capacity || 0, //Max capacity from group trips-->synced with GroupTripsPage
+    currentMembers: t.currentMembers || 0,
+    maxCapacity: t.capacity || 0,
   });
   
 
@@ -95,27 +125,23 @@ function MyTripsPage() {
       id: t.itinerary_id,
       name: t.itinerary_name,
       destination: t.itinerary_dest,
-      start: t.start_date,
-      end: t.end_date,
+      start: formatDateForInput(t.start_date),
+      end: formatDateForInput(t.end_date),
       status: t.completed,
       isGroupTrip: t.type === "Group" ? true : false,
-      collaborators: ["a", "b"], //Initialize empty collaborators array
+      collaborators: ["a", "b"],
       userItineraryType: t.useritype
     }));
 
     setTrips((prev) => {
-      //keep any group trips already in state
       const existingGroupTrips = prev.filter((x) => x.isGroupTrip === true);
 
-      //add joined group trips from shared state too
       const sharedGroupTrips = (joinedGroupTrips || []).map(mapGroupTripToMyTrip);
 
-      //Merge group trips without duplicates
       const allGroupTrips = [...existingGroupTrips, ...sharedGroupTrips].filter(
         (trip, index, arr) => arr.findIndex((x) => x.id === trip.id) === index
       );
 
-      //Ensure no id clash with private trips
       const finalGroupTrips = allGroupTrips.filter(
         (g) => !mapTrips.some((p) => p.id === g.id)
       );
@@ -140,7 +166,33 @@ function MyTripsPage() {
     });
   }, [joinedGroupTrips]);
 
-  //Create a new trip
+  //Open add trip modal
+  const openAddModal = () => {
+    setIsEditingTrip(false);
+    setEditingTripId(null);
+    setNewTripName("");
+    setNewDestination("");
+    setNewStart("");
+    setNewEnd("");
+    setInvalidFields([]);
+    setErrorMsg("");
+    setShowAddTripModal(true);
+  };
+
+  //Open edit trip modal
+  const openEditModal = (trip) => {
+    setIsEditingTrip(true);
+    setEditingTripId(trip.id);
+    setNewTripName(trip.name);
+    setNewDestination(trip.destination);
+    setNewStart(formatDateForInput(trip.start));
+    setNewEnd(formatDateForInput(trip.end));
+    setInvalidFields([]);
+    setErrorMsg("");
+    setShowAddTripModal(true);
+  };
+
+  //Create or update trip
   const handleSaveTrip = async () => {
     const missing = [];
     if (!newTripName) missing.push("tripName");
@@ -156,51 +208,94 @@ function MyTripsPage() {
     }
 
     try {
-      let newTripID;
-      let response;
+      if (isEditingTrip) {
+        const response = await axios.patch(
+          `http://localhost:8080/Itinerary/UpdateItinerary`,
+          {
+            itineraryid: editingTripId,
+            iName: newTripName,
+            iDest: newDestination,
+            start: formatDateForInput(newStart),
+            end: formatDateForInput(newEnd)
+          },
+          { withCredentials: true }
+        );
 
-      response = await axios.post("http://localhost:8080/Itinerary/CreateItinerary", {
-        iName: newTripName,
-        iDest: newDestination,
-        start: newStart,
-        end: newEnd,
-        type: "Private"
-      }, {withCredentials: true})
-      .catch(err => {
-        console.log(err)
-      });
+        console.log("Update response:", response.data);
 
-      newTripID = response.data?.[0]?.itinerary_id;
+        if (response.data === true || response.status === 200) {
+          setTrips((prev) =>
+            prev.map((trip) =>
+              trip.id === editingTripId
+                ? {
+                    ...trip,
+                    name: newTripName,
+                    destination: newDestination,
+                    start: formatDateForInput(newStart),
+                    end: formatDateForInput(newEnd)
+                  }
+                : trip
+            )
+          );
+          setSuccessMsg("Trip updated successfully!");
 
-      if (newTripID > 0) {
-        const newTrip = {
-          id: newTripID,
-          name: newTripName,
-          destination: newDestination,
-          start: newStart,
-          end: newEnd,
-          status: false,
-          isGroupTrip: false,
-          userItineraryType: response.data[0].useritype,
-          type: "Private", //Marker for private trips
-          collaborators: [], //Initialize empty collaborators array
-        };
-
-        setTrips((prev) => [...prev, newTrip]);
-        setSuccessMsg("Trip successfully created!");
-
-        setNewTripName("");
-        setNewDestination("");
-        setNewStart("");
-        setNewEnd("");
-        setErrorMsg("");
-        setTimeout(() => setShowAddTripModal(false), 300);
+          setNewTripName("");
+          setNewDestination("");
+          setNewStart("");
+          setNewEnd("");
+          setErrorMsg("");
+          setTimeout(() => setShowAddTripModal(false), 300);
+        } else {
+          setErrorMsg("Update Failed");
+        }
       } else {
-        setErrorMsg("Insert Failed");
+        const response = await axios.post(
+          "http://localhost:8080/Itinerary/CreateItinerary",
+          {
+            iName: newTripName,
+            iDest: newDestination,
+            start: formatDateForInput(newStart),
+            end: formatDateForInput(newEnd),
+            type: "Private"
+          },
+          { withCredentials: true }
+        ).catch(err => {
+          console.log(err);
+          throw err;
+        });
+
+        const newTripID = response.data?.[0]?.itinerary_id;
+
+        if (newTripID > 0) {
+          const newTrip = {
+            id: newTripID,
+            name: newTripName,
+            destination: newDestination,
+            start: formatDateForInput(newStart),
+            end: formatDateForInput(newEnd),
+            status: false,
+            isGroupTrip: false,
+            userItineraryType: response.data[0].useritype,
+            type: "Private",
+            collaborators: [],
+          };
+
+          setTrips((prev) => [...prev, newTrip]);
+          setSuccessMsg("Trip successfully created!");
+
+          setNewTripName("");
+          setNewDestination("");
+          setNewStart("");
+          setNewEnd("");
+          setErrorMsg("");
+          setTimeout(() => setShowAddTripModal(false), 300);
+        } else {
+          setErrorMsg("Insert Failed");
+        }
       }
     } catch (err) {
       console.error(err);
-      setErrorMsg("Insert Failed");
+      setErrorMsg("Operation Failed");
     }
   };
 
@@ -214,7 +309,6 @@ function MyTripsPage() {
   const deleteTripConfirmed = async () => {
     if (!tripToDelete) return;
 
-    // For group trips
     if (tripToDelete.isGroupTrip === true) {
       setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
       setShowDeleteConfirm(false);
@@ -225,7 +319,6 @@ function MyTripsPage() {
       return;
     }
 
-    // If button is delete
     if(tripToDelete.userItineraryType === "host")
     {
       try {
@@ -254,7 +347,6 @@ function MyTripsPage() {
         setShowDeleteConfirm(false);
       }
     }
-    // If button is exit
     else if(tripToDelete.userItineraryType === "visitor"){
       try {
       const response = await axios.delete(
@@ -284,7 +376,6 @@ function MyTripsPage() {
     }
   };
 
-  //Update collaborators for a trip
   const updateTripCollaborators = (tripId, collaborators) => {
     setTrips((prev) =>
       prev.map((trip) =>
@@ -293,7 +384,6 @@ function MyTripsPage() {
     );
   };
 
-  //Listen for collaborator updates from TripDetailsPage
   useEffect(() => {
     const handleUpdateCollaborators = (event) => {
       const { tripId, collaborators } = event.detail;
@@ -304,7 +394,6 @@ function MyTripsPage() {
     return () => window.removeEventListener("updateCollaborators", handleUpdateCollaborators);
   }, []);
 
-  //Apply filters
   const filteredTrips = trips.filter((t) => {
     const matchSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -325,7 +414,6 @@ function MyTripsPage() {
     <div className="mytrips-page">
       <h1 className="title">My Trips</h1>
 
-      {/*Search/filter/add button*/}
       <div className="top-controls">
         <input
           className="search-bar"
@@ -411,11 +499,7 @@ function MyTripsPage() {
 
         <button
           className="add-trip-btn"
-          onClick={() => {
-            setShowAddTripModal(true);
-            setInvalidFields([]);
-            setErrorMsg("");
-          }}
+          onClick={openAddModal}
         >
           Add New Trip +
         </button>
@@ -431,7 +515,6 @@ function MyTripsPage() {
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                   <h2 className="trip-name">{trip.name}</h2>
-                  {/*Marker for trip type*/}
                   {usertype === "premium" && <span 
                     style={{
                       padding: "4px 8px",
@@ -446,14 +529,12 @@ function MyTripsPage() {
                   </span>}
                 </div>
 
-                {/*Member counter for group trips*/}
                 {usertype === "premium" && trip.isGroupTrip && (
                   <p style={{ fontSize: "14px", color: "#666", marginTop: "5px" }}>
                     Members: {trip.currentMembers}/{trip.maxCapacity}
                   </p>
                 )}
 
-                {/*Collaborator counter for private trips*/}
                 {usertype === "premium" && !trip.isGroupTrip && trip.collaborators && trip.collaborators.length > 0 && (
                   <p style={{ fontSize: "14px", color: "#666", marginTop: "5px" }}>
                     Collaborators: {trip.collaborators.length}
@@ -483,6 +564,15 @@ function MyTripsPage() {
                   View
                 </button>
 
+                {!trip.isGroupTrip && (
+                  <button 
+                    className="edit-btn"
+                    onClick={() => openEditModal(trip)}
+                  >
+                    Edit
+                  </button>
+                )}
+
                 {trip.userItineraryType === "host" && <button className="delete-btn" onClick={() => requestDeleteTrip(trip.id)}>
                   Delete
                 </button>}
@@ -495,11 +585,10 @@ function MyTripsPage() {
           ))}
       </div>
 
-      {/*Add new trip modal*/}
       {showAddTripModal && (
         <div className="modal-overlay">
           <div className="modal-box">
-            <h2 className="modal-title">Trip Details</h2>
+            <h2 className="modal-title">{isEditingTrip ? "Edit Trip" : "Trip Details"}</h2>
 
             {errorMsg && <div className="error-msg">{errorMsg}</div>}
 
@@ -562,14 +651,13 @@ function MyTripsPage() {
               </button>
 
               <button className="modal-save" onClick={handleSaveTrip}>
-                Save
+                {isEditingTrip ? "Update" : "Save"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/*Delete confirmation modal*/}
       {showDeleteConfirm && (
         <div className="modal-overlay">
           <div className="modal-box small">
