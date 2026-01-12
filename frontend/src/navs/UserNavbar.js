@@ -128,8 +128,8 @@ function UserNavbar({ outletContext }) {
                         <Link to="/mytrips" className="nav-link">
                             My Trips
                         </Link>
-                        <Link to="/profile" className="nav-link">
-                            My Profile
+                        <Link to="/feed" className="nav-link">
+                            Feed
                         </Link>
                         <Link to="/join-trip" className="nav-link">
                             Join A Trip

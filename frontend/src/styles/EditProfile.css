@@ -2,17 +2,52 @@
     display: flex;
     min-height: 100vh;
     background: #f5f5f5;
-    padding: 40px 20px;
+}
+
+/*Sidebar*/
+.edit-profile-sidebar {
+    width: 220px;
+    background: #0b4f6c;
+    padding: 20px 0;
+    position: fixed;
+    height: 100vh;
+    left: 0;
+    top: 60px;
+}
+
+.edit-profile-sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.edit-profile-sidebar li {
+    padding: 15px 30px;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.edit-profile-sidebar li:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.edit-profile-sidebar li.active {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    font-weight: 600;
+    border-left: 4px solid #fff;
 }
 
 /*Main content*/
 .edit-profile-main {
-    margin: 0 auto;
+    margin-left: 220px;
     flex: 1;
+    padding: 40px 60px;
     display: flex;
     justify-content: center;
-    max-width: 1200px;
-    width: 100%;
 }
 
 .edit-profile-container {
@@ -49,24 +84,12 @@
     overflow: hidden;
     margin-bottom: 15px;
     border: 4px solid #0b4f6c;
-    background: #f9f9f9;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .profile-pic-preview {
     width: 100%;
     height: 100%;
     object-fit: cover;
-}
-
-.profile-pic-empty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
 }
 
 .change-pic-btn {
@@ -78,13 +101,11 @@
     font-size: 14px;
     font-weight: 600;
     transition: background 0.3s ease;
-    border: none;
 }
 
 .change-pic-btn:hover {
     background: #094561;
 }
-
 /*Edit user info form*/
 .form-group {
     margin-bottom: 25px;
@@ -217,7 +238,32 @@
     background: #d0d0d0;
 }
 
-/*Modals*/
+@media (max-width: 768px) {
+    .edit-profile-sidebar {
+        width: 100%;
+        position: relative;
+        height: auto;
+    }
+
+    .edit-profile-main {
+        margin-left: 0;
+        padding: 20px;
+    }
+
+    .edit-profile-container {
+        padding: 30px 20px;
+    }
+
+    .interests-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+}
+
+/*Unsubscribe modal/ confirmation message*/
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -231,7 +277,6 @@
     z-index: 1000;
 }
 
-/*Unsubscribe modal*/
 .unsubscribe-modal {
     background: white;
     border-radius: 12px;
@@ -299,7 +344,7 @@
     background: #d0d0d0;
 }
 
-/*Upgrade modal*/
+/*Upgrade to premium modal/ confirmation message*/
 .upgrade-modal {
     background: white;
     border-radius: 12px;
@@ -358,7 +403,7 @@
     background: #d0d0d0;
 }
 
-/*Payment modal*/
+/*Payment modal--> simulation*/
 .payment-modal {
     background: white;
     border-radius: 12px;
@@ -401,6 +446,19 @@
 .payment-form-group input:focus {
     outline: none;
     border-color: #0b4f6c;
+}
+
+.card-input-wrapper {
+    position: relative;
+}
+
+.card-logos {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 6px;
 }
 
 .payment-row {
@@ -449,7 +507,7 @@
     background: #094561;
 }
 
-/*Success modal*/
+/*Payment successful*/
 .success-modal {
     background: white;
     border-radius: 12px;
@@ -483,26 +541,4 @@
 .success-modal p {
     font-size: 15px;
     color: #666;
-}
-
-@media (max-width: 768px) {
-    .edit-profile-page {
-        padding: 20px;
-    }
-
-    .edit-profile-container {
-        padding: 30px 20px;
-    }
-
-    .interests-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .form-actions {
-        flex-direction: column;
-    }
-
-    .payment-row {
-        grid-template-columns: 1fr;
-    }
 }

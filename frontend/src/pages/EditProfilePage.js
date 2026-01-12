@@ -20,6 +20,7 @@ const initialProfile = {
 function EditProfilePage() {
   const navigate = useNavigate();
   const location = useLocation();
+
   const incomingProfile = location.state?.profile ?? initialProfile;
 
   //User info starting states
@@ -91,13 +92,16 @@ function EditProfilePage() {
   //Handle payment submit
   const handlePaymentSubmit = (e) => {
     e.preventDefault();
+
     const cleanCardNumber = paymentDetails.cardNumber.replace(/\s+/g, "");
     if (cleanCardNumber.length !== 16) return alert("Card number must be 16 digits");
     if (paymentDetails.cvv.length !== 3) return alert("CVV must be 3 digits");
+
     const expParts = paymentDetails.expDate.split("/");
     if (expParts.length !== 2 || expParts[0].length !== 2 || expParts[1].length !== 2) {
       return alert("Please enter expiry date in MM/YY format");
     }
+
     setShowPaymentModal(false);
     setAccountType("Premium");
     setShowSuccessModal(true);
@@ -113,6 +117,7 @@ function EditProfilePage() {
   const handleProfilePicChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     const reader = new FileReader();
     reader.onloadend = () => setProfilePic(reader.result);
     reader.readAsDataURL(file);
@@ -121,6 +126,7 @@ function EditProfilePage() {
   //Save changes and navigate back
   const handleSaveChanges = (e) => {
     e.preventDefault();
+
     const updatedProfile = {
       ...incomingProfile,
       username,
@@ -129,6 +135,7 @@ function EditProfilePage() {
       interests,
       profilePic,
     };
+
     navigate("/profile", { state: { updatedProfile } });
   };
 
@@ -137,9 +144,17 @@ function EditProfilePage() {
 
   return (
     <div className="edit-profile-page">
+      <div className="edit-profile-sidebar">
+        <ul>
+          <li onClick={() => navigate("/feed")}>Feed</li>
+          <li className="active">My Profile</li>
+        </ul>
+      </div>
+
       <div className="edit-profile-main">
         <div className="edit-profile-container">
-          <h1 className="edit-profile-title">Edit Profile</h1>
+          <h1 className="edit-profile-title">Profile</h1>
+
           <form onSubmit={handleSaveChanges}>
             <div className="profile-pic-section">
               <div className="profile-pic-wrapper">
@@ -162,6 +177,7 @@ function EditProfilePage() {
                   </div>
                 )}
               </div>
+
               <label htmlFor="profile-pic-input" className="change-pic-btn">
                 Change Photo
               </label>
@@ -250,7 +266,7 @@ function EditProfilePage() {
         </div>
       </div>
 
-      {/*Unsubscribe from premium modal*/}
+      {/*Unsubscribe from premium modal/ confimation message*/}
       {showUnsubscribeModal && (
         <div className="modal-overlay" onClick={cancelUnsubscribe}>
           <div className="unsubscribe-modal" onClick={(e) => e.stopPropagation()}>
@@ -272,7 +288,7 @@ function EditProfilePage() {
         </div>
       )}
 
-      {/*Upgrade to premium modal*/}
+      {/*Upgrade to premium modal/ confirmation message*/}
       {showUpgradeModal && (
         <div className="modal-overlay" onClick={cancelUpgrade}>
           <div className="upgrade-modal" onClick={(e) => e.stopPropagation()}>
@@ -292,7 +308,7 @@ function EditProfilePage() {
         </div>
       )}
 
-      {/*Payment modal*/}
+      {/*Payment modal-> credit car details form*/}
       {showPaymentModal && (
         <div className="modal-overlay" onClick={cancelPayment}>
           <div className="payment-modal" onClick={(e) => e.stopPropagation()}>
@@ -308,6 +324,7 @@ function EditProfilePage() {
                   required
                 />
               </div>
+
               <div className="payment-form-group">
                 <label>Card no.</label>
                 <input
@@ -320,6 +337,7 @@ function EditProfilePage() {
                   required
                 />
               </div>
+
               <div className="payment-row">
                 <div className="payment-form-group">
                   <label>Exp date</label>
@@ -344,6 +362,7 @@ function EditProfilePage() {
                   />
                 </div>
               </div>
+
               <div className="payment-modal-actions">
                 <button type="button" className="payment-cancel-btn" onClick={cancelPayment}>
                   Cancel
@@ -357,7 +376,7 @@ function EditProfilePage() {
         </div>
       )}
 
-      {/*Success modal*/}
+      {/*Success modal/message*/}
       {showSuccessModal && (
         <div className="modal-overlay">
           <div className="success-modal">
