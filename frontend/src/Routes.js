@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import axios from "axios";
 
 //Navbars
 import UserNavbar from "./navs/UserNavbar";
@@ -24,7 +25,7 @@ import HomePage from "./pages/HomePage";
 import ChatbotPage from "./pages/ChatbotPage";
 import GroupTripsPage from "./pages/GroupTripsPage";
 import GroupChatPage from "./pages/GroupChatPage";
-import ItineraryFeedPage from "./pages/ItineraryFeedPage";
+//import ItineraryFeedPage from "./pages/ItineraryFeedPage";
 import ProfilePage from "./pages/ProfilePage"; 
 import EditProfilePage from "./pages/EditProfilePage";
 import ReviewsPage from "./pages/ReviewsPage";
@@ -39,15 +40,6 @@ import Content from "./pages/Content";
 import Support from "./pages/Support";
 
 
-//Placeholder
-function Placeholder({ title }) {
-  return (
-    <div style={{ padding: "40px" }}>
-      <h1>{title}</h1>
-      <p>This page will be created later.</p>
-    </div>
-  );
-}
 
 function AppRoutes() {
   //Track if user is a first-time user
@@ -77,43 +69,49 @@ function AppRoutes() {
     setIsFirstTimeUser(false);
   };
 
-  //Shared state (dummy)
-  const [groupTrips, setGroupTrips] = useState([
-    {
-      id: 1,
-      owner: "JohnWick123",
-      title: "Egypt Sightseeing Tour",
-      date: "22 Jan 2026 – 31 Jan 2026",
-      capacity: 8,
-      joined: 1,
-      description:
-        "Explore the wonders of Egypt including iconic pyramids and indulge in countless delicacies.",
-    },
-    {
-      id: 2,
-      owner: "MileyCyrus",
-      title: "Majestic Maldives",
-      date: "13 Dec 2025 – 29 Dec 2025",
-      capacity: 4,
-      joined: 2,
-      description:
-        "Perfect getaway from the city. Rest, relax, and enjoy the beautiful beaches in Maldives.",
-    },
-    {
-      id: 3,
-      owner: "DylanWang",
-      title: "Italy Adventures!",
-      date: "1 Feb 2026 – 20 Feb 2026",
-      capacity: 10,
-      joined: 5,
-      description:
-        "Explore local hotspots in Italy, perfect for those traveling to Europe for the first time.",
-    },
-  ]);
+  //Group trips data - loaded from backend
+  const [groupTrips, setGroupTrips] = useState([]);
 
   //trips that appear on My Trips page (group trips you joined/created)
   const [myTrips, setMyTrips] = useState([]);
   const [groupChats, setGroupChats] = useState({});
+
+  //Load all itineraries from backend on mount
+  useEffect(() => {
+    const loadAllItineraries = async () => {
+      try {
+        //Get group trips from GetGroupTrips endpoint
+        const response = await axios.get(
+          "http://localhost:8080/GroupTrips/GetGroupTrips",
+          { withCredentials: true }
+        );
+        
+        console.log("All group trips from backend:", response.data);
+        
+        //Map group trips
+        const groupTripsData = (response.data || [])
+          .map((trip) => ({
+            id: trip.itinerary_id,
+            owner: trip.owner || "Unknown",
+            title: trip.title,
+            date: `${trip.start_date} – ${trip.end_date}`,
+            capacity: trip.capacity || 0,
+            joined: trip.num_ppl || 0,
+            description: trip.description || "",
+            startDate: trip.start_date,
+            endDate: trip.end_date,
+            type: "group",
+          }));
+        
+        setGroupTrips(groupTripsData);
+        console.log("Processed group trips:", groupTripsData);
+      } catch (err) {
+        console.error("Error loading group trips:", err);
+      }
+    };
+
+    loadAllItineraries();
+  }, []);
 
   //Create group trip
   const createTrip = (trip) => {
@@ -129,33 +127,77 @@ function AppRoutes() {
     }));
   };
 
-  //Join trip/add to My trips page
-  const joinTrip = (trip) => {
-    setMyTrips((prev) => {
-      if (prev.find((t) => t.id === trip.id)) return prev;
-      return [...prev, trip];
-    });
+  //Join trip/add to My trips page 
+  const joinTrip = async (trip) => {
+    try {
+      console.log("Joining trip:", trip);
+      
+      //Add to myTrips immediately 
+      setMyTrips((prev) => {
+        if (prev.find((t) => t.id === trip.id)) return prev;
+        return [...prev, trip];
+      });
 
-    setGroupTrips((prev) =>
-      prev.map((t) =>
-        t.id === trip.id ? { ...t, joined: t.joined + 1 } : t
-      )
-    );
+      //Try to call backend if endpoints exist
+      try {
+        const response = await axios.post(
+          `http://localhost:8080/GroupTrips/JoinGroupTrip/${trip.id}`,
+          {},
+          {withCredentials: true}
+        );
+        console.log("Backend join successful:", response);
+      } catch(apiErr) {
+        console.log("Backend endpoint not available (expected), using local state");
+      }
 
-    setGroupChats((prev) => ({
-      ...prev,
-      [trip.id]: prev[trip.id] || [],
-    }));
+      //Update group trip member count
+      setGroupTrips((prev) =>
+        prev.map((t) =>
+          t.id === trip.id ? { ...t, joined: t.joined + 1 } : t
+        )
+      );
+
+      //Initialize group chat
+      setGroupChats((prev) => ({
+        ...prev,
+        [trip.id]: prev[trip.id] || [],
+      }));
+    } catch(err) {
+      console.error("Error in joinTrip:", err);
+      throw err;
+    }
   };
 
-  //Exit remove from My Trips 
-  const exitTrip = (tripId) => {
-    setMyTrips((prev) => prev.filter((t) => t.id !== tripId));
-    setGroupTrips((prev) =>
-      prev.map((t) =>
-        t.id === tripId ? { ...t, joined: Math.max(0, t.joined - 1) } : t
-      )
-    );
+  //Exit trip--> remove from my trips
+  const exitTrip = async (tripId) => {
+    try {
+      console.log("Exiting trip:", tripId);
+      
+      //Remove from my trips immediately 
+      setMyTrips((prev) => prev.filter((t) => t.id !== tripId));
+
+      //Try to call backend if endpoints exist
+      try {
+        const response = await axios.post(
+          `http://localhost:8080/GroupTrips/ExitGroupTrip/${tripId}`,
+          {},
+          {withCredentials: true}
+        );
+        console.log("Backend exit successful:", response);
+      } catch(apiErr) {
+        console.log("Backend endpoint not available (expected), using local state");
+      }
+
+      //Update group trip member count
+      setGroupTrips((prev) =>
+        prev.map((t) =>
+          t.id === tripId ? { ...t, joined: Math.max(0, t.joined - 1) } : t
+        )
+      );
+    } catch(err) {
+      console.error("Error in exitTrip:", err);
+      throw err;
+    }
   };
 
   const removeTripFromJoinPage = (tripId) => {
@@ -177,7 +219,7 @@ function AppRoutes() {
           <Route path="/" element={<Landing />} />
           <Route path="/register" element={<CreateAccountPage />} />
           <Route path="/login" element={<LoginPage setCurrentUserProfile={setCurrentUserProfile} markAsFirstTimeUser={markAsFirstTimeUser} />} />
-          <Route path='/login/:errorMsg' element={<LoginPage setCurrentUserProfile={setCurrentUserProfile} markAsFirstTimeUser={markAsFirstTimeUser} />} /> {/* If user navigate without logging in, redirect back to home page*/}
+          <Route path='/login/:errorMsg' element={<LoginPage setCurrentUserProfile={setCurrentUserProfile} markAsFirstTimeUser={markAsFirstTimeUser} />} />
           <Route path="/quiz" element={<QuizPage />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/reviews" element={<ReviewsPage />} />
@@ -239,9 +281,6 @@ function AppRoutes() {
             element={<SavedTimelinesPage />}
           />
           
-          {/*Feed*/}
-          <Route path="/feed" element={<ItineraryFeedPage />} />
-
           {/*Profile*/}
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/edit-profile" element={<EditProfilePage />} />
