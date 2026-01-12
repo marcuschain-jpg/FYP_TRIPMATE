@@ -101,6 +101,7 @@ function GroupTripsPage() {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> parent of 42db5de (Merge pull request #38 from marcuschain-jpg/mari-branch-2)
     try{
@@ -130,6 +131,14 @@ function GroupTripsPage() {
     //Pass trip to parent
     //joinTrip(trip);
   };
+=======
+    const optimisticTrip = {
+      ...trip,
+      joinedByYou: true,
+      currentMembers: trip.currentMembers + 1,
+      isHost: false,
+    };
+>>>>>>> parent of 4a6b617 (Merge branch 'main' into mari-branch-2)
 
 <<<<<<< HEAD
 =======
@@ -170,6 +179,7 @@ function GroupTripsPage() {
     if (!confirmExit) return;
     const tripId = trip.id;
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -234,6 +244,8 @@ function GroupTripsPage() {
           isHost: true,
         };
 =======
+=======
+>>>>>>> parent of 4a6b617 (Merge branch 'main' into mari-branch-2)
     setGroupTrips((prev) =>
       prev.map((t) =>
         t.id === tripId
@@ -241,6 +253,9 @@ function GroupTripsPage() {
           : t
       )
     );
+<<<<<<< HEAD
+>>>>>>> parent of 4a6b617 (Merge branch 'main' into mari-branch-2)
+=======
 >>>>>>> parent of 4a6b617 (Merge branch 'main' into mari-branch-2)
 
         setGroupTrips(prev => [...prev, newTrip]);
