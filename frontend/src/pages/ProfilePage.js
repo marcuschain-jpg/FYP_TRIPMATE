@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/Profile.css";
 import axios from "axios";
 
@@ -28,9 +28,6 @@ function ProfilePage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  //Shared joined group trips from Routes.js
-  const { myTrips } = useOutletContext();
-
   const [profile, setProfile] = useState(initialProfile);
   const [currentDate, setCurrentDate] = useState(new Date(2026, 0, 1)); // Jan 2026
   const [trips, setTrips] = useState([]);
@@ -46,6 +43,8 @@ function ProfilePage() {
           { withCredentials: true }
         );
 
+        console.log("Private trips from backend:", privateRes.data);
+
         //Format private trips
         const privateTrips = privateRes.data.map((trip) => ({
           id: trip.itinerary_id,
@@ -56,41 +55,9 @@ function ProfilePage() {
           destination: trip.itinerary_dest,
         }));
 
-        //Format joined group trips 
-        const groupTrips = (myTrips || []).map((trip) => {
-          let startDate;
-          let endDate;
+        console.log("Formatted private trips:", privateTrips);
 
-          //Trip joined from GroupTripsPage.js 
-          if (trip.date) {
-            const parts = trip.date.split(" - ");
-            startDate = parts[0];
-            endDate = parts[1];
-          }
-
-          //Trip loaded earlier from backend
-          else if (trip.start_date && trip.end_date) {
-            startDate = trip.start_date;
-            endDate = trip.end_date;
-          }
-
-          return {
-            id: trip.id,
-            title: trip.title,
-            startDate,
-            endDate,
-            type: "group",
-            destination: trip.location,
-          };
-        });
-
-        //Combine all trips (avoid duplicates)
-        const mergedTrips = [...privateTrips, ...groupTrips].filter(
-          (trip, index, arr) =>
-            arr.findIndex((t) => t.id === trip.id) === index
-        );
-
-        setTrips(mergedTrips);
+        setTrips(privateTrips);
         setLoading(false);
       } catch (err) {
         console.error("Error loading trips:", err);
@@ -103,7 +70,7 @@ function ProfilePage() {
     };
 
     loadTrips();
-  }, [navigate, myTrips]); 
+  }, [navigate]); 
 
   //Sync profile info when edits are made
   useEffect(() => {
@@ -271,9 +238,9 @@ function ProfilePage() {
                           <>
                             <div className="day-number">{day}</div>
                             <div className="trips-container">
-                              {tripsOnDay.map((trip) => (
+                              {tripsOnDay.map((trip, tripIndex) => (
                                 <div
-                                  key={trip.id}
+                                  key={`${trip.id}-${tripIndex}`}
                                   className={`trip-badge ${trip.type}`}
                                   title={trip.title}
                                 >
