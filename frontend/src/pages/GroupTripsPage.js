@@ -9,20 +9,7 @@ function GroupTripsPage() {
   const { myTrips, joinTrip, exitTrip } = useOutletContext();
   const navigate = useNavigate();
 
-  //Dummy data--> groups with member count
-  const [groupTrips, setGroupTrips] = useState([
-    {
-      id: 1,
-      owner: "JohnWick123",
-      title: "Egypt Sightseeing Tour",
-      date: "22 Jan 2026 – 31 Jan 2026",
-      capacity: 5, //Max capacity - capped at 5
-      currentMembers: 1, //Current members in the trip
-      description:
-        "Explore the wonders of Egypt including iconic pyramids and indulge in countless delicacies.",
-      joinedByYou: false,
-    },
-  ]);
+  const [groupTrips, setGroupTrips] = useState([]);
   const [loading, setLoading] = useState(true);
 
   //Sync join state
@@ -99,11 +86,6 @@ function GroupTripsPage() {
       return;
     }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> parent of 42db5de (Merge pull request #38 from marcuschain-jpg/mari-branch-2)
     try{
       let newCurrMembers = 0;
       const res = await axios.patch("http://localhost:8080/GroupTrips/JoinGroupTrip", {i_id:trip.id}, {withCredentials:true})
@@ -131,46 +113,7 @@ function GroupTripsPage() {
     //Pass trip to parent
     //joinTrip(trip);
   };
-=======
-    const optimisticTrip = {
-      ...trip,
-      joinedByYou: true,
-      currentMembers: trip.currentMembers + 1,
-      isHost: false,
-    };
->>>>>>> parent of 4a6b617 (Merge branch 'main' into mari-branch-2)
 
-<<<<<<< HEAD
-=======
-    const optimisticTrip = {
-      ...trip,
-      joinedByYou: true,
-      currentMembers: trip.currentMembers + 1,
-      isHost: false,
-    };
-
-    setGroupTrips((prev) =>
-      prev.map((t) => (t.id === trip.id ? optimisticTrip : t))
-    );
-
-    //Update my trips immediately
-    joinTrip(optimisticTrip);
-
-    //Backend syncing
-    try {
-      await axios.patch(
-        "http://localhost:8080/GroupTrips/JoinGroupTrip",
-        { i_id: trip.id },
-        { withCredentials: true }
-      );
-    } catch (err) {
-      console.warn("Backend join failed, UI kept:", err);
-    }
-  };
-
->>>>>>> parent of 4a6b617 (Merge branch 'main' into mari-branch-2)
-=======
->>>>>>> parent of 42db5de (Merge pull request #38 from marcuschain-jpg/mari-branch-2)
   //Exit handler
   const handleExit = async(trip) => {
     const confirmExit = window.confirm(
@@ -179,11 +122,6 @@ function GroupTripsPage() {
     if (!confirmExit) return;
     const tripId = trip.id;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> parent of 42db5de (Merge pull request #38 from marcuschain-jpg/mari-branch-2)
     try{
       const res = await axios.delete("http://localhost:8080/GroupTrips/ExitGroupTrip", {data:{i_id:tripId, isHost:trip.isHost}, withCredentials:true})
       if(res.data.deleteItinerary){
@@ -243,20 +181,6 @@ function GroupTripsPage() {
           joinedByYou: true,
           isHost: true,
         };
-=======
-=======
->>>>>>> parent of 4a6b617 (Merge branch 'main' into mari-branch-2)
-    setGroupTrips((prev) =>
-      prev.map((t) =>
-        t.id === tripId
-          ? { ...t, joinedByYou: false, currentMembers: t.currentMembers - 1 }
-          : t
-      )
-    );
-<<<<<<< HEAD
->>>>>>> parent of 4a6b617 (Merge branch 'main' into mari-branch-2)
-=======
->>>>>>> parent of 4a6b617 (Merge branch 'main' into mari-branch-2)
 
         setGroupTrips(prev => [...prev, newTrip]);
 
