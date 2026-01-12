@@ -30,6 +30,8 @@ function ActivityFormPage() {
   const [searchResult, setSearchResult] = useState([]); //store search results from api, drop down bar
   const [mapCenterChange, setMapCenterChange] = useState(null); // store center coord for maps
   const [activityCoords, setActivityCoords] = useState([]); // store coords for maps
+  const [itineraryLat, setItineraryLat] = useState(0);
+  const [itineraryLng, setItineraryLng] = useState(0);
   //setMapData(useMapData()) // get API key & set default coordinates to mark on map
 
   //Search bar modal pop out
@@ -56,27 +58,46 @@ function ActivityFormPage() {
           setLoading(false);
         })
         .catch(err => {
-          if(err.response.status === 401 || 403){
-            const errData = err.response;
-            const errorMsg = errData.status + ": " + errData.data.message;
-            navigate(`/login/${errorMsg}`);
+          if(err.response){
+            if(err.response.status === 401 || err.response.status === 403){
+              const errData = err.response;
+              const errorMsg = errData.status + ": " + errData.data.message;
+              navigate(`/login/${errorMsg}`);
+            }
+            else if(err.response.status === 500){
+              console.log(err.response.data.message);
+            }
+          }
+          else{
+            console.log(err)
           }
         });
       };
       loadEditActivity();
     }
     else{ //create page--> still need validate
-      axios.post("http://localhost:8080/GetRoleForUser", {}, {withCredentials:true})
+      axios.get("http://localhost:8080/Itinerary/GetActivityToCreate", {params:{i_id:tripId}, withCredentials:true})
       .then(res => {
+        setItineraryLng(res.data[0].longitude);
+        setItineraryLat(res.data[0].latitude);
+        setMapCenterChange({lng:parseFloat(res.data[0].longitude), lat:parseFloat(res.data[0].latitude)});
         setLoading(false);
       })
       .catch(err => {
-        if(err.response.status === 401 || err.response.status === 403){
-          const errData = err.response;
-          const errorMsg = errData.status + ": " + errData.data.message;
-          navigate(`/login/${errorMsg}`);
-        }
-      });
+          if(err.response){
+            if(err.response.status === 401 || err.response.status === 403){
+              const errData = err.response;
+              const errorMsg = errData.status + ": " + errData.data.message;
+              navigate(`/login/${errorMsg}`);
+            }
+            else if(err.response.status === 500){
+              console.log(err.response.data.message);
+            }
+          }
+          else{
+            console.log(err)
+          }
+        });
     }
   }, []);
 
@@ -94,6 +115,8 @@ function ActivityFormPage() {
     setOriginalDate(a[0].activity_date);
     setLongitude(parseFloat(a[0].longitude));
     setLatitude(parseFloat(a[0].latitude));
+    setItineraryLng(a[0].i_lng);
+    setItineraryLat(a[0].i_lat);
 
     //Render coords for maps
     setMapCenterChange({lng:parseFloat(a[0].longitude), lat:parseFloat(a[0].latitude)});
@@ -135,9 +158,9 @@ function ActivityFormPage() {
     if (!trip || !editing) return;
     if (!originalDate) return;
     if (!date) return;
-    if (startPointTouched) return; // User manually chose → respect it
+    if (startPointTouched) return; // User manually chose â†’ respect it
 
-    //Date unchanged → keep current checkbox value
+    //Date unchanged â†’ keep current checkbox value
     if (date === originalDate) return;
 
     //If moving to a day that already has activities, default unchecked
@@ -149,7 +172,7 @@ function ActivityFormPage() {
       //First activity for that day
       setIsStartPoint(true);
     } else {
-      //Day already has activities (and likely has start point) → don't steal start point
+      //Day already has activities (and likely has start point) â†’ don't steal start point
       setIsStartPoint(false);
     }
   }, [date, originalDate, trip, editing, index, startPointTouched]);*/
@@ -164,8 +187,8 @@ function ActivityFormPage() {
       }
 
       const locTimer = setTimeout(async() => {
-      console.log("Send to backend", locationName);
-      await axios.post("http://localhost:8080/Itinerary/LocSearch", {input:locationName}, {withCredentials:true})
+      console.log("Send to backend", locationName, itineraryLat, itineraryLng);
+      await axios.post("http://localhost:8080/Itinerary/LocSearch", {input:locationName, lng:itineraryLng, lat:itineraryLat}, {withCredentials:true})
       .then(res=>{
         renderLoadSearchResult(res.data);
       })
@@ -298,7 +321,7 @@ function ActivityFormPage() {
         className="back-btn"
         onClick={() => navigate(`/mytrips/trip/itinerary/${tripId}/default`)}
       >
-        ← Back
+        â† Back
       </button>
 
       <h1 className="form-title">
@@ -373,13 +396,13 @@ function ActivityFormPage() {
                   {m.url ? (
                     <img src={m.url} className="media-preview-img" />
                   ) : (
-                    <div className="media-file-icon">📄 {m.name}</div>
+                    <div className="media-file-icon">ðŸ“„ {m.name}</div>
                   )}
                   <button
                     className="media-delete-existing"
                     onClick={() => handlePhotoDelete(m)}
                   >
-                    ✕
+                    âœ•
                   </button>
                 </div>
               ))}
@@ -388,7 +411,7 @@ function ActivityFormPage() {
 
           {/*Upload new media*/}
           <label className="upload-media-btn">
-            <span className="upload-media-icon">📁</span>
+            <span className="upload-media-icon">ðŸ“</span>
             Upload Media
             <input
               type="file"
@@ -409,7 +432,7 @@ function ActivityFormPage() {
                       alt=""
                     />
                   ) : (
-                    <div className="media-file-icon">📄 {file.name}</div>
+                    <div className="media-file-icon">ðŸ“„ {file.name}</div>
                   )}
                 </div>
               ))}
