@@ -12,12 +12,14 @@ router.post("/CreateGroupTrip", RequireAuth(["premium"]), async(req,res) => {
     const {iName, iDest ,start, end, num_ppl, description} = req.body;
     const userid = req.userid
     const triptype = "Group"
+    console.log(iDest);
 
     try{
     const data = await pool.query(
-      `INSERT INTO itinerary (itinerary_name, itinerary_dest, start_date, end_date, user_host_id, type, capacity, description)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       RETURNING itinerary_id`, [iName, iDest, start, end, userid, triptype, num_ppl, description]
+      `INSERT INTO itinerary (itinerary_name, itinerary_dest, start_date, end_date, user_host_id, type, capacity, description
+      , placeid, longitude, latitude)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING itinerary_id`, [iName, iDest.name, start, end, userid, triptype, num_ppl, description, iDest.placeid, iDest.lat, iDest.lng]
     );
     if(data.rowCount > 0) return res.json(data.rows);
   }

@@ -21,7 +21,7 @@ const RequireAuth = require("../middlewares/RequireAuths.js"); // Authenticate a
 const SendEmail = require("../helper/SendEmail.js");
 
 // Default key and center coord to initialize maps
-router.get("/maps", (req, res) => {
+router.get("/maps", RequireAuth(["registered", "premium"]),(req, res) => {
  return res.json({
     apiKey: process.env.gMapsApiKey,
     center: { lat: 1.3521, lng: 103.8198 },
@@ -707,8 +707,6 @@ router.patch("/EditActivity", RequireAuth(["registered", "premium"]), InsertPhot
       return res.send(true);
     }
   }
-
-
 });
 
 
@@ -717,11 +715,11 @@ router.get("/GetActivityToEdit", RequireAuth(["registered", "premium"]), async(r
   try{
     const data = await pool.query(
       `SELECT a.activity_name, a.activity_location, a.activity_address, a.activity_order, a.gmaps_placeid, a.longitude, a.latitude,
-	     ap.photo_id, ap.photo_url, ap.photo_title,
+	     ap.photo_id, ap.photo_url, ap.photo_title, i.latitude AS i_lat, i.longitude AS i_lng,
 	     TO_CHAR(a.activity_date, 'YYYY-MM-DD') AS activity_date
        FROM activity a
-	     LEFT JOIN activity_photo ap
-	     ON a.activity_id = ap.activity_id
+       JOIN itinerary i ON a.itinerary_id = i.itinerary_id
+	     LEFT JOIN activity_photo ap ON a.activity_id = ap.activity_id
        WHERE a.activity_id = $1`,[a_id]
     );
     const updatedData = await ExtractPhotoS3(data.rows);
@@ -729,24 +727,37 @@ router.get("/GetActivityToEdit", RequireAuth(["registered", "premium"]), async(r
   }
   catch(err)
   {
-    return res.status(500).send("GetActivityToEdit failed");
+    return res.status(500).send({message:"GetActivityToEdit failed"});
   }
 });
 
+router.get("/GetActivityToCreate", RequireAuth(["registered", "premium"]), async(req,res) => {
+  const a_id = req.query['i_id'];
+
+  try{
+    const data = await pool.query(
+      `SELECT longitude, latitude FROM itinerary
+       WHERE itinerary_id = $1 `, [a_id]
+    )
+    return res.send(data.rows);
+  }
+  catch(err) { return res.status(500).send({message:"Failed to retrieve coords."}) }
+});
+
 router.post("/LocSearch", RequireAuth(["registered", "premium"]), async(req, res) => {
-  const {input} = req.body;
+  const {input, lng, lat} = req.body;
 
   try {
     const response = await axios.post(
       "https://places.googleapis.com/v1/places:searchText",
       {
-        textQuery: input,  // matches curl example
-        pageSize: 5,       // limit results
-        locationBias: {    // triangulate location to city now its singapore
+        textQuery: input,  // Search
+        pageSize: 5,       // Limit results
+        locationBias: {    // Center to itinerary city location
         circle: {
           center: {
-            latitude: 1.352083,
-            longitude:103.819836
+            latitude: lat,
+            longitude:lng
             },
           radius: 500.0
           }

@@ -18,7 +18,7 @@ function MyTripsPage() {
   //Modal states
   const [showAddTripModal, setShowAddTripModal] = useState(false);
   const [firstLoad, setFirstLoad] = useState(true);
-  const [searchResult, setSearchResult]= useState([])
+  const [searchResult, setSearchResult]= useState([]);
 
   const [showLocSearch, setShowLocSearch] = useState(false);
   const [newTripName, setNewTripName] = useState("");
@@ -68,7 +68,7 @@ function MyTripsPage() {
         setUsertype(res.data.role)
       }
       catch(err){
-        if(err.response.status === 401 || 403){
+        if(err.response.status === 401 || err.response.status === 403){
           const errData = err.response;
           const errorMsg = errData.status + ": " + errData.data.message;
           navigate(`/login/${errorMsg}`);
@@ -500,7 +500,7 @@ function MyTripsPage() {
                       backgroundColor: trip.isGroupTrip ? "#FF6B6B" : "#4ECDC4"
                     }}
                   >
-                    {trip.isGroupTrip ? "Public" : "Group"}
+                    {trip.isGroupTrip ? "Group" : "Private"}
                   </span>}
                   {usertype === "premium" && <span 
                     style={{
