@@ -6,7 +6,7 @@ export default function useMapData() {
 
   useEffect(() => {
     const fetchMapData = async () => {
-      const res = await axios.get("http://localhost:8080/Itinerary/maps");
+      const res = await axios.get("http://localhost:8080/Itinerary/maps", {withCredentials:true});
       setMapData(res.data);
     };
     fetchMapData();
