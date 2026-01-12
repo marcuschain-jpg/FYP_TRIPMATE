@@ -43,6 +43,12 @@ function MyTripsPage() {
   const [Loading, setLoading] = useState(true);
   const [usertype, setUsertype] = useState("");
 
+  //For city load
+  const [firstLoad, setFirstLoad] = useState(true);
+  const [searchResult, setSearchResult]= useState([]);
+  const [newFullDest, setNewFullDest] = useState({});
+  const [showLocSearch, setShowLocSearch] = useState(false);
+
   //Modal states
   const [showAddTripModal, setShowAddTripModal] = useState(false);
   const [isEditingTrip, setIsEditingTrip] = useState(false);
@@ -125,12 +131,14 @@ function MyTripsPage() {
       id: t.itinerary_id,
       name: t.itinerary_name,
       destination: t.itinerary_dest,
-      start: formatDateForInput(t.start_date),
-      end: formatDateForInput(t.end_date),
+      start: t.start_date,
+      end: t.end_date,
       status: t.completed,
       isGroupTrip: t.type === "Group" ? true : false,
-      collaborators: ["a", "b"],
-      userItineraryType: t.useritype
+      userItineraryType: t.useritype,
+      collaborators: t.num_ppl,
+      currentMembers: t.num_ppl,
+      maxCapacity: t.capacity
     }));
 
     setTrips((prev) => {
@@ -165,6 +173,63 @@ function MyTripsPage() {
       return merged;
     });
   }, [joinedGroupTrips]);
+
+  // For location search
+  useEffect(() => {
+    if(!newDestination) return;
+    if(firstLoad) //When first load page dont search for anything
+      {
+        setFirstLoad(false);
+        return;
+      }
+
+      const locTimer = setTimeout(async() => {
+      console.log("Send to backend", newDestination);
+      await axios.post("http://localhost:8080/Itinerary/CitySearch", {input:newDestination}, {withCredentials:true})
+      .then(res=>{
+        renderLoadSearchResult(res.data);
+      })
+      .catch(err => {console.log(err);});
+
+    }, 1000);
+
+    return () => {
+      clearTimeout(locTimer);
+    };
+  }, [newDestination])
+
+  useEffect(() => {
+    if(searchResult.length > 0)
+      {
+        console.log(searchResult);
+        setShowLocSearch(true);
+      }
+  }, [searchResult])
+
+  const renderLoadSearchResult = (res) => {
+    const mapResults = res.map(t => ({
+      placeid: t.id,
+      name: t.name,
+      lat: t.lat,
+      lng: t.lng,
+    }));
+
+    setSearchResult(mapResults);
+  };
+
+
+  const updateFormBasedOnLoc = async(res) => {
+    setNewFullDest({
+      placeid: res.placeid,
+      name: res.name,
+      lat: res.lat,
+      lng: res.lng
+    });
+    setNewDestination(res.name);
+
+    setFirstLoad(true);
+    setShowLocSearch(false);
+  };
 
   //Open add trip modal
   const openAddModal = () => {
@@ -253,7 +318,7 @@ function MyTripsPage() {
           "http://localhost:8080/Itinerary/CreateItinerary",
           {
             iName: newTripName,
-            iDest: newDestination,
+            iDest: newFullDest,
             start: formatDateForInput(newStart),
             end: formatDateForInput(newEnd),
             type: "Private"
@@ -277,7 +342,8 @@ function MyTripsPage() {
             isGroupTrip: false,
             userItineraryType: response.data[0].useritype,
             type: "Private",
-            collaborators: [],
+            collaborators: 1,
+            maxCapacity: 5,
           };
 
           setTrips((prev) => [...prev, newTrip]);
@@ -288,6 +354,7 @@ function MyTripsPage() {
           setNewStart("");
           setNewEnd("");
           setErrorMsg("");
+          setNewFullDest({});
           setTimeout(() => setShowAddTripModal(false), 300);
         } else {
           setErrorMsg("Insert Failed");
@@ -309,65 +376,59 @@ function MyTripsPage() {
   const deleteTripConfirmed = async () => {
     if (!tripToDelete) return;
 
+    const isHost = tripToDelete.userItineraryType === "host" ? true:false;
+
+    // For group trips
     if (tripToDelete.isGroupTrip === true) {
-      setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
-      setShowDeleteConfirm(false);
-      setTripToDelete(null);
-
-      setSuccessMsg("Left group trip successfully!");
-      setTimeout(() => setSuccessMsg(""), 1500);
-      return;
-    }
-
-    if(tripToDelete.userItineraryType === "host")
-    {
       try {
-      const response = await axios.delete(
-        "http://localhost:8080/Itinerary/DeleteItinerary",
-        {
-          data: { itineraryid: tripToDelete.id },
-          withCredentials: true
+        const response = await axios.delete("http://localhost:8080/GroupTrips/ExitGroupTrip",{data: { i_id: tripToDelete.id, isHost:isHost}, withCredentials: true});
+        if (response.data.deleteItinerary) {
+          setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
+          setShowDeleteConfirm(false);
+          setTripToDelete(null);
+
+          setSuccessMsg("Trip deleted successfully!");
+          setTimeout(() => setSuccessMsg(""), 1500);
+          return;
         }
-      );
+        else{
+          setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
+          setShowDeleteConfirm(false);
+          setTripToDelete(null);
 
-      if (response.data === true) {
-        setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
-        setShowDeleteConfirm(false);
-        setTripToDelete(null);
-
-        setSuccessMsg("Trip deleted successfully!");
-        setTimeout(() => setSuccessMsg(""), 1500);
-      } else {
-        setErrorMsg("Delete failed.");
-        setShowDeleteConfirm(false);
-      }
+          setSuccessMsg("Public group trip exited successfully!");
+          setTimeout(() => setSuccessMsg(""), 1500);
+          return;
+        }
       } catch (err) {
         console.error(err);
         setErrorMsg("Delete failed (server error).");
         setShowDeleteConfirm(false);
       }
     }
-    else if(tripToDelete.userItineraryType === "visitor"){
+
+    // Use shared_itinerary backend
+    else{
       try {
-      const response = await axios.delete(
-        "http://localhost:8080/Itinerary/ExitItinerary",
-        {
-          data: { itineraryid: tripToDelete.id },
-          withCredentials: true
+        const response = await axios.delete("http://localhost:8080/Itinerary/DeleteItinerary",{data: { i_id: tripToDelete.id, isHost:isHost}, withCredentials: true});
+        if (response.data.deleteItinerary) {
+          setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
+          setShowDeleteConfirm(false);
+          setTripToDelete(null);
+
+          setSuccessMsg("Trip deleted successfully!");
+          setTimeout(() => setSuccessMsg(""), 1500);
+          return;
         }
-      );
+        else{
+          setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
+          setShowDeleteConfirm(false);
+          setTripToDelete(null);
 
-      if (response.data === true) {
-        setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
-        setShowDeleteConfirm(false);
-        setTripToDelete(null);
-
-        setSuccessMsg("Trip deleted successfully!");
-        setTimeout(() => setSuccessMsg(""), 1500);
-      } else {
-        setErrorMsg("Delete failed.");
-        setShowDeleteConfirm(false);
-      }
+          setSuccessMsg("Private group trip exited successfully!");
+          setTimeout(() => setSuccessMsg(""), 1500);
+          return;
+        }
       } catch (err) {
         console.error(err);
         setErrorMsg("Delete failed (server error).");
@@ -525,7 +586,19 @@ function MyTripsPage() {
                       backgroundColor: trip.isGroupTrip ? "#FF6B6B" : "#4ECDC4"
                     }}
                   >
-                    {trip.isGroupTrip ? "Group / Public" : "Private"}
+                    {trip.isGroupTrip ? "Group" : "Private"}
+                  </span>}
+                  {usertype === "premium" && <span 
+                    style={{
+                      padding: "4px 8px",
+                      borderRadius: "4px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      color: trip.isGroupTrip ? "#fff" : "#333",
+                      backgroundColor: trip.userItineraryType === "host" ? "#FF6B6B" : "#4ECDC4"
+                    }}
+                  >
+                    {trip.userItineraryType === "host" ? "Host" : "Collaborator"}
                   </span>}
                 </div>
 
@@ -535,9 +608,9 @@ function MyTripsPage() {
                   </p>
                 )}
 
-                {usertype === "premium" && !trip.isGroupTrip && trip.collaborators && trip.collaborators.length > 0 && (
+                {usertype === "premium" && !trip.isGroupTrip && trip.collaborators && (
                   <p style={{ fontSize: "14px", color: "#666", marginTop: "5px" }}>
-                    Collaborators: {trip.collaborators.length}
+                    Collaborators: {trip.collaborators}/{trip.maxCapacity}
                   </p>
                 )}
 
@@ -611,9 +684,21 @@ function MyTripsPage() {
                     invalidFields.includes("destination") ? "invalid-input" : ""
                   }`}
                   value={newDestination}
-                  onChange={(e) => setNewDestination(e.target.value)}
+                  onChange={(e) => {
+                    setNewDestination(e.target.value);
+                    setShowLocSearch(false);
+                  }}
                 />
               </div>
+              { showLocSearch && (
+                <div className="form-input-search">
+                  {searchResult.map(res => (
+                    <div key={res.placeid} className="form-input-search-res" onClick={() => updateFormBasedOnLoc(res)}>
+                      {res.name}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="modal-row">

@@ -24,12 +24,33 @@ const initialProfile = {
   profilePic: "",
 };
 
+//Formats any date to YYYY-MM-DD format for consistency
+function formatDateForCalendar(dateValue) {
+  if (!dateValue) return null;
+  
+  let date;
+  
+  if (typeof dateValue === "string") {
+    date = new Date(dateValue);
+  } else if (dateValue instanceof Date) {
+    date = dateValue;
+  } else {
+    return null;
+  }
+  
+  if (isNaN(date.getTime())) {
+    return null;
+  }
+  
+  return date;
+}
+
 function ProfilePage() {
   const navigate = useNavigate();
   const location = useLocation();
 
   const [profile, setProfile] = useState(initialProfile);
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 0, 1)); // Jan 2026
+  const [currentDate, setCurrentDate] = useState(new Date(2026, 0, 1)); 
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,21 +64,23 @@ function ProfilePage() {
           { withCredentials: true }
         );
 
-        console.log("Private trips from backend:", privateRes.data);
+        console.log("Trips from backend:", privateRes.data);
 
-        //Format private trips
-        const privateTrips = privateRes.data.map((trip) => ({
+        //Format all trips (both private and group)
+        const allTrips = privateRes.data.map((trip) => ({
           id: trip.itinerary_id,
           title: trip.itinerary_name,
-          startDate: trip.start_date,
-          endDate: trip.end_date,
-          type: "private",
+          // Use formatDateForCalendar to parse dates from database
+          startDate: formatDateForCalendar(trip.start_date),
+          endDate: formatDateForCalendar(trip.end_date),
+          //Set type based on trip type from database (Group or Private)
+          type: trip.type === "Group" ? "group" : "private",
           destination: trip.itinerary_dest,
         }));
 
-        console.log("Formatted private trips:", privateTrips);
+        console.log("Formatted all trips (private + group):", allTrips);
 
-        setTrips(privateTrips);
+        setTrips(allTrips);
         setLoading(false);
       } catch (err) {
         console.error("Error loading trips:", err);
@@ -89,8 +112,10 @@ function ProfilePage() {
 
   const getTripsOnDate = (day) => {
     return trips.filter((trip) => {
-      const tripStart = new Date(trip.startDate);
-      const tripEnd = new Date(trip.endDate);
+      if (!trip.startDate || !trip.endDate) return false;
+      
+      const tripStart = trip.startDate;
+      const tripEnd = trip.endDate;
       const checkDate = new Date(
         currentDate.getFullYear(),
         currentDate.getMonth(),
