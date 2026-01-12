@@ -11,18 +11,20 @@ router.post("/CreateGroupTrip", RequireAuth(["premium"]), async(req,res) => {
     const iDest = iName; //will replace after text box is there
     const userid = req.userid
     const triptype = "Group"
+    console.log(iDest);
 
     try{
-        const data = await pool.query(
-            `INSERT INTO itinerary (itinerary_name, itinerary_dest, start_date, end_date, user_host_id, type, capacity, description)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-             RETURNING itinerary_id`, [iName, iDest, start, end, userid, triptype, num_ppl, description]
-        );
-        if(data.rowCount > 0) return res.json(data.rows);
-    }
-    catch(err){
-        return res.status(500).send({message: "Create Group Trips failed"});
-    }
+    const data = await pool.query(
+      `INSERT INTO itinerary (itinerary_name, itinerary_dest, start_date, end_date, user_host_id, type, capacity, description
+      , placeid, longitude, latitude)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING itinerary_id`, [iName, iDest.name, start, end, userid, triptype, num_ppl, description, iDest.placeid, iDest.lat, iDest.lng]
+    );
+    if(data.rowCount > 0) return res.json(data.rows);
+  }
+  catch(err){
+    return res.status(500).send({message: "Create Group Trips failed"});
+  }
 });
 
 
@@ -113,6 +115,7 @@ router.delete("/ExitGroupTrip", RequireAuth(["premium"]), async(req,res) => {
     const {i_id, isHost} = req.body;
     const userid = req.userid;
     let num_ppl = 0;
+    console.log(i_id);
 
     // Retrieve num of ppl for update later
     try {
@@ -216,7 +219,7 @@ router.delete("/ExitGroupTrip", RequireAuth(["premium"]), async(req,res) => {
             return res.status(500).send({message: "Fail to exit group trip"});
         }
     }
-});
+})
 
 
 module.exports = router;
