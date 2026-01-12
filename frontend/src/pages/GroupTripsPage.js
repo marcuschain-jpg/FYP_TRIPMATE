@@ -74,13 +74,40 @@ function GroupTripsPage() {
       currentMembers: trip.currentMembers + 1,
       isHost: false,
     };
+    try{
+      let newCurrMembers = 0;
+      const res = await axios.patch("http://localhost:8080/GroupTrips/JoinGroupTrip", {i_id:trip.id}, {withCredentials:true})
+      newCurrMembers = res.data // updated number of ppl from db
+      setGroupTrips((prev) => prev.map((t) =>
+        t.id === trip.id ? { ...t, joinedByYou: true, currentMembers: newCurrMembers, isHost: false}: t
+        )
+      );
+    }
+    catch(err){
+      if(err.response)
+        {
+          if(err.response.status === 401 || err.response.status === 403){ // Auth error
+            const errData = err.response;
+            const errorMsg = errData.status + ": " + errData.data.message;
+            navigate(`/login/${errorMsg}`);
+          }
+          else if(err.response.status === 500){ // DB/Backend error
+            console.log(err.response.data.message);
+          }
+        }
+          else console.log(err); // General error
+    }
+
+    //Pass trip to parent
+    //joinTrip(trip);
+  };
 
     setGroupTrips((prev) =>
       prev.map((t) => (t.id === trip.id ? optimisticTrip : t))
     );
 
     //Update my trips immediately
-    joinTrip(optimisticTrip);
+    //joinTrip(optimisticTrip);
 
     //Backend syncing
     try {
@@ -107,6 +134,22 @@ function GroupTripsPage() {
           : t
       )
     );
+    try{
+      const res = await axios.post("http://localhost:8080/GroupTrips/CreateGroupTrip",
+      {iName:tripName, iDest: location, start: startDate, end: endDate, num_ppl:maxCapacity, description:description},{withCredentials:true});
+        if(res.data){
+          const newTrip = {
+          id: res.data.itinerary_id, 
+          owner: "You",
+          location: location,
+          title: tripName,
+          date: `${startDate} – ${endDate}`,
+          capacity: maxCapacity, //Capped at 5
+          currentMembers: 1, //Creator is automatically a member
+          description,
+          joinedByYou: true,
+          isHost: true,
+        };
 
     exitTrip(tripId);
 

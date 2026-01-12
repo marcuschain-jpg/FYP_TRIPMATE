@@ -17,8 +17,13 @@ function MyTripsPage() {
 
   //Modal states
   const [showAddTripModal, setShowAddTripModal] = useState(false);
+  const [firstLoad, setFirstLoad] = useState(true);
+  const [searchResult, setSearchResult]= useState([])
+
+  const [showLocSearch, setShowLocSearch] = useState(false);
   const [newTripName, setNewTripName] = useState("");
-  const [newDestination, setNewDestination] = useState("");
+  const [newDestination, setNewDestination] = useState(""); // Plain search
+  const [newFullDest, setNewFullDest] = useState({});
   const [newStart, setNewStart] = useState("");
   const [newEnd, setNewEnd] = useState("");
 
@@ -99,8 +104,10 @@ function MyTripsPage() {
       end: t.end_date,
       status: t.completed,
       isGroupTrip: t.type === "Group" ? true : false,
-      collaborators: ["a", "b"], //Initialize empty collaborators array
-      userItineraryType: t.useritype
+      userItineraryType: t.useritype,
+      collaborators: t.num_ppl,
+      currentMembers: t.num_ppl,
+      maxCapacity: t.capacity
     }));
 
     setTrips((prev) => {
@@ -140,6 +147,49 @@ function MyTripsPage() {
     });
   }, [joinedGroupTrips]);
 
+  // For location search
+  useEffect(() => {
+    if(!newDestination) return;
+    if(firstLoad) //When first load page dont search for anything
+      {
+        setFirstLoad(false);
+        return;
+      }
+
+      const locTimer = setTimeout(async() => {
+      console.log("Send to backend", newDestination);
+      await axios.post("http://localhost:8080/Itinerary/CitySearch", {input:newDestination}, {withCredentials:true})
+      .then(res=>{
+        renderLoadSearchResult(res.data);
+      })
+      .catch(err => {console.log(err);});
+
+    }, 1000);
+
+    return () => {
+      clearTimeout(locTimer);
+    };
+  }, [newDestination])
+
+  useEffect(() => {
+    if(searchResult.length > 0)
+      {
+        console.log(searchResult);
+        setShowLocSearch(true);
+      }
+  }, [searchResult])
+
+  const renderLoadSearchResult = (res) => {
+    const mapResults = res.map(t => ({
+      placeid: t.id,
+      name: t.name,
+      lat: t.lat,
+      lng: t.lng,
+    }));
+
+    setSearchResult(mapResults);
+  };
+
   //Create a new trip
   const handleSaveTrip = async () => {
     const missing = [];
@@ -147,6 +197,7 @@ function MyTripsPage() {
     if (!newDestination) missing.push("destination");
     if (!newStart) missing.push("start");
     if (!newEnd) missing.push("end");
+    if (!newFullDest) missing.push("destination");
 
     setInvalidFields(missing);
 
@@ -161,10 +212,10 @@ function MyTripsPage() {
 
       response = await axios.post("http://localhost:8080/Itinerary/CreateItinerary", {
         iName: newTripName,
-        iDest: newDestination,
+        iDest: newFullDest,
         start: newStart,
         end: newEnd,
-        type: "Private"
+        type: "Private",
       }, {withCredentials: true})
       .catch(err => {
         console.log(err)
@@ -183,7 +234,8 @@ function MyTripsPage() {
           isGroupTrip: false,
           userItineraryType: response.data[0].useritype,
           type: "Private", //Marker for private trips
-          collaborators: [], //Initialize empty collaborators array
+          collaborators: 1,
+          maxCapacity: 5, //Initialize empty collaborators array
         };
 
         setTrips((prev) => [...prev, newTrip]);
@@ -194,6 +246,7 @@ function MyTripsPage() {
         setNewStart("");
         setNewEnd("");
         setErrorMsg("");
+        setNewFullDest({});
         setTimeout(() => setShowAddTripModal(false), 300);
       } else {
         setErrorMsg("Insert Failed");
@@ -214,68 +267,59 @@ function MyTripsPage() {
   const deleteTripConfirmed = async () => {
     if (!tripToDelete) return;
 
+    const isHost = tripToDelete.userItineraryType === "host" ? true:false;
+
     // For group trips
     if (tripToDelete.isGroupTrip === true) {
-      setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
-      setShowDeleteConfirm(false);
-      setTripToDelete(null);
-
-      setSuccessMsg("Left group trip successfully!");
-      setTimeout(() => setSuccessMsg(""), 1500);
-      return;
-    }
-
-    // If button is delete
-    if(tripToDelete.userItineraryType === "host")
-    {
       try {
-      const response = await axios.delete(
-        "http://localhost:8080/Itinerary/DeleteItinerary",
-        {
-          data: { itineraryid: tripToDelete.id },
-          withCredentials: true
+        const response = await axios.delete("http://localhost:8080/GroupTrips/ExitGroupTrip",{data: { i_id: tripToDelete.id, isHost:isHost}, withCredentials: true});
+        if (response.data.deleteItinerary) {
+          setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
+          setShowDeleteConfirm(false);
+          setTripToDelete(null);
+
+          setSuccessMsg("Trip deleted successfully!");
+          setTimeout(() => setSuccessMsg(""), 1500);
+          return;
         }
-      );
+        else{
+          setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
+          setShowDeleteConfirm(false);
+          setTripToDelete(null);
 
-      if (response.data === true) {
-        setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
-        setShowDeleteConfirm(false);
-        setTripToDelete(null);
-
-        setSuccessMsg("Trip deleted successfully!");
-        setTimeout(() => setSuccessMsg(""), 1500);
-      } else {
-        setErrorMsg("Delete failed.");
-        setShowDeleteConfirm(false);
-      }
+          setSuccessMsg("Public group trip exited successfully!");
+          setTimeout(() => setSuccessMsg(""), 1500);
+          return;
+        }
       } catch (err) {
         console.error(err);
         setErrorMsg("Delete failed (server error).");
         setShowDeleteConfirm(false);
       }
     }
-    // If button is exit
-    else if(tripToDelete.userItineraryType === "visitor"){
+
+    // Use shared_itinerary backend
+    else{
       try {
-      const response = await axios.delete(
-        "http://localhost:8080/Itinerary/ExitItinerary",
-        {
-          data: { itineraryid: tripToDelete.id },
-          withCredentials: true
+        const response = await axios.delete("http://localhost:8080/Itinerary/DeleteItinerary",{data: { i_id: tripToDelete.id, isHost:isHost}, withCredentials: true});
+        if (response.data.deleteItinerary) {
+          setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
+          setShowDeleteConfirm(false);
+          setTripToDelete(null);
+
+          setSuccessMsg("Trip deleted successfully!");
+          setTimeout(() => setSuccessMsg(""), 1500);
+          return;
         }
-      );
+        else{
+          setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
+          setShowDeleteConfirm(false);
+          setTripToDelete(null);
 
-      if (response.data === true) {
-        setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
-        setShowDeleteConfirm(false);
-        setTripToDelete(null);
-
-        setSuccessMsg("Trip deleted successfully!");
-        setTimeout(() => setSuccessMsg(""), 1500);
-      } else {
-        setErrorMsg("Delete failed.");
-        setShowDeleteConfirm(false);
-      }
+          setSuccessMsg("Private group trip exited successfully!");
+          setTimeout(() => setSuccessMsg(""), 1500);
+          return;
+        }
       } catch (err) {
         console.error(err);
         setErrorMsg("Delete failed (server error).");
@@ -283,6 +327,7 @@ function MyTripsPage() {
       }
     }
   };
+
 
   //Update collaborators for a trip
   const updateTripCollaborators = (tripId, collaborators) => {
@@ -320,6 +365,19 @@ function MyTripsPage() {
 
     return matchSearch && matchType && matchStatus;
   });
+
+  const updateFormBasedOnLoc = async(res) => {
+    setNewFullDest({
+      placeid: res.placeid,
+      name: res.name,
+      lat: res.lat,
+      lng: res.lng
+    });
+    setNewDestination(res.name);
+
+    setFirstLoad(true);
+    setShowLocSearch(false);
+  };
 
   return (
     <div className="mytrips-page">
@@ -442,7 +500,19 @@ function MyTripsPage() {
                       backgroundColor: trip.isGroupTrip ? "#FF6B6B" : "#4ECDC4"
                     }}
                   >
-                    {trip.isGroupTrip ? "Group / Public" : "Private"}
+                    {trip.isGroupTrip ? "Public" : "Group"}
+                  </span>}
+                  {usertype === "premium" && <span 
+                    style={{
+                      padding: "4px 8px",
+                      borderRadius: "4px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      color: trip.isGroupTrip ? "#fff" : "#333",
+                      backgroundColor: trip.userItineraryType === "host" ? "#FF6B6B" : "#4ECDC4"
+                    }}
+                  >
+                    {trip.userItineraryType === "host" ? "Host" : "Collaborator"}
                   </span>}
                 </div>
 
@@ -454,9 +524,9 @@ function MyTripsPage() {
                 )}
 
                 {/*Collaborator counter for private trips*/}
-                {usertype === "premium" && !trip.isGroupTrip && trip.collaborators && trip.collaborators.length > 0 && (
+                {usertype === "premium" && !trip.isGroupTrip && trip.collaborators  && (
                   <p style={{ fontSize: "14px", color: "#666", marginTop: "5px" }}>
-                    Collaborators: {trip.collaborators.length}
+                    Collaborators: {trip.collaborators}/{trip.maxCapacity}
                   </p>
                 )}
 
@@ -522,9 +592,21 @@ function MyTripsPage() {
                     invalidFields.includes("destination") ? "invalid-input" : ""
                   }`}
                   value={newDestination}
-                  onChange={(e) => setNewDestination(e.target.value)}
+                  onChange={(e) => {
+                    setNewDestination(e.target.value);
+                    setShowLocSearch(false);
+                  }}
                 />
               </div>
+              { showLocSearch && (
+                <div className="form-input-search">
+                  {searchResult.map(res => (
+                    <div key={res.placeid} className="form-input-search-res" onClick={() => updateFormBasedOnLoc(res)}>
+                      {res.name}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="modal-row">
