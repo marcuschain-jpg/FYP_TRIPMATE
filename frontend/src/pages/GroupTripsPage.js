@@ -26,6 +26,10 @@ function GroupTripsPage() {
 
   //Modal state
   const [showModal, setShowModal] = useState(false);
+  const [showLocSearch, setShowLocSearch] = useState(false);
+  const [firstLoad, setFirstLoad] = useState(true);
+  const [searchResult, setSearchResult] = useState([]);
+  const [newFullDest, setNewFullDest] = useState({});
 
   //form state (dummy)
   const [tripName, setTripName] = useState("");
@@ -58,6 +62,61 @@ function GroupTripsPage() {
     };
     getAllGroupTrips();
   },[])
+
+  useEffect(() => {
+    if(!location) return;
+    if(firstLoad) //When first load page dont search for anything
+      {
+        setFirstLoad(false);
+        return;
+      }
+
+      const locTimer = setTimeout(async() => {
+      console.log("Send to backend", location);
+      await axios.post("http://localhost:8080/Itinerary/CitySearch", {input:location}, {withCredentials:true})
+      .then(res=>{
+        renderLoadSearchResult(res.data);
+      })
+      .catch(err => {console.log(err);});
+
+    }, 1000);
+
+    return () => {
+      clearTimeout(locTimer);
+    };
+  }, [location])
+
+  useEffect(() => {
+    if(searchResult.length > 0)
+      {
+        console.log(searchResult);
+        setShowLocSearch(true);
+      }
+  }, [searchResult])
+
+  const renderLoadSearchResult = (res) => {
+    const mapResults = res.map(t => ({
+      placeid: t.id,
+      name: t.name,
+      lat: t.lat,
+      lng: t.lng,
+    }));
+
+    setSearchResult(mapResults);
+  };
+
+  const updateFormBasedOnLoc = async(res) => {
+    setNewFullDest({
+      placeid: res.placeid,
+      name: res.name,
+      lat: res.lat,
+      lng: res.lng
+    });
+    setLocation(res.name);
+
+    setFirstLoad(true);
+    setShowLocSearch(false);
+  };
 
   const renderGroupTrips = async(res) =>{
     console.log('data: ', res);
@@ -167,7 +226,7 @@ function GroupTripsPage() {
 
     try{
       const res = await axios.post("http://localhost:8080/GroupTrips/CreateGroupTrip",
-      {iName:tripName, iDest: location, start: startDate, end: endDate, num_ppl:maxCapacity, description:description},{withCredentials:true});
+      {iName:tripName, iDest: newFullDest, start: startDate, end: endDate, num_ppl:maxCapacity, description:description},{withCredentials:true});
         if(res.data){
           const newTrip = {
           id: res.data.itinerary_id, 
@@ -338,16 +397,28 @@ function GroupTripsPage() {
                 <label>Location</label>
                 <input
                   value={location}
-                  onChange={(e) => setLocation(e.target.value)}
+                  onChange={(e) => {
+                    setLocation(e.target.value)
+                    setShowLocSearch(false);
+                  }}
                 />
               </div>
             </div>
+            { showLocSearch && (
+                <div className="form-input-search">
+                  {searchResult.map(res => (
+                    <div key={res.placeid} className="form-input-search-res" onClick={() => updateFormBasedOnLoc(res)}>
+                      {res.name}
+                    </div>
+                  ))}
+                </div>
+              )}
 
             <div className="modal-field full-width">
               <label>Description</label>
               <textarea
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) =>  setDescription(e.target.value)}
               />
             </div>
 
