@@ -30,8 +30,6 @@ function ActivityFormPage() {
   const [searchResult, setSearchResult] = useState([]); //store search results from api, drop down bar
   const [mapCenterChange, setMapCenterChange] = useState(null); // store center coord for maps
   const [activityCoords, setActivityCoords] = useState([]); // store coords for maps
-  const [itineraryLat, setItineraryLat] = useState(0);
-  const [itineraryLng, setItineraryLng] = useState(0);
   //setMapData(useMapData()) // get API key & set default coordinates to mark on map
 
   //Search bar modal pop out
@@ -58,46 +56,27 @@ function ActivityFormPage() {
           setLoading(false);
         })
         .catch(err => {
-          if(err.response){
-            if(err.response.status === 401 || err.response.status === 403){
-              const errData = err.response;
-              const errorMsg = errData.status + ": " + errData.data.message;
-              navigate(`/login/${errorMsg}`);
-            }
-            else if(err.response.status === 500){
-              console.log(err.response.data.message);
-            }
-          }
-          else{
-            console.log(err)
+          if(err.response.status === 401 || 403){
+            const errData = err.response;
+            const errorMsg = errData.status + ": " + errData.data.message;
+            navigate(`/login/${errorMsg}`);
           }
         });
       };
       loadEditActivity();
     }
     else{ //create page--> still need validate
-      axios.get("http://localhost:8080/Itinerary/GetActivityToCreate", {params:{i_id:tripId}, withCredentials:true})
+      axios.post("http://localhost:8080/GetRoleForUser", {}, {withCredentials:true})
       .then(res => {
-        setItineraryLng(res.data[0].longitude);
-        setItineraryLat(res.data[0].latitude);
-        setMapCenterChange({lng:parseFloat(res.data[0].longitude), lat:parseFloat(res.data[0].latitude)});
         setLoading(false);
       })
       .catch(err => {
-          if(err.response){
-            if(err.response.status === 401 || err.response.status === 403){
-              const errData = err.response;
-              const errorMsg = errData.status + ": " + errData.data.message;
-              navigate(`/login/${errorMsg}`);
-            }
-            else if(err.response.status === 500){
-              console.log(err.response.data.message);
-            }
-          }
-          else{
-            console.log(err)
-          }
-        });
+        if(err.response.status === 401 || err.response.status === 403){
+          const errData = err.response;
+          const errorMsg = errData.status + ": " + errData.data.message;
+          navigate(`/login/${errorMsg}`);
+        }
+      });
     }
   }, []);
 
@@ -115,8 +94,6 @@ function ActivityFormPage() {
     setOriginalDate(a[0].activity_date);
     setLongitude(parseFloat(a[0].longitude));
     setLatitude(parseFloat(a[0].latitude));
-    setItineraryLng(a[0].i_lng);
-    setItineraryLat(a[0].i_lat);
 
     //Render coords for maps
     setMapCenterChange({lng:parseFloat(a[0].longitude), lat:parseFloat(a[0].latitude)});
@@ -187,8 +164,8 @@ function ActivityFormPage() {
       }
 
       const locTimer = setTimeout(async() => {
-      console.log("Send to backend", locationName, itineraryLat, itineraryLng);
-      await axios.post("http://localhost:8080/Itinerary/LocSearch", {input:locationName, lng:itineraryLng, lat:itineraryLat}, {withCredentials:true})
+      console.log("Send to backend", locationName);
+      await axios.post("http://localhost:8080/Itinerary/LocSearch", {input:locationName}, {withCredentials:true})
       .then(res=>{
         renderLoadSearchResult(res.data);
       })
