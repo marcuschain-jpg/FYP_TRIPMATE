@@ -13,6 +13,27 @@ function normDate(d) {
   return String(d).slice(0, 10);
 }
 
+//Date formatting (DD/MM/YYYY format)
+function formatDateForDisplay(dateValue) {
+  if (!dateValue) return "";
+  
+  let date;
+  
+  if (typeof dateValue === "string") {
+    date = new Date(dateValue);
+  } else if (dateValue instanceof Date) {
+    date = dateValue;
+  } else {
+    return "";
+  }
+  
+  if (isNaN(date.getTime())) {
+    return "";
+  }
+  
+  return date.toLocaleDateString("en-GB");
+}
+
 function ItineraryPage() {
   const { tripId, firstdate } = useParams();
   const navigate = useNavigate();
@@ -140,11 +161,12 @@ function ItineraryPage() {
         setLoading(true);
         console.log(data);
 
+        //Format trip dates using formatDateForDisplay function
         const mapTrips = {
           id: tripId,
           name: data?.[0]?.itinerary_name,
-          start: data?.[0]?.start_date,
-          end: data?.[0]?.end_date,
+          start: formatDateForDisplay(data?.[0]?.start_date),
+          end: formatDateForDisplay(data?.[0]?.end_date),
           type: data?.[0]?.type,
           numPpl: data?.[0]?.num_ppl
         };
@@ -196,7 +218,7 @@ function ItineraryPage() {
       });
   }, [isArranging, tripId, firstdate, navigate]);
 
-  // Functions to load upon receiving socket updates for REAL TIME
+  //Functions to load upon receiving realtime socket updates 
   const renderUpdateActivities = (res, message) => {
     if (message === "activity created!") {
       const mapAct = res.map((a) => ({
@@ -318,6 +340,12 @@ function ItineraryPage() {
         mapRef.current.setCenter(points[0]);
         mapRef.current.setZoom(14);
       }
+      //Center map to default location when no activities 
+      else {
+        const defaultCenter = mapConfig?.center || { lat: 1.3521, lng: 103.8198 };
+        mapRef.current.setCenter(defaultCenter);
+        mapRef.current.setZoom(12);
+      }
       return;
     }
 
@@ -339,12 +367,18 @@ function ItineraryPage() {
       (result, status) => {
         if (status === "OK" && result) {
           directionsRendererRef.current.setDirections(result);
+          //Autocenter and fit map bounds to show all waypoints
+          const bounds = new window.google.maps.LatLngBounds();
+          result.routes[0].overview_path.forEach((point) => {
+            bounds.extend(point);
+          });
+          mapRef.current.fitBounds(bounds);
         } else {
           console.error("Directions request failed:", status, result);
         }
       }
     );
-  }, [activityCoords, selectedDate]);
+  }, [activityCoords, selectedDate, mapConfig]);
 
   //Delete activity
   const handleDeleteActivity = async (index) => {
