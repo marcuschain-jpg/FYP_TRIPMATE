@@ -216,12 +216,8 @@ function GroupTripsPage() {
 
   //Upload handler
   const handleUpload = async() => {
-    if (!tripName || !location || !pax || !startDate || !endDate ) {
+    if (!tripName || !location || !pax || !startDate || !endDate) {
       alert("Please fill in all required fields");
-      return;
-    }
-    if (!newFullDest){
-      alert("Please select a city that you are travelling to!");
       return;
     }
 

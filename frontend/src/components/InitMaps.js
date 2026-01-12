@@ -7,26 +7,29 @@ function InitMaps({ DefaultMapData, centerChange, activityCoords }) {
     googleMapsApiKey: DefaultMapData.apiKey, // from keys.env
   });
 
-  const [mapData, setMapData] = useState(null);
+  const [mapData, setMapData] = useState({
+    apiKey:DefaultMapData.apiKey,
+    center:DefaultMapData.center
+  });
 
   useEffect(() => {
-    if(!mapData||!centerChange) return;
-    mapData.panTo({
-      lat: centerChange.lat,
-      lng: centerChange.lng
-    });
-  },[mapData,centerChange])
+    if(centerChange){
+    setMapData(prev => ({
+      ...prev,
+      center:{lat:centerChange.lat, lng:centerChange.lng}
+    }))
+    }
+  },[centerChange])
 
   if (!isLoaded) return <div>Loading Google Maps...</div>;
 
   return (
     <GoogleMap
       mapContainerStyle={{ width: "600px", height: "400px" }}
-      center={DefaultMapData.center}
+      center={mapData.center}
       zoom={12}
-      onLoad={setMapData}
     >
-      {activityCoords.map(coord => (
+      {mapData.center && activityCoords.map(coord => (
         <div key={coord.id}>
           <MarkerF position={coord.coords} />
         </div>

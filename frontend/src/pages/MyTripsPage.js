@@ -47,10 +47,6 @@ function MyTripsPage() {
   const [showAddTripModal, setShowAddTripModal] = useState(false);
   const [isEditingTrip, setIsEditingTrip] = useState(false);
   const [editingTripId, setEditingTripId] = useState(null);
-  const [firstLoad, setFirstLoad] = useState(true);
-  const [searchResult, setSearchResult]= useState([]);
-
-  const [showLocSearch, setShowLocSearch] = useState(false);
   const [newTripName, setNewTripName] = useState("");
   const [newDestination, setNewDestination] = useState("");
   const [newStart, setNewStart] = useState("");
@@ -97,7 +93,7 @@ function MyTripsPage() {
         setUsertype(res.data.role)
       }
       catch(err){
-        if(err.response.status === 401 || err.response.status === 403){
+        if(err.response.status === 401 || 403){
           const errData = err.response;
           const errorMsg = errData.status + ": " + errData.data.message;
           navigate(`/login/${errorMsg}`);
@@ -133,7 +129,7 @@ function MyTripsPage() {
       end: formatDateForInput(t.end_date),
       status: t.completed,
       isGroupTrip: t.type === "Group" ? true : false,
-      collaborators: t.num_ppl,
+      collaborators: ["a", "b"],
       userItineraryType: t.useritype
     }));
 
@@ -529,19 +525,7 @@ function MyTripsPage() {
                       backgroundColor: trip.isGroupTrip ? "#FF6B6B" : "#4ECDC4"
                     }}
                   >
-                    {trip.isGroupTrip ? "Group" : "Private"}
-                  </span>}
-                  {usertype === "premium" && <span 
-                    style={{
-                      padding: "4px 8px",
-                      borderRadius: "4px",
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      color: trip.isGroupTrip ? "#fff" : "#333",
-                      backgroundColor: trip.userItineraryType === "host" ? "#FF6B6B" : "#4ECDC4"
-                    }}
-                  >
-                    {trip.userItineraryType === "host" ? "Host" : "Collaborator"}
+                    {trip.isGroupTrip ? "Group / Public" : "Private"}
                   </span>}
                 </div>
 
