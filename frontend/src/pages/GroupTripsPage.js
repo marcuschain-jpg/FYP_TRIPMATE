@@ -9,20 +9,7 @@ function GroupTripsPage() {
   const { myTrips, joinTrip, exitTrip } = useOutletContext();
   const navigate = useNavigate();
 
-  //Dummy data--> groups with member count
-  const [groupTrips, setGroupTrips] = useState([
-    {
-      id: 1,
-      owner: "JohnWick123",
-      title: "Egypt Sightseeing Tour",
-      date: "22 Jan 2026 – 31 Jan 2026",
-      capacity: 5, //Max capacity - capped at 5
-      currentMembers: 1, //Current members in the trip
-      description:
-        "Explore the wonders of Egypt including iconic pyramids and indulge in countless delicacies.",
-      joinedByYou: false,
-    },
-  ]);
+  const [groupTrips, setGroupTrips] = useState([]);
   const [loading, setLoading] = useState(true);
 
   //Sync join state
