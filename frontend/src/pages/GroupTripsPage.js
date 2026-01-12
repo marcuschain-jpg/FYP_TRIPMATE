@@ -99,6 +99,7 @@ function GroupTripsPage() {
       return;
     }
 
+<<<<<<< HEAD
     try{
       let newCurrMembers = 0;
       const res = await axios.patch("http://localhost:8080/GroupTrips/JoinGroupTrip", {i_id:trip.id}, {withCredentials:true})
@@ -127,6 +128,34 @@ function GroupTripsPage() {
     //joinTrip(trip);
   };
 
+=======
+    const optimisticTrip = {
+      ...trip,
+      joinedByYou: true,
+      currentMembers: trip.currentMembers + 1,
+      isHost: false,
+    };
+
+    setGroupTrips((prev) =>
+      prev.map((t) => (t.id === trip.id ? optimisticTrip : t))
+    );
+
+    //Update my trips immediately
+    joinTrip(optimisticTrip);
+
+    //Backend syncing
+    try {
+      await axios.patch(
+        "http://localhost:8080/GroupTrips/JoinGroupTrip",
+        { i_id: trip.id },
+        { withCredentials: true }
+      );
+    } catch (err) {
+      console.warn("Backend join failed, UI kept:", err);
+    }
+  };
+
+>>>>>>> parent of 4a6b617 (Merge branch 'main' into mari-branch-2)
   //Exit handler
   const handleExit = async(trip) => {
     const confirmExit = window.confirm(
@@ -135,6 +164,7 @@ function GroupTripsPage() {
     if (!confirmExit) return;
     const tripId = trip.id;
 
+<<<<<<< HEAD
     try{
       const res = await axios.delete("http://localhost:8080/GroupTrips/ExitGroupTrip", {data:{i_id:tripId, isHost:trip.isHost}, withCredentials:true})
       if(res.data.deleteItinerary){
@@ -194,6 +224,15 @@ function GroupTripsPage() {
           joinedByYou: true,
           isHost: true,
         };
+=======
+    setGroupTrips((prev) =>
+      prev.map((t) =>
+        t.id === tripId
+          ? { ...t, joinedByYou: false, currentMembers: t.currentMembers - 1 }
+          : t
+      )
+    );
+>>>>>>> parent of 4a6b617 (Merge branch 'main' into mari-branch-2)
 
         setGroupTrips(prev => [...prev, newTrip]);
 
