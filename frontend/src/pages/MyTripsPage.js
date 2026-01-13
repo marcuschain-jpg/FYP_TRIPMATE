@@ -73,7 +73,10 @@ function MyTripsPage() {
   //Delete confirmation message
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [tripToDelete, setTripToDelete] = useState(null);
+
+  // For chat
   const[showChat, setShowChat] = useState(false);
+  const [activeTripID, setActiveTripID] = useState(0);
 
   //Convert a group trip into MyTrips format with member counter
   const mapGroupTripToMyTrip = (t) => ({
@@ -470,6 +473,7 @@ function MyTripsPage() {
 
     return matchSearch && matchType && matchStatus;
   });
+  
 
   return (
     <div className="mytrips-page">
@@ -624,7 +628,10 @@ function MyTripsPage() {
                 {trip.isGroupTrip === true && (
                   <button
                     className="chat-btn"
-                    onClick={() => setShowChat(true)}
+                    onClick={() => {
+                      setShowChat(true);
+                      setActiveTripID(trip.id);
+                    }}
                   >
                     Chat
                   </button>
@@ -771,11 +778,14 @@ function MyTripsPage() {
           </div>
         </div>
       )}
-
-      {showChat && ( <ItineraryChat onClose={() => setShowChat(false)}/> )}
+      {showChat && ( <ItineraryChat onClose={() => {
+        setShowChat(false);
+        setActiveTripID(0);
+        }} i_id={activeTripID}/>)}      
 
       {successMsg && <div className="success-popup">{successMsg}</div>}
     </div>
+
   );
 }
 

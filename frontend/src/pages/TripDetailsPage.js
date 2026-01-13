@@ -386,7 +386,7 @@ function TripDetailsPage() {
         </div>
       )}
 
-      {showChat && ( <ItineraryChat onClose={() => setShowChat(false)}/> )}
+      {showChat && ( <ItineraryChat onClose={() => {setShowChat(false);}} i_id={tripId}/>)}
     </div>
   );
 }

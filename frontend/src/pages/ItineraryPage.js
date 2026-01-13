@@ -2,10 +2,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import "../styles/Itinerary.css";
 import axios from "axios";
-import { io } from "socket.io-client";
+import { socket } from "../hooks/Socket";
 import ItineraryChat from "../components/ItineraryChat";
-
-const socket = io("http://localhost:8080");
 
 //Normalize any date string to YYYY-MM-DD
 function normDate(d) {
@@ -282,6 +280,7 @@ function ItineraryPage() {
   useEffect(() => {
     if (!socket) return;
 
+    socket.connect();
     socket.emit("joinTrip", `trip_${tripId}`);
 
     socket.on("Arranging", (data) => {
@@ -523,7 +522,7 @@ function ItineraryPage() {
       (<button className="floating-chat-btn" onClick={() => setShowChat(true)} title="Chat">
         Chat
       </button>)}
-      {showChat && <ItineraryChat onClose={() => setShowChat(false)} />}
+      {showChat && ( <ItineraryChat onClose={() => {setShowChat(false);}} i_id={tripId}/>)}
     </div>
   );
 }
