@@ -51,6 +51,7 @@ router.get("/GetAllItineraries", RequireAuth(["registered", "premium"]), async(r
        i.num_ppl, i.capacity
        FROM itinerary i
        JOIN group_trip gt ON i.itinerary_id = gt.itinerary_id
+       WHERE gt.user_id = $1
        ORDER BY completed ASC`, [userid]
     );
 
