@@ -70,10 +70,10 @@ function ProfilePage() {
         const allTrips = privateRes.data.map((trip) => ({
           id: trip.itinerary_id,
           title: trip.itinerary_name,
-          // Use formatDateForCalendar to parse dates from database
+          //Use formatDateForCalendar--> dates from database
           startDate: formatDateForCalendar(trip.start_date),
           endDate: formatDateForCalendar(trip.end_date),
-          //Set type based on trip type from database (Group or Private)
+          //Set type based on trip type from database (group or private)
           type: trip.type === "Group" ? "group" : "private",
           destination: trip.itinerary_dest,
         }));
@@ -147,6 +147,10 @@ function ProfilePage() {
     );
 
   const handleToday = () => setCurrentDate(new Date());
+
+  const handleTripClick = (tripId) => {
+    navigate(`/mytrips/trip/${tripId}`);
+  };
 
   const monthNames = [
     "January","February","March","April","May","June",
@@ -268,6 +272,8 @@ function ProfilePage() {
                                   key={`${trip.id}-${tripIndex}`}
                                   className={`trip-badge ${trip.type}`}
                                   title={trip.title}
+                                  onClick={() => handleTripClick(trip.id)}
+                                  style={{ cursor: "pointer" }}
                                 >
                                   {trip.title}
                                 </div>
