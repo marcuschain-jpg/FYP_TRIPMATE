@@ -621,14 +621,20 @@
     cursor: pointer;
 }
 
+/*For activity form map container*/
 .activity-right-map {
-    width: 65%;
-    background: white;
-    border-radius: 12px;
-    padding: 15px;
-    border: 1px solid #dcdcdc;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
+    flex: 1;
+    min-width: 0; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .activity-right-map > div {
+    width: 100%;
+    height: 100%;
+  }
+  
 
 .activity-right-map iframe,
 .activity-right-map div {
