@@ -82,6 +82,22 @@ router.post("/CreateItinerary", RequireAuth(["registered", "premium"]), async(re
   }
 });
 
+router.patch("/EditItinerary", RequireAuth(["registered", "premium"]), async(req,res) => {
+  const {i_id, iName, iDest, start, end, type} = req.body;
+  const userid = req.userid;
+  
+  try{
+    const data = await pool.query(
+      `UPDATE itinerary
+       SET itinerary_name=$2, itinerary_dest=$3, start_date=$4, end_date=$5, user_host_id=$6, type=$7,
+       placeid=$8, latitude=$9, longitude=$10
+       WHERE itinerary_id = $1`, [i_id, iName, iDest.name, start, end, userid, type, iDest.placeid, iDest.lat, iDest.lng]
+    );
+    if(data.rowCount > 0) return res.send(true);  
+  }
+  catch(err) {console.log(err); return res.status(500).send("Failed to update itinerary")}
+});
+
 router.delete("/DeleteItinerary", RequireAuth(["registered", "premium"]), async(req, res) =>{
   // For Private Trips
   const {i_id, isHost} = req.body;
@@ -97,7 +113,7 @@ router.delete("/DeleteItinerary", RequireAuth(["registered", "premium"]), async(
     }
     catch(err) { console.log(err); return res.status(500).send({message: "Failed to get num_ppl in ExitItinerary"});}
 
-  // Only 1 person, safe to delete itinerary & media
+  // CASE 1 ====== Only 1 person, safe to delete itinerary & media
   if(num_ppl === 1){
     try{
       // Delete photos of itinerary if have
@@ -128,7 +144,7 @@ router.delete("/DeleteItinerary", RequireAuth(["registered", "premium"]), async(
     catch(err) {console.log(err); return res.send({message: "Fail to remove itinerary"});}
   }
 
-  // person > 1, if host - re-assign host
+  // CASE 2 ====== person > 1, if host - re-assign host
   else if(isHost && num_ppl > 1){
     // Remove record from shared_itinerary returning user_id
     // Update user_host_id in itinerary
@@ -157,7 +173,7 @@ router.delete("/DeleteItinerary", RequireAuth(["registered", "premium"]), async(
       catch(err) {console.log(err); return res.send({message: "Fail to delegate new host"});}
     }
   
-  // person > 1, if visitor - exit
+  // CASE 3 ====== person > 1, if visitor - exit
   else if(!isHost && num_ppl > 1){
     // Remove user from group_trips table
     try{
@@ -187,7 +203,7 @@ router.post("/CitySearch", RequireAuth(["registered", "premium"]), async(req, re
       "https://places.googleapis.com/v1/places:autocomplete",
       {
         input: input,  // matches curl example
-        includedPrimaryTypes: "(cities)",
+        includedPrimaryTypes: ["locality", "country"],
       },
       {
         headers: {
@@ -198,7 +214,7 @@ router.post("/CitySearch", RequireAuth(["registered", "premium"]), async(req, re
       }
     );
     // response.data.results contains the search results
-    const acResponse = acRawResponse.data.suggestions.slice(0,4);
+    const acResponse = acRawResponse.data.suggestions.slice(0,3);
 
     // 2. Search in place details with place id to get coordinates
     const response = await Promise.all(

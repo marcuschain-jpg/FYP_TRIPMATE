@@ -1,13 +1,11 @@
 //Default page all users will see when they enter tripmate.com
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Landing.css";
+import Axios from '../hooks/Axios.js';
 
 //Import images
 import landingImage from "../Assets/Landing.jpg";
-import marketing1 from "../Assets/Marketing1.jpg";
-import marketing2 from "../Assets/Marketing2.jpg";
-import marketing3 from "../Assets/Marketing3.jpg";
 
 function Landing() {
   const navigate = useNavigate();
@@ -20,24 +18,30 @@ function Landing() {
     }
   }, [navigate]);
 
-  //Feature cards--> dummy data and pics
-  const features = [
-    {
-      image: marketing1,
-      title: "Integrated Chatbot",
-      description: "Integrated chatbot function to for Q&A as well as optimized trip planning"
-    },
-    {
-      image: marketing2,
-      title: "Integrated Chatbot",
-      description: "Integrated chatbot function to for Q&A as well as optimized trip planning"
-    },
-    {
-      image: marketing3,
-      title: "Integrated Chatbot",
-      description: "Integrated chatbot function to for Q&A as well as optimized trip planning"
+  //Feature cards
+  const [features, setFeatures] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const LoadLanding = async() => {
+      try{
+        const res = await Axios.get("Landing/LoadLanding")
+        console.log(res.data);
+        setLoading(false);
+        setFeatures(res.data.map(d => ({
+          id: d.content_id,
+          image: d.photo_url,
+          title: d.c_title,
+          description: d.c_content
+        })));
+      }
+      catch(err){
+        if(err.response) console.log(err.response.data.message);
+        else console.log(err);
+      }
     }
-  ];
+    LoadLanding();
+  }, [])
 
   return (
     <div className="landing-container">
@@ -63,7 +67,7 @@ function Landing() {
       {/*Tripmate features*/}
       <section className="features-section">
         <div className="features-container">
-          {features.map((feature, index) => (
+          {!loading && features.map((feature, index) => (
             <div className="feature-card" key={index}>
               <div className="feature-image-wrapper">
                 <img 
@@ -78,6 +82,7 @@ function Landing() {
               </div>
             </div>
           ))}
+          {loading && <p>Loading..</p>}
         </div>
       </section>
     </div>
