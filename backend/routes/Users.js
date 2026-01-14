@@ -125,7 +125,8 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-//GEtT Function
+//Activity Logs
+//GET Function
 router.get("/activity", async (req, res) => {
   try {
     const result = await pool.query(`
