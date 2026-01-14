@@ -4,6 +4,8 @@ const router = express.Router();
 const pool = require("../helper/db.js");
 // --- Authenticate ---
 const RequireAuth = require("../middlewares/RequireAuths.js");
+// --- S3 Storage manip ---
+const { ExtractPhotoS3 } = require("../helper/S3FileSys.js")
 
 router.get("/GetPhotoTimeline", RequireAuth(["registered", "premium"]), async(req,res) => {
     const i_id = req.query["i_id"]
@@ -17,7 +19,11 @@ router.get("/GetPhotoTimeline", RequireAuth(["registered", "premium"]), async(re
              RIGHT JOIN itinerary i ON a.itinerary_id = i.itinerary_id
              WHERE i.itinerary_id = $1`, [i_id]
         );
-        return res.send(data.rows);
+        if(data.rowCount > 0) {
+          const updatedData = await ExtractPhotoS3(data.rows)
+          return res.send(updatedData);
+        }
+        else {return res.send([]);}
     }
     catch(err){
         return res.status(500).send({message: "get timeline photos failed"})
@@ -82,7 +88,11 @@ router.get("/GetSavedTimelines", RequireAuth(["registered", "premium"]), async(r
          JOIN activity a ON ap.activity_id = a.activity_id
          where t.itinerary_id = $1`, [i_id]
        );
-       if(data.rowCount > 0) return res.send(data.rows);
+       if(data.rowCount > 0) {
+          const updatedData = await ExtractPhotoS3(data.rows)
+          return res.send(updatedData);
+        }
+        else {return res.send([]);}
     }
     catch(err) {return res.status(500).send({message: "GetSavedTimelines failed"})}
 });

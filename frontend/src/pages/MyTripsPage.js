@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../styles/Itinerary.css";
 import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import axios from 'axios';
+import Axios from '../hooks/Axios.js';
 import ItineraryChat from "../components/ItineraryChat";
 
 //Date formatter function--> for date editing
@@ -98,33 +99,36 @@ function MyTripsPage() {
   useEffect(() => {
     const getUserType = async() => {
       try{
-        const res = await axios.post("http://localhost:8080/GetRoleForUser", {}, {withCredentials:true})
+        const res = await Axios.post("GetRoleForUser", {}, {withCredentials:true})
         setUsertype(res.data.role)
       }
       catch(err){
-        if(err.response.status === 401 || 403){
-          const errData = err.response;
-          const errorMsg = errData.status + ": " + errData.data.message;
-          navigate(`/login/${errorMsg}`);
+        if(err.response){
+          if(err.response.status === 401 || err.response.status === 403){
+            const errData = err.response;
+            const errorMsg = errData.status + ": " + errData.data.message;
+            navigate(`/login/${errorMsg}`);
+          }
+            else if(err.response.status === 500) console.log(err.response.data.message);
         }
+        else console.log(err);
       }
     }
-    axios.get("http://localhost:8080/Itinerary/GetAllItineraries", {withCredentials: true})
+    Axios.get("Itinerary/GetAllItineraries", {withCredentials: true})
       .then((response) => {
         renderLoadTrip(response.data);
         setLoading(false);
       })
       .catch((err) => {
-        if(err.response.status === 401 || err.response.status === 403)
-        {
-          const errData = err.response;
-          const errorMsg = errData.status + ": " + errData.data.message;
-          navigate(`/login/${errorMsg}`);
+        if(err.response){
+          if(err.response.status === 401 || err.response.status === 403){
+            const errData = err.response;
+            const errorMsg = errData.status + ": " + errData.data.message;
+            navigate(`/login/${errorMsg}`);
+          }
+            else if(err.response.status === 500) console.log(err.response.data.message);
         }
-        else if(err.response.status === 500)
-        {
-          console.log(err.response.data.message);
-        }
+        else console.log(err);
       });
       getUserType();
   }, []);
@@ -188,7 +192,7 @@ function MyTripsPage() {
 
       const locTimer = setTimeout(async() => {
       console.log("Send to backend", newDestination);
-      await axios.post("http://localhost:8080/Itinerary/CitySearch", {input:newDestination}, {withCredentials:true})
+      await Axios.post("Itinerary/CitySearch", {input:newDestination}, {withCredentials:true})
       .then(res=>{
         renderLoadSearchResult(res.data);
       })
@@ -257,6 +261,7 @@ function MyTripsPage() {
     setNewEnd(formatDateForInput(trip.end));
     setInvalidFields([]);
     setErrorMsg("");
+    setFirstLoad(true);
     setShowAddTripModal(true);
   };
 
@@ -267,6 +272,7 @@ function MyTripsPage() {
     if (!newDestination) missing.push("destination");
     if (!newStart) missing.push("start");
     if (!newEnd) missing.push("end");
+    if (!newFullDest) missing.push("destination");
 
     setInvalidFields(missing);
 
@@ -277,14 +283,15 @@ function MyTripsPage() {
 
     try {
       if (isEditingTrip) {
-        const response = await axios.patch(
-          `http://localhost:8080/Itinerary/UpdateItinerary`,
+        const response = await Axios.patch(
+          `Itinerary/EditItinerary`,
           {
-            itineraryid: editingTripId,
+            i_id: editingTripId,
             iName: newTripName,
-            iDest: newDestination,
+            iDest: newFullDest,
             start: formatDateForInput(newStart),
-            end: formatDateForInput(newEnd)
+            end: formatDateForInput(newEnd),
+            type: "Private"
           },
           { withCredentials: true }
         );
@@ -312,13 +319,15 @@ function MyTripsPage() {
           setNewStart("");
           setNewEnd("");
           setErrorMsg("");
+          setFirstLoad(true);
+          setNewFullDest({});
           setTimeout(() => setShowAddTripModal(false), 300);
         } else {
           setErrorMsg("Update Failed");
         }
       } else {
-        const response = await axios.post(
-          "http://localhost:8080/Itinerary/CreateItinerary",
+        const response = await Axios.post(
+          "Itinerary/CreateItinerary",
           {
             iName: newTripName,
             iDest: newFullDest,
@@ -358,14 +367,22 @@ function MyTripsPage() {
           setNewEnd("");
           setErrorMsg("");
           setNewFullDest({});
+          setFirstLoad(true);
           setTimeout(() => setShowAddTripModal(false), 300);
         } else {
           setErrorMsg("Insert Failed");
         }
       }
     } catch (err) {
-      console.error(err);
-      setErrorMsg("Operation Failed");
+      if(err.response){
+          if(err.response.status === 401 || err.response.status === 403){
+            const errData = err.response;
+            const errorMsg = errData.status + ": " + errData.data.message;
+            navigate(`/login/${errorMsg}`);
+          }
+            else if(err.response.status === 500) console.log(err.response.data.message);
+        }
+        else console.log(err);
     }
   };
 
@@ -384,7 +401,7 @@ function MyTripsPage() {
     // For group trips
     if (tripToDelete.isGroupTrip === true) {
       try {
-        const response = await axios.delete("http://localhost:8080/GroupTrips/ExitGroupTrip",{data: { i_id: tripToDelete.id, isHost:isHost}, withCredentials: true});
+        const response = await Axios.delete("GroupTrips/ExitGroupTrip",{data: { i_id: tripToDelete.id, isHost:isHost}, withCredentials: true});
         if (response.data.deleteItinerary) {
           setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
           setShowDeleteConfirm(false);
@@ -413,7 +430,7 @@ function MyTripsPage() {
     // Use shared_itinerary backend
     else{
       try {
-        const response = await axios.delete("http://localhost:8080/Itinerary/DeleteItinerary",{data: { i_id: tripToDelete.id, isHost:isHost}, withCredentials: true});
+        const response = await Axios.delete("Itinerary/DeleteItinerary",{data: { i_id: tripToDelete.id, isHost:isHost}, withCredentials: true});
         if (response.data.deleteItinerary) {
           setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
           setShowDeleteConfirm(false);
