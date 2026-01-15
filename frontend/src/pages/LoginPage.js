@@ -128,6 +128,13 @@ export default function LoginPage({ setCurrentUserProfile, markAsFirstTimeUser }
           onChange={(e) => setPassword(e.target.value)}
         />
 
+        {/*Forgot password link*/}
+        <p className="forgot-password-link">
+          <span onClick={() => navigate("/reset-password")}>
+            Forgot Password?
+          </span>
+        </p>
+
         {/*Login button*/}
         <button className="login-btn" onClick={handleLogin}>
           Login
