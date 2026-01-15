@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/EditProfile.css";
+import Axios from '../hooks/Axios.js';
 
 //Initial user profile information before editing
 const initialProfile = {
-  username: "JohnSmith",
-  bio: "Always down for an adventure!",
-  accountType: "Premium",
+  username: "Loading..",
+  bio: "",
+  accountType: "registered",
   interests: {
     food: true,
     adventure: true,
@@ -22,12 +23,15 @@ function EditProfilePage() {
   const location = useLocation();
   const incomingProfile = location.state?.profile ?? initialProfile;
 
+  const [loading, setLoading] = useState(true);
+
   //User info starting states
   const [username, setUsername] = useState(incomingProfile.username);
   const [bio, setBio] = useState(incomingProfile.bio);
   const [accountType, setAccountType] = useState(incomingProfile.accountType);
   const [interests, setInterests] = useState(incomingProfile.interests);
   const [profilePic, setProfilePic] = useState(incomingProfile.profilePic);
+  const [mediaToUpload, setMediaToUpload] = useState(null);
 
   //Modal states
   const [showUnsubscribeModal, setShowUnsubscribeModal] = useState(false);
@@ -42,6 +46,33 @@ function EditProfilePage() {
     expDate: "",
     cvv: "",
   });
+
+  // Load profile details
+  useEffect(() => {
+    const getProfileDetails = async() => {
+      try{
+        const res = await Axios.get("api/users/GetProfileDetails", {withCredentials: true});
+        setLoading(false);
+        setUsername(res.data[0].email);
+        setBio(res.data[0].bio !== null ? res.data[0].bio : "");
+        setAccountType(res.data[0].type);
+        setProfilePic(res.data[0].photo_url !== null ? res.data[0].photo_url : "");
+      }
+      catch(err){
+        if(err.response){
+          if (err.response.status === 401 || err.response.status === 403) {
+            const errorMsg = err.response.status + ": " + err.response.data.message;
+            navigate(`/login/${errorMsg}`);
+          } else if (err.response.status === 500) {
+            const errorMsg = err.response.status + ": " + err.response.data.message;
+            console.log(errorMsg);
+          }
+        }
+        else console.log(err);
+      }
+    }
+    getProfileDetails()
+  }, [])
 
   //Credit card details format
   const formatCardNumber = (value) => {
@@ -69,13 +100,13 @@ function EditProfilePage() {
 
   //Handle account type click
   const handleAccountTypeClick = (type) => {
-    if (accountType === "Premium" && type === "Free") setShowUnsubscribeModal(true);
-    else if (accountType === "Free" && type === "Premium") setShowUpgradeModal(true);
+    if (accountType === "premium" && type === "Free") setShowUnsubscribeModal(true);
+    else if (accountType === "registered" && type === "Premium") setShowUpgradeModal(true);
   };
 
   //Confirm unsubscribe modal/confirmation message
   const confirmUnsubscribe = () => {
-    setAccountType("Free");
+    setAccountType("registered");
     setShowUnsubscribeModal(false);
   };
 
@@ -99,7 +130,7 @@ function EditProfilePage() {
       return alert("Please enter expiry date in MM/YY format");
     }
     setShowPaymentModal(false);
-    setAccountType("Premium");
+    setAccountType("premium");
     setShowSuccessModal(true);
     setTimeout(() => setShowSuccessModal(false), 3000);
   };
@@ -113,23 +144,49 @@ function EditProfilePage() {
   const handleProfilePicChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Save into state, for saving changes later
+    setMediaToUpload(e.target.files?.[0]);
+    
+    // Set profile pic visually
     const reader = new FileReader();
     reader.onloadend = () => setProfilePic(reader.result);
     reader.readAsDataURL(file);
   };
 
   //Save changes and navigate back
-  const handleSaveChanges = (e) => {
+  const handleSaveChanges = async(e) => {
     e.preventDefault();
-    const updatedProfile = {
-      ...incomingProfile,
-      username,
-      bio,
-      accountType,
-      interests,
-      profilePic,
-    };
-    navigate("/profile", { state: { updatedProfile } });
+
+    const formData = new FormData();
+    if(mediaToUpload) formData.append("media", mediaToUpload);
+    formData.append("email", username);
+    formData.append("bio", bio);
+
+    try{
+      const res = await Axios.patch("api/users/UpdateUserProfile", formData, {headers:{ "Content-Type": "multipart/form-data" }, withCredentials:true})
+      const updatedProfile = {
+        ...incomingProfile,
+        username,
+        bio,
+        accountType,
+        interests,
+        profilePic,
+      };
+      navigate("/profile", { state: { updatedProfile } });
+    }
+    catch(err){
+      if(err.response){
+        if (err.response.status === 401 || err.response.status === 403) {
+          const errorMsg = err.response.status + ": " + err.response.data.message;
+          navigate(`/login/${errorMsg}`);
+        } else if (err.response.status === 500) {
+          const errorMsg = err.response.status + ": " + err.response.data.message;
+          console.log(errorMsg);
+        }
+      }
+      else console.log(err);
+    }
   };
 
   //Cancel edit and return profile
@@ -223,14 +280,14 @@ function EditProfilePage() {
               <div className="account-type-buttons">
                 <button
                   type="button"
-                  className={`account-type-btn ${accountType === "Premium" ? "active" : ""}`}
+                  className={`account-type-btn ${accountType === "premium" ? "active" : ""}`}
                   onClick={() => handleAccountTypeClick("Premium")}
                 >
                   Premium
                 </button>
                 <button
                   type="button"
-                  className={`account-type-btn ${accountType === "Free" ? "active" : ""}`}
+                  className={`account-type-btn ${accountType === "registered" ? "active" : ""}`}
                   onClick={() => handleAccountTypeClick("Free")}
                 >
                   Free

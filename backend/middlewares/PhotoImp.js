@@ -8,7 +8,8 @@ function InsertPhoto(){
         cb(null, path.join(__dirname, "../uploads")); // store in storage folder
     },
     filename: (req, file, cb) => {
-        const name = `${Math.random().toString(32)}_dateVal_${Date.now().toString(32)}_${file.originalname}`; // e.g., uuid_date_file1.jpg
+        if(!req.uploadSessionID) req.uploadSessionID = Math.random().toString(32);
+        const name = `${req.uploadSessionID}_dateVal_${Date.now().toString(32)}_${file.originalname}`; // e.g., uuid_date_file1.jpg
         cb(null, name);
     },
     });

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/Profile.css";
-import axios from "axios";
+import Axios from '../hooks/Axios';
 
 const BookmarkIcon = ({ active }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={active ? "#333" : "#aaa"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -11,8 +11,8 @@ const BookmarkIcon = ({ active }) => (
 
 //Current user profile
 const initialProfile = {
-  username: "JohnSmith",
-  bio: "Always down for an adventure!",
+  username: "Loading..",
+  bio: "",
   accountType: "Premium",
   interests: {
     food: true,
@@ -59,10 +59,10 @@ function ProfilePage() {
     const loadTrips = async () => {
       try {
         //Get private trips
-        const privateRes = await axios.get(
-          "http://localhost:8080/Itinerary/GetAllItineraries",
-          { withCredentials: true }
-        );
+        const [privateRes, userRes] = await Promise.all([
+          Axios.get("Itinerary/GetAllItineraries",{ withCredentials: true }),
+          Axios.get("api/users/GetProfileDetails", { withCredentials: true})
+        ]);
 
         console.log("Trips from backend:", privateRes.data);
 
@@ -78,9 +78,17 @@ function ProfilePage() {
           destination: trip.itinerary_dest,
         }));
 
+        const userDetails = {
+          username: userRes.data[0].email,
+          bio: userRes.data[0].bio,
+          accountType: userRes.data[0].type,
+          profilePic: userRes.data[0].photo_url
+        }
+
         console.log("Formatted all trips (private + group):", allTrips);
 
         setTrips(allTrips);
+        setProfile(userDetails);
         setLoading(false);
       } catch (err) {
         console.error("Error loading trips:", err);
@@ -91,6 +99,7 @@ function ProfilePage() {
         setLoading(false);
       }
     };
+    
 
     loadTrips();
   }, [navigate]); 
