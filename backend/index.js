@@ -32,7 +32,7 @@ app.use("/AuthService", authServiceRouter); // Login & create account
 app.use("/Timeline", timelineRouter); // Timeline page
 app.use("/Media", mediaRouter); // Media page
 app.use("/GroupTrips", groupTripsRouter); // Group trips related + chat
-app.use("/Users", usersRoute);
+app.use("/Users", usersRoute); //Anything relating to users
 
 // Admin routes
 //Realtime Update for User in Admin Page

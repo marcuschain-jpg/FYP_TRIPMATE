@@ -61,7 +61,7 @@ function ProfilePage() {
         //Get private trips
         const [privateRes, userRes] = await Promise.all([
           Axios.get("Itinerary/GetAllItineraries",{ withCredentials: true }),
-          Axios.get("api/users/GetProfileDetails", { withCredentials: true})
+          Axios.get("Users/GetProfileDetails", { withCredentials: true})
         ]);
 
         console.log("Trips from backend:", privateRes.data);

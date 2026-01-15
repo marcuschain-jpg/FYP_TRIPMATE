@@ -21,7 +21,8 @@ const initialProfile = {
 function EditProfilePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const incomingProfile = location.state?.profile ?? initialProfile;
+  //const incomingProfile = location.state?.profile ?? initialProfile;
+  const incomingProfile = initialProfile;
 
   const [loading, setLoading] = useState(true);
 
@@ -51,7 +52,7 @@ function EditProfilePage() {
   useEffect(() => {
     const getProfileDetails = async() => {
       try{
-        const res = await Axios.get("api/users/GetProfileDetails", {withCredentials: true});
+        const res = await Axios.get("Users/GetProfileDetails", {withCredentials: true});
         setLoading(false);
         setUsername(res.data[0].email);
         setBio(res.data[0].bio !== null ? res.data[0].bio : "");
@@ -164,7 +165,7 @@ function EditProfilePage() {
     formData.append("bio", bio);
 
     try{
-      const res = await Axios.patch("api/users/UpdateUserProfile", formData, {headers:{ "Content-Type": "multipart/form-data" }, withCredentials:true})
+      const res = await Axios.patch("Users/UpdateUserProfile", formData, {headers:{ "Content-Type": "multipart/form-data" }, withCredentials:true})
       const updatedProfile = {
         ...incomingProfile,
         username,
