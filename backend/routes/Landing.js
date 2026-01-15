@@ -43,4 +43,47 @@ router.get("/LoadLanding", async(req,res) => {
     catch(err){ console.log(err); res.status(500).send({message: "Error receiving details to load landing page"})}
 });
 
+router.get("/LoadReviews", async(req,res) => {
+    try{
+        const [premUserRev, normUserRev] = await Promise.all([
+             pool.query(
+            `SELECT r.review_id, r.r_content, r.r_rating, u.type, u.first_name, u.last_name,
+             TO_CHAR(r.createdat, 'YYYY-MM-DD') as createdat
+             FROM review r
+             JOIN users u ON r.userid = u.userid
+             WHERE u.type = 'premium' AND r_rating > 3
+             ORDER BY random()
+             LIMIT 3`
+            ),
+            pool.query(
+            `SELECT r.review_id, r.r_content, r.r_rating, u.type, u.first_name, u.last_name,
+             TO_CHAR(r.createdat, 'YYYY-MM-DD') as createdat
+             FROM review r
+             JOIN users u ON r.userid = u.userid
+             WHERE u.type = 'registered' AND r_rating > 3
+             ORDER BY random()
+             LIMIT 3`
+            )
+        ]);
+        const cPremUserRev = premUserRev.rows.map(item => ({
+            id: item.review_id,
+            name: `${item.first_name} ${item.last_name}`,
+            rating: item.r_rating,
+            timeAgo: item.createdat,
+            text: item.r_content,
+            isPremium: true
+        }));
+        const cNormUserRev = normUserRev.rows.map(item => ({
+            id: item.review_id,
+            name: `${item.first_name} ${item.last_name}`,
+            rating: item.r_rating,
+            timeAgo: item.createdat,
+            text: item.r_content,
+            isPremium: false
+        }));
+        const allReviews = [...cPremUserRev, ...cNormUserRev];
+        res.send(allReviews);
+    }
+    catch(err) {console.log(err); res.status(500).send({message: "Failed to load reviews"})}
+});
 module.exports = router;

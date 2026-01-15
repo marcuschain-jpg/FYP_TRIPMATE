@@ -1,61 +1,38 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../styles/Reviews.css";
 import reviewsBg from "../Assets/Reviews.jpg";
+import Axios from '../hooks/Axios.js';
 
-//Dummy reviews data
-const reviews = [
-  {
-    id: 1,
-    name: "Ariana Grande",
-    rating: 5,
-    timeAgo: "3 months ago",
-    text: "TripMate helped me plan my Japan itinerary in minutes! It optimized all my routes and saved me so much time. Super intuitive and stress-free.",
-    isPremium: true
-  },
-  {
-    id: 2,
-    name: "Lin Jun Jie",
-    rating: 5,
-    timeAgo: "1 month ago",
-    text: "TripMate actually makes travel planning exciting. The interface is clean, the AI is smart, and it feels built for travelers like me.",
-    isPremium: true
-  },
-  {
-    id: 3,
-    name: "Tom Holland",
-    rating: 5,
-    timeAgo: "2 weeks ago",
-    text: "I'm so impressed! I love how personalized this website is. I usually have a tough time thinking about activities to do but now with suggestions from the website, planning my trips is such a breeze!",
-    isPremium: true
-  },
-  {
-    id: 4,
-    name: "Lee Min Ho",
-    rating: 4,
-    timeAgo: "3 hours ago",
-    text: "While exploring, I asked a question about a temple — and TripMate answered instantly! It's like having a smart guide in your pocket.",
-    isPremium: false
-  },
-  {
-    id: 5,
-    name: "Jennie Kim",
-    rating: 4,
-    timeAgo: "2 days ago",
-    text: "I used to juggle multiple apps for trip planning, but TripMate simplified everything. Planning and reflecting on my trips feels effortless now.",
-    isPremium: false
-  },
-  {
-    id: 6,
-    name: "Gordan Ramsay",
-    rating: 5,
-    timeAgo: "1 day ago",
-    text: "I love how my photos are automatically pinned to each location. The timeline feature made reliving my Bali trip so special!",
-    isPremium: false
-  }
-];
 
 function ReviewsPage() {
   //Render star rating based on number
+  const navigate = useNavigate();
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const LoadReviews = async() => {
+      try{
+        const res = await Axios.get(`Landing/LoadReviews`)
+        setLoading(false);
+        setReviews(res.data);
+      }
+      catch(err){
+        if(err.response){
+          if (err.response.status === 401 || err.response.status === 403) {
+            const errorMsg = err.response.status + ": " + err.response.data.message;
+            navigate(`/login/${errorMsg}`);
+          } else if (err.response.status === 500) {
+            const errorMsg = err.response.status + ": " + err.response.data.message;
+            console.log(errorMsg);
+          }
+        }
+        else console.log(err);
+      }
+    };
+    LoadReviews();
+  }, [])
   const renderStars = (rating) => {
     return (
       <div className="stars">
@@ -73,7 +50,8 @@ function ReviewsPage() {
       <div className="reviews-overlay">
         <div className="reviews-container">
           <div className="reviews-grid">
-            {reviews.map((review) => (
+            {loading && <p>Loading...</p>}
+            {!loading && reviews.map((review) => (
               <div key={review.id} className="review-card">
                 {/*Review header with user profile picture and user info*/}
                 <div className="review-header">
