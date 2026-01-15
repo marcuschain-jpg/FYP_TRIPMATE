@@ -5,7 +5,9 @@ import Axios from '../hooks/Axios.js';
 
 //Initial user profile information before editing
 const initialProfile = {
-  username: "Loading..",
+  email: "Loading..",
+  firstName: "",
+  lastName: "",
   bio: "",
   accountType: "registered",
   interests: {
@@ -21,14 +23,17 @@ const initialProfile = {
 function EditProfilePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  //const incomingProfile = location.state?.profile ?? initialProfile;
   const incomingProfile = initialProfile;
 
   const [loading, setLoading] = useState(true);
 
   //User info starting states
-  const [username, setUsername] = useState(incomingProfile.username);
+  const [email, setEmail] = useState(incomingProfile.email);
+  const [firstName, setFirstName] = useState(incomingProfile.firstName);
+  const [lastName, setLastName] = useState(incomingProfile.lastName);
   const [bio, setBio] = useState(incomingProfile.bio);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [accountType, setAccountType] = useState(incomingProfile.accountType);
   const [interests, setInterests] = useState(incomingProfile.interests);
   const [profilePic, setProfilePic] = useState(incomingProfile.profilePic);
@@ -48,13 +53,15 @@ function EditProfilePage() {
     cvv: "",
   });
 
-  // Load profile details
+  //Load profile details
   useEffect(() => {
     const getProfileDetails = async() => {
       try{
         const res = await Axios.get("Users/GetProfileDetails", {withCredentials: true});
         setLoading(false);
-        setUsername(res.data[0].email);
+        setEmail(res.data[0].email);
+        setFirstName(res.data[0].firstName !== null ? res.data[0].firstName : "");
+        setLastName(res.data[0].lastName !== null ? res.data[0].lastName : "");
         setBio(res.data[0].bio !== null ? res.data[0].bio : "");
         setAccountType(res.data[0].type);
         setProfilePic(res.data[0].photo_url !== null ? res.data[0].photo_url : "");
@@ -146,10 +153,8 @@ function EditProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Save into state, for saving changes later
     setMediaToUpload(e.target.files?.[0]);
     
-    // Set profile pic visually
     const reader = new FileReader();
     reader.onloadend = () => setProfilePic(reader.result);
     reader.readAsDataURL(file);
@@ -159,16 +164,30 @@ function EditProfilePage() {
   const handleSaveChanges = async(e) => {
     e.preventDefault();
 
+    if (password || confirmPassword) {
+      if (password !== confirmPassword) {
+        return alert("Passwords do not match");
+      }
+      if (password.length < 6) {
+        return alert("Password must be at least 6 characters long");
+      }
+    }
+
     const formData = new FormData();
     if(mediaToUpload) formData.append("media", mediaToUpload);
-    formData.append("email", username);
+    formData.append("email", email);
+    formData.append("firstName", firstName);
+    formData.append("lastName", lastName);
     formData.append("bio", bio);
+    if (password) formData.append("password", password);
 
     try{
       const res = await Axios.patch("Users/UpdateUserProfile", formData, {headers:{ "Content-Type": "multipart/form-data" }, withCredentials:true})
       const updatedProfile = {
         ...incomingProfile,
-        username,
+        email,
+        firstName,
+        lastName,
         bio,
         accountType,
         interests,
@@ -233,14 +252,37 @@ function EditProfilePage() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="username">Username</label>
+              <label htmlFor="email">Email</label>
               <input
-                type="text"
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter username"
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter email"
               />
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="firstName">First Name</label>
+                <input
+                  type="text"
+                  id="firstName"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Enter first name"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="lastName">Last Name</label>
+                <input
+                  type="text"
+                  id="lastName"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Enter last name"
+                />
+              </div>
             </div>
 
             <div className="form-group">
@@ -251,6 +293,28 @@ function EditProfilePage() {
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 placeholder="Tell us about yourself"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Leave blank to keep current password"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="confirmPassword">Confirm Password</label>
+              <input
+                type="password"
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
               />
             </div>
 

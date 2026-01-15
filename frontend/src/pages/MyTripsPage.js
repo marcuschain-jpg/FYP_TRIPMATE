@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Itinerary.css";
-import { useParams, useNavigate, useOutletContext } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from 'axios';
 import Axios from '../hooks/Axios.js';
 import ItineraryChat from "../components/ItineraryChat";
@@ -36,8 +36,6 @@ const formatDateForInput = (dateValue) => {
 
 function MyTripsPage() {
   const navigate = useNavigate();
-
-  const { myTrips: joinedGroupTrips } = useOutletContext();
 
   //Load all existing trips  
   const [trips, setTrips] = useState([]);
@@ -76,25 +74,9 @@ function MyTripsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [tripToDelete, setTripToDelete] = useState(null);
 
-  // For chat
+  //For chat
   const[showChat, setShowChat] = useState(false);
   const [activeTripID, setActiveTripID] = useState(0);
-
-  //Convert a group trip into MyTrips format with member counter
-  const mapGroupTripToMyTrip = (t) => ({
-    id: t.id,
-    name: t.title,
-    destination: "Group Trip",
-    start: "",
-    end: "",
-    status: false,
-    isGroupTrip: true,
-    type: "Group",
-    owner: t.owner,
-    currentMembers: t.currentMembers || 0,
-    maxCapacity: t.capacity || 0,
-  });
-  
 
   //Load from backend (private trips)
   useEffect(() => {
@@ -149,38 +131,8 @@ function MyTripsPage() {
       maxCapacity: t.capacity
     }));
 
-    setTrips((prev) => {
-      const existingGroupTrips = prev.filter((x) => x.isGroupTrip === true);
-
-      const sharedGroupTrips = (joinedGroupTrips || []).map(mapGroupTripToMyTrip);
-
-      const allGroupTrips = [...existingGroupTrips, ...sharedGroupTrips].filter(
-        (trip, index, arr) => arr.findIndex((x) => x.id === trip.id) === index
-      );
-
-      const finalGroupTrips = allGroupTrips.filter(
-        (g) => !mapTrips.some((p) => p.id === g.id)
-      );
-
-      return [...mapTrips, ...finalGroupTrips];
-    });
+    setTrips(mapTrips);
   };
-
-  //Whenever joined trips changes-->keep them in My trips list
-  useEffect(() => {
-    if (!joinedGroupTrips) return;
-
-    setTrips((prev) => {
-      const privateTrips = prev.filter((t) => t.isGroupTrip !== true);
-      const newGroupTrips = joinedGroupTrips.map(mapGroupTripToMyTrip);
-
-      const merged = [...privateTrips, ...newGroupTrips].filter(
-        (trip, index, arr) => arr.findIndex((x) => x.id === trip.id) === index
-      );
-
-      return merged;
-    });
-  }, [joinedGroupTrips]);
 
   //For location search
   useEffect(() => {
@@ -457,24 +409,6 @@ function MyTripsPage() {
       }
     }
   };
-
-  const updateTripCollaborators = (tripId, collaborators) => {
-    setTrips((prev) =>
-      prev.map((trip) =>
-        trip.id === tripId ? { ...trip, collaborators } : trip
-      )
-    );
-  };
-
-  useEffect(() => {
-    const handleUpdateCollaborators = (event) => {
-      const { tripId, collaborators } = event.detail;
-      updateTripCollaborators(tripId, collaborators);
-    };
-
-    window.addEventListener("updateCollaborators", handleUpdateCollaborators);
-    return () => window.removeEventListener("updateCollaborators", handleUpdateCollaborators);
-  }, []);
 
   const filteredTrips = trips.filter((t) => {
     const matchSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase());

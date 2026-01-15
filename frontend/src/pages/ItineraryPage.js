@@ -111,7 +111,7 @@ function ItineraryPage() {
     markersRef.current = [];
   }
 
-  //Initialize Google Maps
+  //Initialize maps 
   useEffect(() => {
     if (!mapConfig?.apiKey) return;
 
@@ -329,7 +329,7 @@ function ItineraryPage() {
     [activities, selectedDate]
   );
 
-  //Draw driving route and markers
+  //Draw driving route and markers & center map 
   useEffect(() => {
     if (!mapRef.current || !(window.google && window.google.maps)) return;
     if (!selectedDate) return;
@@ -339,8 +339,8 @@ function ItineraryPage() {
     console.log("All activityCoords:", activityCoords);
 
     const filteredCoord = activityCoords.filter(
-      (a) => normDate(a.date) === normDate(selectedDate))
-    ;
+      (a) => normDate(a.date) === normDate(selectedDate)
+    );
 
     console.log("Filtered coords for date:", filteredCoord);
 
@@ -367,21 +367,27 @@ function ItineraryPage() {
       console.log(`Marker ${index + 1} created at:`, point);
     });
 
-    //Need min 2 points for route
-    if (points.length < 2) {
-      console.log("Less than 2 points, not drawing route");
-      if (points.length === 1) {
-        mapRef.current.setCenter(points[0]);
-        mapRef.current.setZoom(14);
-      }
-      //Center map to default location when no activities 
-      else {
-        const defaultCenter = mapConfig?.center || { lat: 1.3521, lng: 103.8198 };
-        mapRef.current.setCenter(defaultCenter);
-        mapRef.current.setZoom(12);
-      }
+    // IMPROVED CENTERING LOGIC
+    if (points.length === 0) {
+      // No activities: center to default location
+      const defaultCenter = mapConfig?.center || { lat: 1.3521, lng: 103.8198 };
+      mapRef.current.setCenter(defaultCenter);
+      mapRef.current.setZoom(12);
+      console.log("No activities - centered to default location");
       return;
     }
+
+    if (points.length === 1) {
+      //If only single activity-->center on it with closer zoom
+      mapRef.current.setCenter(points[0]);
+      mapRef.current.setZoom(14);
+      console.log("Single activity - centered on activity");
+      return;
+    }
+
+    //More than 1 activity--> center and showall points & routes
+    const bounds = new window.google.maps.LatLngBounds();
+    points.forEach((point) => bounds.extend(point));
 
     const origin = points[0];
     const destination = points[points.length - 1];
@@ -404,15 +410,21 @@ function ItineraryPage() {
         console.log("Directions API response status:", status);
         if (status === "OK" && result) {
           directionsRendererRef.current.setDirections(result);
-          //Autocenter and fit map bounds to show all waypoints
-          const bounds = new window.google.maps.LatLngBounds();
+          
+          //Fit bounds to show entire route
+          const routeBounds = new window.google.maps.LatLngBounds();
           result.routes[0].overview_path.forEach((point) => {
-            bounds.extend(point);
+            routeBounds.extend(point);
           });
-          mapRef.current.fitBounds(bounds);
-          console.log("Route drawn successfully");
+          
+          mapRef.current.fitBounds(routeBounds);
+          
+          mapRef.current.panBy(0, -50);
+          console.log("Route drawn and map fitted to bounds successfully");
         } else {
           console.error("Directions request failed:", status, result);
+          mapRef.current.fitBounds(bounds);
+          console.log("Directions failed - fallback to activity bounds");
         }
       }
     );
@@ -550,7 +562,7 @@ function ItineraryPage() {
           ) : (
             <div
               ref={mapDivRef}
-              style={{ width: "100%", height: "600px", borderRadius: "12px" }}
+              style={{ width: "100%", height: "100%", borderRadius: "12px" }}
             />
           )}
         </div>
