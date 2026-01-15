@@ -257,7 +257,8 @@ router.get("/GetItinerary", RequireAuth(["registered", "premium"]), async(req, r
        u.first_name, u.last_name, u.email, i.user_host_id
        FROM itinerary i
        LEFT JOIN shared_itinerary si ON i.itinerary_id = si.itinerary_id
-       LEFT JOIN users u ON si.user_id = u.userid
+       LEFT JOIN group_trip gt ON i.itinerary_id = gt.itinerary_id
+       LEFT JOIN users u ON si.user_id = u.userid OR gt.user_id = u.userid
        WHERE i.itinerary_id = $1`, [i_id]
     );
     let data = rawdata.rows.map(({user_host_id,...item}) => {
@@ -347,7 +348,7 @@ router.post("/AddCollaborator", RequireAuth(["premium"]), async(req,res) => {
 });
 
 router.delete("/DeleteCollaborator", RequireAuth(["premium"]), async(req,res) => {
-  const {i_id, email} = req.body;
+  const {i_id, email, type} = req.body;
   let userid_collab = null;
   let num_ppl = 0;
 
@@ -365,7 +366,7 @@ router.delete("/DeleteCollaborator", RequireAuth(["premium"]), async(req,res) =>
   }
   catch(err) {return res.status(500).send({message: "No user found with this email"});}
   
-  if(userid_collab){
+  if(userid_collab && type === "Private"){
     try{
       const data = await pool.query(
         `WITH updatenumppl AS(
@@ -374,6 +375,21 @@ router.delete("/DeleteCollaborator", RequireAuth(["premium"]), async(req,res) =>
          WHERE itinerary_id = $1
         )
          DELETE FROM shared_itinerary
+         WHERE itinerary_id = $1 AND user_id = $2`, [i_id, userid_collab, num_ppl - 1]
+      );
+      if(data.rowCount > 0) return res.send(true);
+    }
+    catch(err) {return res.status(500).send({message: "DeleteCollaboratorFailed"});}
+  }
+  else if(userid_collab && type === "Group"){
+    try{
+      const data = await pool.query(
+        `WITH updatenumppl AS(
+         UPDATE itinerary
+         SET num_ppl = $3
+         WHERE itinerary_id = $1
+        )
+         DELETE FROM group_trip
          WHERE itinerary_id = $1 AND user_id = $2`, [i_id, userid_collab, num_ppl - 1]
       );
       if(data.rowCount > 0) return res.send(true);
