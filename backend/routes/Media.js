@@ -32,6 +32,7 @@ router.get("/GetActivityMedia", RequireAuth(["registered", "premium"]), async(re
 
 router.post("/InsertMedia", RequireAuth(["registered", "premium"]), InsertPhoto(), async(req,res) => {
     const {a_id, photoTitle, lng, lat} = req.body;
+    const uploadSessionID = req.uploadSessionID;
 
     // 1. Geotag photos
     for (const file of req.files){
@@ -44,7 +45,7 @@ router.post("/InsertMedia", RequireAuth(["registered", "premium"]), InsertPhoto(
     }
 
     // 2. Store photo in S3
-    const s3URL = await ImportPhotoS3();
+    const s3URL = await ImportPhotoS3("storage",uploadSessionID);
 
     if(s3URL){
       // 3. Prepare photo content for upload in db

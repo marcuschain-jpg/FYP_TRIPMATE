@@ -586,6 +586,7 @@ router.post("/CreateActivity", RequireAuth(["registered", "premium"]), InsertPho
   let havePhoto = false;
   const io = req.app.get("io");
   let payload = null;
+  const uploadSessionID = req.uploadSessionID;
 
   if(req.files.length > 0) havePhoto = true;
   const realOrder = (aOrder === true) ? 0 : null
@@ -623,7 +624,7 @@ router.post("/CreateActivity", RequireAuth(["registered", "premium"]), InsertPho
     }
 
     // Store in S3 then unlink, return link to S3
-    const s3URL = await ImportPhotoS3();
+    const s3URL = await ImportPhotoS3("storage", uploadSessionID);
 
     // Prepare for insert in db
     const photoRecRaw = s3URL.map(file => [aName, file, lng, lat, a_id]);
@@ -665,6 +666,7 @@ router.patch("/EditActivity", RequireAuth(["registered", "premium"]), InsertPhot
   let order = false;
   let payload = null;
   const io = req.app.get("io");
+  const uploadSessionID = req.uploadSessionID;
 
   if(req.files.length > 0) havePhoto = true;
 
@@ -706,7 +708,7 @@ router.patch("/EditActivity", RequireAuth(["registered", "premium"]), InsertPhot
     }
 
     // Store in S3 then unlink, return link to S3
-    const s3URL = await ImportPhotoS3();
+    const s3URL = await ImportPhotoS3("storage", uploadSessionID);
     console.log(s3URL);
 
     // Prepare for insert in db
