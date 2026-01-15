@@ -22,12 +22,6 @@ function UserNavbar({ outletContext }) {
         navigate("/"); //send user to landing page (marketing page)
     };
 
-    //Handle profile click to navigate to profile page--> from top right drop down 
-    const handleProfileClick = () => {
-        navigate("/profile");
-        setShowMenu(false);
-    };
-
     return (
         <>
             {/*Styling for registered user navbar--> shows up when user is logged in*/}
@@ -146,12 +140,6 @@ function UserNavbar({ outletContext }) {
 
                         {showMenu && (
                             <div className="profile-menu">
-                                <button 
-                                    className="profile-menu-item"
-                                    onClick={handleProfileClick}
-                                >
-                                    Profile
-                                </button>
                                 <button
                                     className="profile-menu-item"
                                     onClick={handleLogout}

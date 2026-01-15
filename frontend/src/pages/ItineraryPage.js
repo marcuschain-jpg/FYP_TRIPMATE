@@ -43,35 +43,40 @@ function ItineraryPage() {
   const [isArranging, setIsArranging] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [activityCoords, setActivityCoords] = useState([]);
-
-  //Get google maps key from backend
   const [mapConfig, setMapConfig] = useState(null);
 
+  //Google Maps refs
+  const mapDivRef = useRef(null);
+  const mapRef = useRef(null);
+  const directionsServiceRef = useRef(null);
+  const directionsRendererRef = useRef(null);
+  const markersRef = useRef([]);
+
+  //Get google maps key from backend with proper auth
   useEffect(() => {
     axios
-      .get("http://localhost:8080/Itinerary/maps")
+      .get("http://localhost:8080/Itinerary/maps", {
+        withCredentials: true,
+      })
       .then((res) => {
-        if (!res.data?.apiKey) {
-          console.error("Maps endpoint returned no apiKey:", res.data);
-          return;
+        console.log("✓ Maps config response:", res.data);
+        if (res.data?.apiKey) {
+          setMapConfig(res.data);
+          console.log("✓ Map config set successfully with apiKey from backend");
+        } else {
+          console.error("✗ No apiKey in response:", res.data);
         }
-        setMapConfig(res.data);
       })
       .catch((err) => {
         console.error(
-          "Failed to retrieve Google Maps config:",
-          err?.response?.data || err.message
+          "✗ Failed to retrieve Google Maps config from backend.",
+          "Status:",
+          err?.response?.status,
+          "Message:",
+          err.message
         );
       });
   }, []);
-
-  //Google Maps (in this page)
-  const mapDivRef = useRef(null);
-  const mapRef = useRef(null);
-
-  //Directions refs 
-  const directionsServiceRef = useRef(null);
-  const directionsRendererRef = useRef(null);
 
   function loadGoogleMaps(apiKey) {
     return new Promise((resolve, reject) => {
@@ -101,17 +106,26 @@ function ItineraryPage() {
     }
   }
 
+  function clearMarkers() {
+    markersRef.current.forEach(marker => marker.setMap(null));
+    markersRef.current = [];
+  }
+
+  //Initialize Google Maps
   useEffect(() => {
+    if (!mapConfig?.apiKey) return;
+
     let cancelled = false;
 
     (async () => {
       try {
-        if (!mapConfig?.apiKey) return;
-
+        console.log("Loading Google Maps...");
         await loadGoogleMaps(mapConfig.apiKey);
+        
         if (cancelled) return;
 
-        if (!mapRef.current && mapDivRef.current) {
+        if (mapDivRef.current && !mapRef.current) {
+          console.log("Creating map instance");
           const center = mapConfig.center || { lat: 1.3521, lng: 103.8198 };
 
           mapRef.current = new window.google.maps.Map(mapDivRef.current, {
@@ -127,7 +141,7 @@ function ItineraryPage() {
           directionsServiceRef.current = new window.google.maps.DirectionsService();
           directionsRendererRef.current = new window.google.maps.DirectionsRenderer({
             map: mapRef.current,
-            suppressMarkers: false,
+            suppressMarkers: true,
             preserveViewport: false,
             polylineOptions: {
               strokeColor: "#393F86", 
@@ -135,9 +149,11 @@ function ItineraryPage() {
               strokeWeight: 6,
             },
           });
+
+          console.log("Map created successfully");
         }
       } catch (e) {
-        console.error("Google Maps failed to load:", e);
+        console.error("Google Maps initialization failed:", e);
       }
     })();
 
@@ -148,7 +164,6 @@ function ItineraryPage() {
 
   //Load trips and activities
   useEffect(() => {
-
     axios
       .get("http://localhost:8080/Itinerary/GetAllActivities", {
         params: { i_id: tripId },
@@ -156,8 +171,7 @@ function ItineraryPage() {
       })
       .then((res) => {
         const data = res.data;
-        setLoading(true);
-        console.log(data);
+        console.log("Activity data:", data);
 
         //Format trip dates using formatDateForDisplay function
         const mapTrips = {
@@ -168,6 +182,7 @@ function ItineraryPage() {
           type: data?.[0]?.type,
           numPpl: data?.[0]?.num_ppl
         };
+        console.log("Trip object:", mapTrips);
         setTrip(mapTrips);
 
         const mapAct = data.map((a) => ({
@@ -187,6 +202,7 @@ function ItineraryPage() {
           date: normDate(a.activity_date),
         }));
 
+        console.log("Activity coords created:", coordAct);
         setActivities(mapAct);
         setActivityCoords(coordAct);
 
@@ -203,12 +219,10 @@ function ItineraryPage() {
       .catch((err) => {
         setLoading(false);
         if (err?.response?.status === 401 || err?.response?.status === 403) {
-          const errData = err.response;
-          const errorMsg = errData.status + ": " + errData.data.message;
+          const errorMsg = err.response.status + ": " + err.response.data?.message;
           navigate(`/login/${errorMsg}`);
         } else if (err?.response?.status === 500) {
-          const errData = err.response;
-          const errorMsg = errData.status + ": " + errData.data.message;
+          const errorMsg = err.response.status + ": " + err.response.data?.message;
           console.log(errorMsg);
         } else {
           console.log(err);
@@ -315,26 +329,47 @@ function ItineraryPage() {
     [activities, selectedDate]
   );
 
-  //Draw driving route 
+  //Draw driving route and markers
   useEffect(() => {
     if (!mapRef.current || !(window.google && window.google.maps)) return;
     if (!selectedDate) return;
     if (!directionsServiceRef.current || !directionsRendererRef.current) return;
 
+    console.log("Route effect triggered. selectedDate:", selectedDate);
+    console.log("All activityCoords:", activityCoords);
+
     const filteredCoord = activityCoords.filter(
       (a) => normDate(a.date) === normDate(selectedDate))
     ;
+
+    console.log("Filtered coords for date:", filteredCoord);
 
     const points = (filteredCoord || [])
       .map((a) => a.coords)
       .filter((c) => Number.isFinite(c?.lat) && Number.isFinite(c?.lng))
       .map((c) => ({ lat: c.lat, lng: c.lng }));
 
-    //Clear previous day's route
+    console.log("Valid points:", points);
+
+    //Clear previous markers and route
+    clearMarkers();
     clearDirections();
 
-    //Need min 2 markers
+    //Add markers for all points
+    points.forEach((point, index) => {
+      const marker = new window.google.maps.Marker({
+        position: point,
+        map: mapRef.current,
+        title: `Activity ${index + 1}`,
+        label: String(index + 1),
+      });
+      markersRef.current.push(marker);
+      console.log(`Marker ${index + 1} created at:`, point);
+    });
+
+    //Need min 2 points for route
     if (points.length < 2) {
+      console.log("Less than 2 points, not drawing route");
       if (points.length === 1) {
         mapRef.current.setCenter(points[0]);
         mapRef.current.setZoom(14);
@@ -355,6 +390,8 @@ function ItineraryPage() {
       stopover: true,
     }));
 
+    console.log("Drawing route with origin:", origin, "destination:", destination, "waypoints:", waypoints);
+
     directionsServiceRef.current.route(
       {
         origin,
@@ -364,6 +401,7 @@ function ItineraryPage() {
         optimizeWaypoints: false,
       },
       (result, status) => {
+        console.log("Directions API response status:", status);
         if (status === "OK" && result) {
           directionsRendererRef.current.setDirections(result);
           //Autocenter and fit map bounds to show all waypoints
@@ -372,6 +410,7 @@ function ItineraryPage() {
             bounds.extend(point);
           });
           mapRef.current.fitBounds(bounds);
+          console.log("Route drawn successfully");
         } else {
           console.error("Directions request failed:", status, result);
         }
@@ -409,7 +448,6 @@ function ItineraryPage() {
   const tripName = trip?.name || "Trip";
   const tripStart = trip?.start || "";
   const tripEnd = trip?.end || "";
-  const tripType = trip?.type || "";
 
   return (
     <div className="itinerary-view">
@@ -518,7 +556,7 @@ function ItineraryPage() {
         </div>
       </div>
 
-      {(!Loading && trip.type === "Group") && 
+      {!Loading && trip?.type === "Group" && 
       (<button className="floating-chat-btn" onClick={() => setShowChat(true)} title="Chat">
         Chat
       </button>)}

@@ -67,6 +67,7 @@ function MyTripsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
+  const [filterMemberType, setFilterMemberType] = useState("All"); //added member type (host/collaborator)
 
   //Dropdown filter state
   const [showFilters, setShowFilters] = useState(false);
@@ -181,7 +182,7 @@ function MyTripsPage() {
     });
   }, [joinedGroupTrips]);
 
-  // For location search
+  //For location search
   useEffect(() => {
     if(!newDestination) return;
     if(firstLoad) //When first load page dont search for anything
@@ -386,7 +387,7 @@ function MyTripsPage() {
     }
   };
 
-  //Confirmation popup
+  //Confirmation modal
   const requestDeleteTrip = (id) => {
     const trip = trips.find((t) => t.id === id);
     setTripToDelete(trip);
@@ -398,7 +399,7 @@ function MyTripsPage() {
 
     const isHost = tripToDelete.userItineraryType === "host" ? true:false;
 
-    // For group trips
+    //For group trips
     if (tripToDelete.isGroupTrip === true) {
       try {
         const response = await Axios.delete("GroupTrips/ExitGroupTrip",{data: { i_id: tripToDelete.id, isHost:isHost}, withCredentials: true});
@@ -427,7 +428,7 @@ function MyTripsPage() {
       }
     }
 
-    // Use shared_itinerary backend
+    //Use shared_itinerary backend
     else{
       try {
         const response = await Axios.delete("Itinerary/DeleteItinerary",{data: { i_id: tripToDelete.id, isHost:isHost}, withCredentials: true});
@@ -488,7 +489,12 @@ function MyTripsPage() {
       (filterStatus === "Completed" && t.status === true) ||
       (filterStatus === "In Progress" && t.status === false);
 
-    return matchSearch && matchType && matchStatus;
+    const matchMemberType =
+      filterMemberType === "All" ||
+      (filterMemberType === "Host" && t.userItineraryType === "host") ||
+      (filterMemberType === "Collaborator" && t.userItineraryType !== "host");
+
+    return matchSearch && matchType && matchStatus && matchMemberType;
   });
   
 
@@ -575,6 +581,37 @@ function MyTripsPage() {
                   In Progress
                 </label>
               </div>
+
+              {usertype === "premium" && <div className="filter-section">
+                <label className="filter-title">Member Type</label>
+
+                <label className="filter-option">
+                  <input
+                    type="radio"
+                    checked={filterMemberType === "All"}
+                    onChange={() => setFilterMemberType("All")}
+                  />
+                  All
+                </label>
+
+                <label className="filter-option">
+                  <input
+                    type="radio"
+                    checked={filterMemberType === "Host"}
+                    onChange={() => setFilterMemberType("Host")}
+                  />
+                  Host
+                </label>
+
+                <label className="filter-option">
+                  <input
+                    type="radio"
+                    checked={filterMemberType === "Collaborator"}
+                    onChange={() => setFilterMemberType("Collaborator")}
+                  />
+                  Collaborator
+                </label>
+              </div>}
             </div>
           )}
         </div>
@@ -771,11 +808,11 @@ function MyTripsPage() {
         <div className="modal-overlay">
           <div className="modal-box small">
             <h2 className="modal-title">
-              {(tripToDelete?.isGroupTrip || tripToDelete.userItineraryType === "visitor") ? "Exit Group Trip" : "Confirm Delete"}
+              {(tripToDelete?.isGroupTrip || tripToDelete?.userItineraryType === "visitor") ? "Exit Group Trip" : "Confirm Delete"}
             </h2>
 
             <p>
-              {(tripToDelete?.isGroupTrip || tripToDelete.userItineraryType === "visitor")
+              {(tripToDelete?.isGroupTrip || tripToDelete?.userItineraryType === "visitor")
                 ? "Are you sure you want to exit this group trip?"
                 : "Are you sure you want to delete this trip?"}
             </p>
@@ -789,7 +826,7 @@ function MyTripsPage() {
               </button>
 
               <button className="modal-delete" onClick={deleteTripConfirmed}>
-                {(tripToDelete?.isGroupTrip || tripToDelete.userItineraryType === "visitor") ? "Exit" : "Delete"}
+                {(tripToDelete?.isGroupTrip || tripToDelete?.userItineraryType === "visitor") ? "Exit" : "Delete"}
               </button>
             </div>
           </div>
