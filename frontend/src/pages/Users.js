@@ -373,7 +373,7 @@ export default function Users() {
                       Delete
                     </button>
 
-                    {/* ✅ VIEW NOW OPENS USER PROFILE */}
+                    {/*VIEW NOW OPENS USER PROFILE */}
                     <button
                       type="button"
                       onClick={() => navigate(`/admin/users/${u.id}`)}
