@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../helper/db");
 
+//GET Function
 router.get("/", async (req, res) => {
   try {
     const result = await pool.query(`

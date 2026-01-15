@@ -11,7 +11,8 @@ const authServiceRouter = require("./routes/AuthService");
 const timelineRouter = require("./routes/Timeline");
 const mediaRouter = require("./routes/Media");
 const RequireAuths = require('./middlewares/RequireAuths.js');
-const usersRoute = require("./routes/users");
+const usersRoute = require("./adminroutes/Users.js");
+const contentsRoute = require("./adminroutes/Content.js");
 
 const app = express();
 const server = http.createServer(app);
