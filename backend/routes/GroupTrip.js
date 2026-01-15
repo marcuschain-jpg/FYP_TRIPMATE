@@ -16,14 +16,19 @@ router.post("/CreateGroupTrip", RequireAuth(["premium"]), async(req,res) => {
 
     try{
     const data = await pool.query(
-      `INSERT INTO itinerary (itinerary_name, itinerary_dest, start_date, end_date, user_host_id, type, capacity, description
+      `WITH creategt AS(INSERT INTO itinerary (itinerary_name, itinerary_dest, start_date, end_date, user_host_id, type, capacity, description
       , placeid, longitude, latitude)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING itinerary_id
+        )
+       INSERT INTO chat_room(itinerary_id)
+       SELECT itinerary_id FROM creategt
        RETURNING itinerary_id`, [iName, iDest.name, start, end, userid, triptype, num_ppl, description, iDest.placeid, iDest.lng, iDest.lat]
     );
     if(data.rowCount > 0) return res.json(data.rows);
   }
   catch(err){
+    console.log(err);
     return res.status(500).send({message: "Create Group Trips failed"});
   }
 });
@@ -191,5 +196,68 @@ router.delete("/ExitGroupTrip", RequireAuth(["premium"]), async(req,res) => {
     }
 });
 
+router.get("/GetChatMsg", RequireAuth(["premium"]), async(req,res)=>{
+    const i_id = req.query["i_id"];
+    const userid = req.userid
+
+    try{
+        const rawdata = await pool.query(
+            `SELECT cm.msg_id, cm.content, u.first_name, u.last_name, u.userid, cr.chat_id, i.itinerary_name
+             FROM chat_room cr
+             LEFT JOIN chat_msg cm ON cm.chat_id = cr.chat_id
+             LEFT JOIN users u ON cm.user_id = u.userid
+             LEFT JOIN itinerary i ON cr.itinerary_id = i.itinerary_id
+             WHERE cr.itinerary_id = $1
+             ORDER BY cm.sent_at asc
+             `, [i_id]
+        );
+        const data = rawdata.rows.map(item => ({
+            id: item.msg_id,
+            sender: item.userid === userid ? "You" : `${item.first_name} ${item.last_name}`,
+            type: item.userid === userid? "sent" : "received",
+            text: item.content,
+            chat_id: item.chat_id,
+            itinerary_name: item.itinerary_name
+        }));
+        return res.send(data);
+    }
+    catch(err) {console.log(err); return res.send({message: "Fail to retrieve all chat msg"});}
+});
+
+router.post("/SendMessage", RequireAuth(["premium"]), async(req,res) => {
+    const {content, chatID} = req.body;
+    const userid = req.userid;
+    const io = req.app.get("io");
+
+    try{
+        const rawdata = await pool.query(
+            `WITH sendmsg AS(INSERT INTO chat_msg(content, user_id, chat_id)
+             VALUES ($1, $2, $3)
+             RETURNING msg_id
+             )
+             SELECT first_name, last_name, userid, (SELECT msg_id FROM sendmsg) AS msg_id
+             FROM users
+             WHERE userid = $2`, [content, userid, chatID]
+        );
+        if(rawdata.rowCount > 0){
+            const dataToSender = {
+                id: rawdata.rows[0].msg_id,
+                sender: "You",
+                type: "sent",
+                text: content
+            };
+            const dataToReceiver = {
+                id: rawdata.rows[0].msg_id,
+                sender: `${rawdata.rows[0].first_name} ${rawdata.rows[0].last_name}`,
+                type: "received",
+                text: content
+            };
+            io.to(`chat_${chatID}`).emit("notification", { message: "new message received!", payload:dataToReceiver });
+            return res.send(dataToSender);
+        }
+        
+    }
+    catch(err) {console.log(err); return res.send({message: "Fail to send chat msg"});}
+});
 
 module.exports = router

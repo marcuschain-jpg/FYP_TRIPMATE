@@ -51,9 +51,20 @@ io.on("connection", (socket) => {
   socket.on("joinTrip", (room) => {
     socket.join(room);
     console.log(`${socket.id} joined room ${room}`);
-  })
-  socket.on("disconnect", () => console.log(`Client disconencted: ${socket.id}`));
   });
+  
+  // Handle join and leave room for trips
+  socket.on("joinChat", (room) => {
+    socket.join(room);
+    console.log(`${socket.id} joined room ${room}`);
+  });
+  socket.on("leaveChat", (room) => {
+    socket.leave(room);
+    console.log(`${socket.id} left room ${room}`);
+  });
+  
+  socket.on("disconnect", () => console.log(`Client disconencted: ${socket.id}`));
+});
 
 
 

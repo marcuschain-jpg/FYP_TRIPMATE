@@ -169,7 +169,7 @@ function TripDetailsPage() {
     if (confirmDelete) {
       let deleteConfirm = false; // Check if db returns true if already deleted
       try{
-        const res = await axios.delete("http://localhost:8080/Itinerary/DeleteCollaborator", {data:{i_id:tripId, email:item.email}, withCredentials:true})
+        const res = await axios.delete("http://localhost:8080/Itinerary/DeleteCollaborator", {data:{i_id:tripId, email:item.email, type:trip.type}, withCredentials:true})
         deleteConfirm = res.data;
       }
       catch(err){
@@ -312,7 +312,7 @@ function TripDetailsPage() {
             )}
 
             {/*Input row*/}
-            {(isPremium) && <div className="collab-input-row">
+            {(isPremium && trip.type === "Private") && <div className="collab-input-row">
               <input
                 type="text"
                 className="collab-input"
@@ -386,7 +386,7 @@ function TripDetailsPage() {
         </div>
       )}
 
-      {showChat && ( <ItineraryChat onClose={() => setShowChat(false)}/> )}
+      {showChat && ( <ItineraryChat onClose={() => {setShowChat(false);}} i_id={tripId}/>)}
     </div>
   );
 }
