@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Help.css";
+import Axios from '../hooks/Axios.js';
 
 //Success message section
 const SuccessMessage = ({ message, onClose }) => (
@@ -83,25 +84,67 @@ function HelpPage() {
   ];
 
   //Handle ticket submission
-  const handleTicketSubmit = (e) => {
+  const handleTicketSubmit = async(e) => {
     e.preventDefault();
-    console.log("Ticket submitted");
-    setSuccessMessage("Your support ticket has been submitted successfully! Our team will respond within 24 hours.");
-    setTimeout(() => {
-      e.target.reset();
-    }, 100);
+    const category = document.getElementById("category").value;
+    const subject = document.getElementById("subject").value;
+    const message = document.getElementById("message").value;
+    try{
+      const res = await Axios.post("Users/SubmitTicket", {category:category, title:subject, contents:message}, {withCredentials:true})
+      if(res.data){
+        console.log("Ticket submitted");
+        setSuccessMessage("Your support ticket has been submitted successfully! Our team will respond within 24 hours.");
+        setTimeout(() => {
+          e.target.reset();
+        }, 100);
+      }
+    }
+    catch(err){
+      if(err.response){
+        if (err.response.status === 401 || err.response.status === 403) {
+          const errorMsg = err.response.status + ": " + err.response.data.message;
+          navigate(`/login/${errorMsg}`);
+        } else if (err.response.status === 500) {
+          const errorMsg = err.response.status + ": " + err.response.data.message;
+          console.log(errorMsg);
+        }
+      }
+      else console.log(err);
+    }
+
   };
 
   //Handle review submission
-  const handleReviewSubmit = (e) => {
+  const handleReviewSubmit = async(e) => {
     e.preventDefault();
-    const rating = document.getElementById("rating-input").value;
+    let rating = document.getElementById("rating-input").value;
+    const content = document.getElementById("review-message").value;
     if (rating === "0") {
       alert("Please select a rating before submitting");
       return;
     }
-    console.log("Review submitted with rating:", rating);
-    setSuccessMessage("Thank you for your review! We appreciate your feedback.");
+    rating = parseInt(rating);
+
+    try{
+      const res = await Axios.post("Users/SubmitReview", {content:content, rating:rating}, {withCredentials:true})
+      if(res.data){
+        console.log("Review submitted with rating:", rating);
+        setSuccessMessage("Thank you for your review! We appreciate your feedback.");
+      }
+    }
+    catch(err){
+      if(err.response){
+        if (err.response.status === 401 || err.response.status === 403) {
+          const errorMsg = err.response.status + ": " + err.response.data.message;
+          navigate(`/login/${errorMsg}`);
+        } else if (err.response.status === 500) {
+          const errorMsg = err.response.status + ": " + err.response.data.message;
+          console.log(errorMsg);
+        }
+      }
+      else console.log(err);
+    }
+
     //Reset the review form after submission
     setReviewKey(prev => prev + 1);
   };

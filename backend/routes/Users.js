@@ -81,5 +81,34 @@ router.patch("/UpdateUserProfile", RequireAuths(["registered", "premium"]), Inse
 
 });
 
+
+router.post("/SubmitReview", RequireAuths(["registered","premium"]), async(req,res) => {
+  const{content, rating} = req.body;
+  const userid = req.userid;
+
+  try{
+    const data = await pool.query(
+      `INSERT INTO review(userid, r_content, r_rating)
+       VALUES($1, $2, $3)`, [userid, content, rating]
+    );
+    if(data.rowCount > 0) return res.send(true);
+  }
+  catch(err) {console.log(err); res.status(500).send({message: "Failed to submit review"});}
+});
+
+router.post("/SubmitTicket", RequireAuths(["registered", "premium"]), async(req,res) => {
+  const{category, title, contents} = req.body;
+  const userid = req.userid
+
+  try{
+    const data = await pool.query(
+      `INSERT INTO support_ticket(userid, title, contents, category)
+       VALUES ($1,$2,$3,$4)`, [userid,title,contents,category]
+    );
+    if(data.rowCount > 0) return res.send(true);
+  }
+  catch(err) {console.log(err); res.status(500).send({message: "Failed to submit ticket"});}
+});
+
 module.exports = router;
 
