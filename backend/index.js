@@ -13,6 +13,8 @@ const mediaRouter = require("./routes/Media");
 const RequireAuths = require('./middlewares/RequireAuths.js');
 const usersRoute = require("./routes/users");
 const groupTripsRouter = require("./routes/GroupTrip.js");
+const usersAdminRoute = require("./adminroutes/Users.js");
+const contentsAdminRoute = require("./adminroutes/Content.js");
 
 const app = express();
 const server = http.createServer(app);
@@ -30,10 +32,12 @@ app.use("/AuthService", authServiceRouter); // Login & create account
 app.use("/Timeline", timelineRouter); // Timeline page
 app.use("/Media", mediaRouter); // Media page
 app.use("/GroupTrips", groupTripsRouter); // Group trips related + chat
+app.use("/Users", usersRoute);
 
 // Admin routes
 //Realtime Update for User in Admin Page
-app.use("/api/users", usersRoute);
+app.use("/api/users", usersAdminRoute);
+
 
 // Basic Auth function for pages that dont need get any information
 app.post("/GetRoleForUser", RequireAuths(["registered", "premium"]), (req, res) => {
