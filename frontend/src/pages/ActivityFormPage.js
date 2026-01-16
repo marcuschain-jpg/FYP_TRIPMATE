@@ -32,7 +32,6 @@ function ActivityFormPage() {
   const [activityCoords, setActivityCoords] = useState([]); // store coords for maps
   const [itineraryLat, setItineraryLat] = useState(0);
   const [itineraryLng, setItineraryLng] = useState(0);
-  //setMapData(useMapData()) // get API key & set default coordinates to mark on map
 
   //Search bar modal pop out
   const [showLocSearch, setShowLocSearch] = useState(false);
@@ -158,9 +157,9 @@ function ActivityFormPage() {
     if (!trip || !editing) return;
     if (!originalDate) return;
     if (!date) return;
-    if (startPointTouched) return; // User manually chose â†’ respect it
+    if (startPointTouched) return; // User manually chose → respect it
 
-    //Date unchanged â†’ keep current checkbox value
+    //Date unchanged → keep current checkbox value
     if (date === originalDate) return;
 
     //If moving to a day that already has activities, default unchecked
@@ -172,7 +171,7 @@ function ActivityFormPage() {
       //First activity for that day
       setIsStartPoint(true);
     } else {
-      //Day already has activities (and likely has start point) â†’ don't steal start point
+      //Day already has activities (and likely has start point) → don't steal start point
       setIsStartPoint(false);
     }
   }, [date, originalDate, trip, editing, index, startPointTouched]);*/
@@ -321,7 +320,7 @@ function ActivityFormPage() {
         className="back-btn"
         onClick={() => navigate(`/mytrips/trip/itinerary/${tripId}/default`)}
       >
-        â† Back
+        ← Back
       </button>
 
       <h1 className="form-title">
@@ -396,13 +395,13 @@ function ActivityFormPage() {
                   {m.url ? (
                     <img src={m.url} className="media-preview-img" />
                   ) : (
-                    <div className="media-file-icon">ðŸ“„ {m.name}</div>
+                    <div className="media-file-icon">{m.name}</div>
                   )}
                   <button
                     className="media-delete-existing"
                     onClick={() => handlePhotoDelete(m)}
                   >
-                    âœ•
+                    ×
                   </button>
                 </div>
               ))}
@@ -411,7 +410,6 @@ function ActivityFormPage() {
 
           {/*Upload new media*/}
           <label className="upload-media-btn">
-            <span className="upload-media-icon">ðŸ“</span>
             Upload Media
             <input
               type="file"
@@ -432,7 +430,7 @@ function ActivityFormPage() {
                       alt=""
                     />
                   ) : (
-                    <div className="media-file-icon">ðŸ“„ {file.name}</div>
+                    <div className="media-file-icon">{file.name}</div>
                   )}
                 </div>
               ))}

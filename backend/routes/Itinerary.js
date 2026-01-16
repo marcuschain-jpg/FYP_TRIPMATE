@@ -297,6 +297,8 @@ router.post("/AddCollaborator", RequireAuth(["premium"]), async(req,res) => {
   let inv_id = null;
   let host_name = "";
   let sentEmail = false;
+  const serviceType = "invitation";
+
 
   try{
     const data = await pool.query(
@@ -315,14 +317,14 @@ router.post("/AddCollaborator", RequireAuth(["premium"]), async(req,res) => {
   if(userid_collab){
     try{
       await pool.query( // Delete previous invitations
-        `DELETE FROM invitation
-         WHERE itinerary_id = $1 AND user_id = $2`, [i_id, userid_collab]
+        `DELETE FROM email_validation
+         WHERE serviceType = $1 AND user_id = $2`, [serviceType, userid_collab]
       );
 
       const data = await pool.query( // Create new invitation
-        `INSERT INTO invitation(itinerary_id, user_id)
-         VALUES($1, $2)
-         RETURNING inv_id`, [i_id, userid_collab]
+        `INSERT INTO email_validation(itinerary_id, user_id, serviceType)
+         VALUES($1, $2, $3)
+         RETURNING inv_id`, [i_id, userid_collab, serviceType]
       );
       await pool.query("COMMIT");
 
@@ -406,7 +408,7 @@ router.post("/AcceptCollabInv", async(req,res) => {
 
   try{
     const rawData = await pool.query(
-      `SELECT num_ppl FROM itinerary WHERE itinerary_id = (SELECT itinerary_id FROM invitation WHERE inv_id =$1)`, [inv_id]
+      `SELECT num_ppl FROM itinerary WHERE itinerary_id = (SELECT itinerary_id FROM email_validation WHERE inv_id =$1)`, [inv_id]
     );
     if(rawData.rows[0].num_ppl >= 5) return res.send({check: false, message: "Itinerary has already reached max capacity!"})
   }
@@ -417,7 +419,7 @@ router.post("/AcceptCollabInv", async(req,res) => {
   try{
     await pool.query(
       `INSERT INTO shared_itinerary(itinerary_id, user_id)
-       SELECT itinerary_id, user_id FROM invitation
+       SELECT itinerary_id, user_id FROM email_validation
        WHERE inv_id =$1
        ON CONFLICT DO NOTHING`, [inv_id]
     );
@@ -426,11 +428,11 @@ router.post("/AcceptCollabInv", async(req,res) => {
       `UPDATE itinerary i
        SET num_ppl=(SELECT count(*) + 1 FROM shared_itinerary si
        WHERE si.itinerary_id = i.itinerary_id)
-       WHERE i.itinerary_id = (SELECT itinerary_id FROM invitation WHERE inv_id =$1)`, [inv_id]
+       WHERE i.itinerary_id = (SELECT itinerary_id FROM email_validation WHERE inv_id =$1)`, [inv_id]
     );
 
     data = await pool.query(
-      `DELETE FROM invitation
+      `DELETE FROM email_validation
        WHERE inv_id = $1`, [inv_id]
     );
     await pool.query("COMMIT")
