@@ -8,8 +8,15 @@ export default function ResetPasswordPage() {
   const navigate = useNavigate();
   const { token } = useParams();
 
-  //States for enter email or reset passwrod 
+  //States for enter email or reset password
   const [step, setStep] = useState(token ? "reset-password" : "enter-email");
+  
+  // Force reset-password step if token exists in URL
+  useEffect(() => {
+    if (token) {
+      setStep("reset-password");
+    }
+  }, [token]);
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -17,7 +24,8 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const [tokenValid, setTokenValid] = useState(false);
-  const [isValidating, setIsValidating] = useState(true);
+  const [isValidating, setIsValidating] = useState(token ? true : false);
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   const showToast = (msg, type) => {
     setToast({ msg, type });
@@ -41,15 +49,9 @@ export default function ResetPasswordPage() {
 
         if (res.data === true) {
           setTokenValid(true);
-          setStep("reset-password");
-        } else {
-          showToast("Reset link has expired. Please send another password reset request.", "error");
-          setTimeout(() => navigate("/reset-password"), 2000);
         }
       } catch (err) {
         console.error(err);
-        showToast("Invalid or expired reset link. Please send another password reset request", "error");
-        setTimeout(() => navigate("/reset-password"), 2000);
       } finally {
         setIsValidating(false);
       }
@@ -78,11 +80,9 @@ export default function ResetPasswordPage() {
       if (res.data === true) {
         showToast("Reset link sent to your email!", "success");
         setEmail("");
-        /*setTimeout(() => {
-          navigate("/login");
-        }, 3000);*/
       } else {
         showToast(res.data.message || "Failed to send reset link.", "error");
+        setFirstLoad(true);
       }
     } catch (err) {
       console.error(err);
@@ -90,6 +90,7 @@ export default function ResetPasswordPage() {
         err.response?.data?.message || "Error sending reset link.",
         "error"
       );
+      setFirstLoad(true);
     } finally {
       setLoading(false);
     }
@@ -119,14 +120,14 @@ export default function ResetPasswordPage() {
       const res = await Axios.patch(
         "AuthService/ResetPassword",
         { token, newPassword },
-        { withCredentials:false }
+        { withCredentials: false }
       );
 
       if (res.data === true) {
         showToast("Password reset successfully!", "success");
-        /*setTimeout(() => {
-          navigate("/login");
-        }, 3000);*/
+        setResetSuccess(true);
+        setNewPassword("");
+        setConfirmPassword("");
       } else {
         showToast(res.data.message || "Failed to reset password.", "error");
         setFirstLoad(true);
@@ -137,25 +138,17 @@ export default function ResetPasswordPage() {
         err.response?.data?.message || "Error resetting password.",
         "error"
       );
+      setFirstLoad(true);
     } finally {
       setLoading(false);
     }
   };
 
-  //Debug logging
-  useEffect(() => {
-    console.log("ResetPasswordPage mounted");
-    console.log("Token:", token);
-    console.log("Step:", step);
-    console.log("isValidating:", isValidating);
-    console.log("tokenValid:", tokenValid);
-  }, [token, step, isValidating, tokenValid]);
-
   if (isValidating && token) {
     return (
       <div className="reset-container">
         <div className="reset-card">
-          <p>Validating reset link...</p>
+          <p style={{ textAlign: "center", color: "#666", fontSize: "16px" }}>Validating reset link...</p>
         </div>
       </div>
     );
@@ -170,6 +163,7 @@ export default function ResetPasswordPage() {
       )}
 
       <div className="reset-card">
+        {/*Enter email to get link*/}
         {step === "enter-email" && (
           <>
             <div className="reset-logo">
@@ -187,16 +181,17 @@ export default function ResetPasswordPage() {
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={!firstload}
             />
 
             <button 
               className="reset-btn" 
               onClick={handleSendReset}
-              disabled={!firstload}
+              disabled={!firstload || loading}
             >
               {firstload && !loading && "Send Reset Link"}
-              {!firstload && loading && "Sending..."}
-              {!firstload && !loading && "Sent"}
+              {loading && "Sending..."}
+              {!firstload && !loading && "✓ Sent"}
             </button>
 
             <p className="reset-footer">
@@ -211,7 +206,8 @@ export default function ResetPasswordPage() {
           </>
         )}
 
-        {step === "reset-password" && tokenValid && (
+        {/*Reset password*/}
+        {step === "reset-password" && !resetSuccess && (
           <>
             <div className="reset-logo">
               <img src={Logo} alt="Logo" />
@@ -228,6 +224,7 @@ export default function ResetPasswordPage() {
               placeholder="Enter new password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
+              disabled={!firstload}
             />
 
             <label className="reset-label">Confirm Password</label>
@@ -237,16 +234,17 @@ export default function ResetPasswordPage() {
               placeholder="Confirm your password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={!firstload}
             />
 
             <button 
               className="reset-btn" 
               onClick={handleResetPassword}
-              disabled={!firstload}
+              disabled={!firstload || loading}
             >
-              {firstload && !loading && "Reset Password"}
-              {!firstload && loading && "Reseting..."}
-              {!firstload && !loading && "Reset Password Complete"}
+              {firstload && !loading && "Save New Password"}
+              {loading && "Saving..."}
+              {!firstload && !loading && "Password Reset"}
             </button>
 
             <p className="reset-footer">
@@ -260,10 +258,24 @@ export default function ResetPasswordPage() {
           </>
         )}
 
-        {!step && (
-          <div style={{ color: "red" }}>
-            <p>Error: Step not set. Token: {token}</p>
-          </div>
+        {/*Display success message when password successfully reset*/}
+        {step === "reset-password" && resetSuccess && (
+          <>
+            <div className="reset-logo">
+              <img src={Logo} alt="Logo" />
+            </div>
+            <h2 className="reset-title">Password Reset Complete!</h2>
+            <p className="reset-subtitle">
+              Your password has been successfully reset. You can now log in with your new password.
+            </p>
+
+            <button 
+              className="reset-btn" 
+              onClick={() => navigate("/login")}
+            >
+              Back to Login
+            </button>
+          </>
         )}
       </div>
     </div>
