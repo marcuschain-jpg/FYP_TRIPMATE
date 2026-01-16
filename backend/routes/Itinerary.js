@@ -580,6 +580,30 @@ router.get("/ArrangeItinerary", RequireAuth(["registered", "premium"]), (req, re
   });
 });
 
+router.get("/GetAllActivitiesViewOnly", async(req, res) => {
+  const extID = req.query['token'];
+
+  try{
+    const data = await pool.query(
+      `SELECT a.activity_id, a.activity_name, a.activity_address, i.itinerary_name, a.activity_location, a.longitude, a.latitude, i.type, i.num_ppl,
+       i.longitude as i_longitude, i.latitude as i_latitude,
+       TO_CHAR(i.start_date, 'DD/MM/YYYY') AS start_date,
+       TO_CHAR(i.end_date, 'DD/MM/YYYY') AS end_date,
+       TO_CHAR(a.activity_date, 'YYYY-MM-DD') AS activity_date
+       FROM itinerary i
+       LEFT JOIN activity a ON i.itinerary_id = a.itinerary_id
+       LEFT JOIN itinerary_external_link iel ON i.itinerary_id = iel.itinerary_id
+       WHERE iel.ext_id = $1
+       ORDER BY activity_date ASC, a.activity_order ASC`, [extID]
+    );
+    return res.json(data.rows);
+  }
+  catch(err)
+  {
+    return res.status(500).send("GetAllActivities for viewing only failed");
+  }
+});
+
 //==================================================== ActivityFormPage ==========================
 router.post("/CreateActivity", RequireAuth(["registered", "premium"]), InsertPhoto(), async(req,res) => {
   const {aName, aLoc, aAddress, aDate, i_id, aOrder, aPlaceID, lng, lat} = req.body;
