@@ -59,6 +59,7 @@ function EditProfilePage() {
       try{
         const res = await Axios.get("Users/GetProfileDetails", {withCredentials: true});
         setLoading(false);
+        console.log(res.data)
         setEmail(res.data[0].email);
         setFirstName(res.data[0].first_name !== null ? res.data[0].first_name : "");
         setLastName(res.data[0].last_name !== null ? res.data[0].last_name : "");
@@ -113,8 +114,25 @@ function EditProfilePage() {
   };
 
   //Confirm unsubscribe modal/confirmation message
-  const confirmUnsubscribe = () => {
-    setAccountType("registered");
+  const confirmUnsubscribe = async() => {
+    const newAccType = "registered";
+    try{
+      const res = Axios.patch("Users/UserChangeType", {newType: newAccType}, {withCredentials:true})
+      if(res.send) alert ("Unsubscribe successful")
+    }
+    catch(err){
+      if(err.response){
+        if (err.response.status === 401 || err.response.status === 403) {
+          const errorMsg = err.response.status + ": " + err.response.data.message;
+          navigate(`/login/${errorMsg}`);
+        } else if (err.response.status === 500) {
+          const errorMsg = err.response.status + ": " + err.response.data.message;
+          console.log(errorMsg);
+        }
+      }
+      else console.log(err);
+    }
+    setAccountType(newAccType);
     setShowUnsubscribeModal(false);
   };
 
@@ -137,10 +155,27 @@ function EditProfilePage() {
     if (expParts.length !== 2 || expParts[0].length !== 2 || expParts[1].length !== 2) {
       return alert("Please enter expiry date in MM/YY format");
     }
-    setShowPaymentModal(false);
-    setAccountType("premium");
-    setShowSuccessModal(true);
-    setTimeout(() => setShowSuccessModal(false), 3000);
+
+    const newAccType = "premium";
+    try{
+      const res = Axios.patch("Users/UserChangeType", {newType: newAccType}, {withCredentials:true})
+      setShowPaymentModal(false);
+      setAccountType("premium");
+      setShowSuccessModal(true);
+      setTimeout(() => setShowSuccessModal(false), 3000);
+    }
+    catch(err){
+      if(err.response){
+        if (err.response.status === 401 || err.response.status === 403) {
+          const errorMsg = err.response.status + ": " + err.response.data.message;
+          navigate(`/login/${errorMsg}`);
+        } else if (err.response.status === 500) {
+          const errorMsg = err.response.status + ": " + err.response.data.message;
+          console.log(errorMsg);
+        }
+      }
+      else console.log(err);
+    }
   };
 
   const cancelPayment = () => {
