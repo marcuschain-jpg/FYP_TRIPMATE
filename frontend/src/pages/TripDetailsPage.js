@@ -94,7 +94,8 @@ function TripDetailsPage() {
       end: formattedEDate,
       status: res[0].completed,
       type: res[0].type,
-      numPpl: res[0].num_ppl
+      numPpl: res[0].num_ppl,
+      isHost: res[0].isHost
     };
 
     if(res[0].email){
@@ -124,7 +125,10 @@ function TripDetailsPage() {
 
   //Add collaborator (dummy only)
   const handleAddCollaborator = async() => {
-    if (newCollaborator.trim() === "") return;
+    if (newCollaborator.trim() === "") {
+      alert("Please enter an email");
+      return;
+    }
     if (trip.numPpl >= 5){
       console.log(trip.numPpl)
       alert("Max amount of collaborators reached!");
@@ -132,8 +136,10 @@ function TripDetailsPage() {
     }
 
     //Prevent duplicates
-    if (collaborators.includes(newCollaborator)) return;
-    let collabAdded = false;
+    if (collaborators.includes(newCollaborator)){
+      alert("User is already a collaborator")
+      return;
+    }
 
     try{
       const res = await axios.post("http://localhost:8080/Itinerary/AddCollaborator", {i_id:tripId, email:newCollaborator, i_name: trip.name}, {withCredentials:true})
@@ -312,7 +318,7 @@ function TripDetailsPage() {
             )}
 
             {/*Input row*/}
-            {(isPremium && trip.type === "Private") && <div className="collab-input-row">
+            {(isPremium && trip.type === "Private" && trip.isHost) && <div className="collab-input-row">
               <input
                 type="text"
                 className="collab-input"
