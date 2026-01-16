@@ -168,7 +168,6 @@ router.patch("/ResetPassword", async(req,res) => {
     const {token, newPassword} = req.body;
     let userid = null;
     let password = null;
-    console.log(token);
 
     try{
         const data = await pool.query(`WITH getcredentials AS(
@@ -178,7 +177,6 @@ router.patch("/ResetPassword", async(req,res) => {
          SELECT userid, password FROM users
          WHERE userid = (SELECT user_id from getcredentials)`, [token]
         );
-        console.log(data);
         userid = data.rows[0].userid;
         password = data.rows[0].password;
     }
