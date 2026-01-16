@@ -60,8 +60,8 @@ function EditProfilePage() {
         const res = await Axios.get("Users/GetProfileDetails", {withCredentials: true});
         setLoading(false);
         setEmail(res.data[0].email);
-        setFirstName(res.data[0].firstName !== null ? res.data[0].firstName : "");
-        setLastName(res.data[0].lastName !== null ? res.data[0].lastName : "");
+        setFirstName(res.data[0].first_name !== null ? res.data[0].first_name : "");
+        setLastName(res.data[0].last_name !== null ? res.data[0].last_name : "");
         setBio(res.data[0].bio !== null ? res.data[0].bio : "");
         setAccountType(res.data[0].type);
         setProfilePic(res.data[0].photo_url !== null ? res.data[0].photo_url : "");
@@ -176,24 +176,27 @@ function EditProfilePage() {
     const formData = new FormData();
     if(mediaToUpload) formData.append("media", mediaToUpload);
     formData.append("email", email);
-    formData.append("firstName", firstName);
-    formData.append("lastName", lastName);
+    formData.append("firstname", firstName);
+    formData.append("lastname", lastName);
     formData.append("bio", bio);
     if (password) formData.append("password", password);
 
     try{
       const res = await Axios.patch("Users/UpdateUserProfile", formData, {headers:{ "Content-Type": "multipart/form-data" }, withCredentials:true})
-      const updatedProfile = {
-        ...incomingProfile,
-        email,
-        firstName,
-        lastName,
-        bio,
-        accountType,
-        interests,
-        profilePic,
-      };
-      navigate("/profile", { state: { updatedProfile } });
+      if(res.data.validateErr) alert(res.data.message)
+      else if(res.data){
+        const updatedProfile = {
+          ...incomingProfile,
+          email,
+          firstName,
+          lastName,
+          bio,
+          accountType,
+          interests,
+          profilePic,
+        };
+        navigate("/profile", { state: { updatedProfile } });
+      }
     }
     catch(err){
       if(err.response){

@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../helper/db.js");
 const RequireAuths = require('../middlewares/RequireAuths.js');
-const { ExtractPhotoS3, ImportPhotoS3 } = require("../helper/S3FileSys.js");
+const { ExtractPhotoS3, ImportPhotoS3, DeletePhotoS3 } = require("../helper/S3FileSys.js");
 const InsertPhoto = require("../middlewares/PhotoImp.js");
 
 router.get("/GetProfileDetails", RequireAuths(["registered", "premium"]), async(req,res) => {
@@ -10,7 +10,7 @@ router.get("/GetProfileDetails", RequireAuths(["registered", "premium"]), async(
 
   try{
     const data = await pool.query(
-      `SELECT email, bio, type, avatar
+      `SELECT email, bio, type, avatar, first_name, last_name
        FROM users
        WHERE userid = $1`, [userid]
     );
@@ -43,42 +43,75 @@ router.patch("/UserChangeType", RequireAuths(["registered", "premium"]), async(r
 });
 
 router.patch("/UpdateUserProfile", RequireAuths(["registered", "premium"]), InsertPhoto(), async(req,res) => {
-  const {email, bio} = req.body;
+  const {email, firstname, lastname, bio, password} = req.body;
   const userid = req.userid;
   let havePhoto = false;
   const uploadSessionID = req.uploadSessionID;
+  let updateComplete = false;
+  let oldPhotoURL = "";
 
-  // Delete previous photo form s3?
+  if(req.files && req.files.length > 0) havePhoto = true;
 
-  if(req.files.length > 0) havePhoto = true;
-
-  // if have photo
   if(havePhoto){
-    const s3URL = await ImportPhotoS3("avatar", uploadSessionID);
     try{
-      const data = await pool.query(
-        `UPDATE users
-        SET email = $1, bio = $2, avatar = $3
-        WHERE userid = $4`, [email, bio, s3URL[0], userid]
-      );
+    const data = await pool.query(`
+      SELECT avatar FROM users WHERE userid = $1
+      `, [userid]);
+    if(data.rowCount > 0) oldPhotoURL = data.rows[0].avatar;
+    else oldPhotoURL = ""
     }
-    catch(err) {console.log(err); res.status(500).send({message: "Failed to update account type"});}
+    catch(err) {oldPhotoURL="";}
   }
 
-  // if no photo  
-  else{
+  if(password){
     try{
-      const data = await pool.query(
-        `UPDATE users
-        SET email = $1, bio = $2
-        WHERE userid = $3`, [email, bio, userid]
-      );
+    const data = await pool.query(`
+      SELECT password FROM users WHERE userid = $1
+      `, [userid]);
+    if(data.rows[0].password === password) return res.send({validateErr: true, message: "New password cannot be the same as your previous password"});
     }
-    catch(err) {console.log(err); res.status(500).send({message: "Failed to update account type"});}
+    catch(err) {return res.status(500).send({message:"Failed to retrieve password for validation"})}
   }
 
-  return res.send(true);
 
+  await pool.query("BEGIN")
+  try{
+    if(havePhoto){
+      const s3URL = await ImportPhotoS3("avatar", uploadSessionID);
+      await pool.query(
+        `UPDATE users
+        SET avatar = $1
+        WHERE userid = $2`, [s3URL[0], userid]
+      );
+    }
+    if(password){
+      await pool.query(
+        `UPDATE users
+        SET password = $1
+        WHERE userid = $2`, [password, userid]
+      );
+    }
+    const data = await pool.query(
+      `UPDATE users
+      SET email = $1, bio = $2, first_name = $3, last_name = $4
+      WHERE userid = $5`, [email, bio, firstname, lastname, userid]
+    );
+    await pool.query("COMMIT");
+    updateComplete = true;
+  }
+  catch(err) {
+    await pool.query("ROLLBACK");
+    await DeletePhotoS3(s3URL[0]);
+    console.log(err);
+    res.status(500).send({message: "Failed to update account type"});
+  }
+
+  //Delete old avatar from s3 and return true
+  if(oldPhotoURL !== ""){
+    await DeletePhotoS3(oldPhotoURL);
+  }
+
+  if(updateComplete) res.send(true);
 });
 
 
