@@ -50,39 +50,85 @@ router.patch("/:id/suspend", async (req, res) => {
   try {
     await pool.query("BEGIN");
 
-    const result = await pool.query(
-      `
-      UPDATE users
-      SET suspended = NOT suspended
-      WHERE userid = $1
-      RETURNING suspended
-      `,
+    //Fetch email and current status
+    const userRes = await pool.query(
+      `SELECT email, suspended FROM users WHERE userid = $1`,
       [id]
     );
 
-    if (result.rowCount === 0) {
+    if (userRes.rowCount === 0) {
       await pool.query("ROLLBACK");
       return res.status(404).json({ message: "User not found" });
     }
 
-    const suspended = result.rows[0].suspended;
-    const action = suspended ? "SUSPENDED" : "ACTIVATED";
+    const { email, suspended } = userRes.rows[0];
+
+    //Toggle Updated Status
+    const newStatus = !suspended;
+    const action = newStatus ? "SUSPENDED" : "ACTIVATED";
 
     await pool.query(
-      `
-      INSERT INTO users_activity_logs (user_id, action)
-      VALUES ($1, $2)
-      `,
-      [id, action]
+      `UPDATE users SET suspended = $1 WHERE userid = $2`,
+      [newStatus, id]
+    );
+
+    //Insert activity log with correct email
+    await pool.query(
+      `INSERT INTO users_activity_logs (user_id, user_email, action)
+       VALUES ($1, $2, $3)`,
+      [id, email, action]
     );
 
     await pool.query("COMMIT");
 
-    res.json({ status: suspended ? "Suspended" : "Active" });
+    res.json({ status: newStatus ? "Suspended" : "Active" });
   } catch (err) {
     await pool.query("ROLLBACK");
-    console.error("Suspend user error:", err);
+    console.error("Suspend toggle error:", err);
     res.status(500).json({ error: "Failed to update user status" });
+  }
+});
+
+// Delete user
+router.delete("/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await pool.query("BEGIN");
+
+    // Fetch email before deletion
+    const userRes = await pool.query(
+      `SELECT email FROM users WHERE userid = $1`,
+      [id]
+    );
+
+    if (userRes.rowCount === 0) {
+      await pool.query("ROLLBACK");
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const { email } = userRes.rows[0];
+
+    // Insert activity log BEFORE deleting
+    await pool.query(
+      `INSERT INTO users_activity_logs (user_id, user_email, action)
+       VALUES ($1, $2, 'DELETED')`,
+      [id, email]
+    );
+
+    // Delete user
+    await pool.query(
+      `DELETE FROM users WHERE userid = $1`,
+      [id]
+    );
+
+    await pool.query("COMMIT");
+
+    res.json({ message: "User deleted" });
+  } catch (err) {
+    await pool.query("ROLLBACK");
+    console.error("Delete user error:", err);
+    res.status(500).json({ error: "Failed to delete user" });
   }
 });
 
@@ -93,24 +139,29 @@ router.delete("/:id", async (req, res) => {
   try {
     await pool.query("BEGIN");
 
-    const userExists = await pool.query(
-      `SELECT userid FROM users WHERE userid = $1`,
+    //Remember the user BEFORE deletion
+    const userResult = await pool.query(
+      `SELECT email FROM users WHERE userid = $1`,
       [id]
     );
 
-    if (userExists.rowCount === 0) {
+    if (userResult.rowCount === 0) {
       await pool.query("ROLLBACK");
       return res.status(404).json({ message: "User not found" });
     }
 
+    const email = userResult.rows[0].email;
+
+    //Write audit log
     await pool.query(
       `
-      INSERT INTO users_activity_logs (user_id, action)
-      VALUES ($1, 'DELETED')
+      INSERT INTO users_activity_logs (user_id, user_email, action)
+      VALUES ($1, $2, 'DELETED');
       `,
-      [id]
+      [id, email]
     );
 
+    //Delete the user
     await pool.query(
       `DELETE FROM users WHERE userid = $1`,
       [id]
@@ -133,11 +184,10 @@ router.get("/activity", async (req, res) => {
     const result = await pool.query(`
       SELECT
         l.log_id,
-        u.email,
+        l.user_email AS email,
         l.action,
         l.created_at
       FROM users_activity_logs l
-      JOIN users u ON u.userid = l.user_id
       ORDER BY l.created_at DESC
       LIMIT 50
     `);
