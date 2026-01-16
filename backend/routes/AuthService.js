@@ -4,6 +4,7 @@ const pool = require("../helper/db.js");
 const jwt = require('jsonwebtoken');
 const dotenv = require("dotenv");
 dotenv.config({ path: "keys.env" });
+const SendEmail = require("../helper/SendEmail.js");
 
 
 router.post('/Login', async (req, res) => {
@@ -90,6 +91,114 @@ router.post("/Logout", (req, res) => {
         sameSite: "Strict"
     })
     res.send({ success: true});
-})
+});
+
+router.post("/SendResetEmail", async(req,res) => {
+  const { email } = req.body;
+  let sentEmail = false;
+  const serviceType = "reset password";
+  let userid = null;
+  let fullname = "";
+  let inv_id = null;
+
+  // 1. Retrieve user info with email and validate email
+  try{
+    const data = await pool.query(
+      `SELECT userid, first_name, last_name FROM users WHERE email = $1`, [email]
+    )
+    if(data.rowCount === 0) return res.status(500).send({message: "No user found with this email"});
+    data.rows.forEach(element => {
+      fullname = `${element.first_name} ${element.last_name}`;
+      userid = element.userid;
+    });
+  }
+  catch(err) {return res.status(500).send({message: "Query Failed"});}
+
+  await pool.query("BEGIN");
+  if(userid){
+    try{
+      await pool.query( // Delete previous password reset request
+        `DELETE FROM email_validation
+         WHERE servicetype = $1 AND user_id = $2`, [serviceType, userid]
+      );
+
+      const data = await pool.query( // Create new email validation request
+        `INSERT INTO email_validation(user_id, servicetype)
+         VALUES($1, $2)
+         RETURNING inv_id`, [userid, serviceType]
+      );
+      await pool.query("COMMIT");
+
+      if(data.rowCount > 0) inv_id = data.rows[0].inv_id;
+    }
+    catch(err) {
+      await pool.query("ROLLBACK");
+      return res.status(500).send({message: "Send validation email failed"});
+    }
+
+    const content = {
+      recipient: email,
+      subject: `Tripmate Password Reset`,
+      text: `Reset your password with tripmate!`,
+      html: `
+      <p>Hi ${fullname}! Below is a link to reset your password for your account with TripMate!</p>
+      <p><a href=http://localhost:3000/reset-password/${inv_id}>Click me!</a></p>`
+    };
+    sentEmail = await SendEmail(content);
+    if(!sentEmail) return res.status(500).send({message: "Failed to send email"});
+    return res.send(true);
+  }
+});
+
+router.post("/ValidateToken", async(req,res) => {
+    const {token} = req.body;
+
+    try{
+        const data = await pool.query(
+            `SELECT * FROM email_validation
+             WHERE inv_id = $1`, [token]
+        );
+        if(data.rowCount > 0) return res.send(true)
+        else return res.send(false);
+    }
+    catch(err) {return res.status(500).send({message: "Send validation email failed"});}
+});
+
+router.patch("/ResetPassword", async(req,res) => {
+    const {token, newPassword} = req.body;
+    let userid = null;
+    let password = null;
+    console.log(token);
+
+    try{
+        const data = await pool.query(`WITH getcredentials AS(
+         SELECT user_id FROM email_validation
+         WHERE inv_id = $1
+        )
+         SELECT userid, password FROM users
+         WHERE userid = (SELECT user_id from getcredentials)`, [token]
+        );
+        console.log(data);
+        userid = data.rows[0].userid;
+        password = data.rows[0].password;
+    }
+    catch(err) {console.log(err); return res.status(500).send({message: "Failed get user credentials"});}
+
+    if(newPassword === password) return res.send({check: false, message: "Password cannot be the same as your old password"});
+
+    try{
+        const data = await pool.query(`WITH deleteinv AS(
+         DELETE FROM email_validation
+         WHERE inv_id = $1
+        )
+         UPDATE users
+         SET password = $2
+         WHERE userid = $3`, [token, newPassword, userid]
+        );
+        res.send(true);
+    }
+    catch(err) {return res.status(500).send({message: "Failed to update password"});}
+});
+
 
 module.exports = router;

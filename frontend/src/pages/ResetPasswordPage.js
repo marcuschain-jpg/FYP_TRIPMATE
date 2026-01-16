@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
+import Axios from '../hooks/Axios';
 import "../styles/ResetPassword.css";
 import Logo from "../Assets/Logo.jpg";
 
@@ -13,6 +13,7 @@ export default function ResetPasswordPage() {
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [firstload, setFirstLoad] = useState(true);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const [tokenValid, setTokenValid] = useState(false);
@@ -32,22 +33,22 @@ export default function ResetPasswordPage() {
 
     const validateToken = async () => {
       try {
-        const res = await axios.post(
-          "http://localhost:8080/AuthService/ValidateResetToken",
+        const res = await Axios.post(
+          "AuthService/ValidateToken",
           { token },
-          { withCredentials: true }
+          { withCredentials: false }
         );
 
-        if (res.data.check === true) {
+        if (res.data === true) {
           setTokenValid(true);
           setStep("reset-password");
         } else {
-          showToast("Reset link has expired. Please try again.", "error");
+          showToast("Reset link has expired. Please send another password reset request.", "error");
           setTimeout(() => navigate("/reset-password"), 2000);
         }
       } catch (err) {
         console.error(err);
-        showToast("Invalid or expired reset link.", "error");
+        showToast("Invalid or expired reset link. Please send another password reset request", "error");
         setTimeout(() => navigate("/reset-password"), 2000);
       } finally {
         setIsValidating(false);
@@ -65,20 +66,21 @@ export default function ResetPasswordPage() {
     }
 
     setLoading(true);
+    setFirstLoad(false);
 
     try {
-      const res = await axios.post(
-        "http://localhost:8080/AuthService/ForgotPassword",
+      const res = await Axios.post(
+        "AuthService/SendResetEmail",
         { email },
-        { withCredentials: true }
+        { withCredentials: false }
       );
 
-      if (res.data.check === true) {
+      if (res.data === true) {
         showToast("Reset link sent to your email!", "success");
         setEmail("");
-        setTimeout(() => {
+        /*setTimeout(() => {
           navigate("/login");
-        }, 2000);
+        }, 3000);*/
       } else {
         showToast(res.data.message || "Failed to send reset link.", "error");
       }
@@ -111,21 +113,23 @@ export default function ResetPasswordPage() {
     }
 
     setLoading(true);
+    setFirstLoad(false);
 
     try {
-      const res = await axios.post(
-        "http://localhost:8080/AuthService/ResetPassword",
+      const res = await Axios.patch(
+        "AuthService/ResetPassword",
         { token, newPassword },
-        { withCredentials: true }
+        { withCredentials:false }
       );
 
-      if (res.data.check === true) {
+      if (res.data === true) {
         showToast("Password reset successfully!", "success");
-        setTimeout(() => {
+        /*setTimeout(() => {
           navigate("/login");
-        }, 2000);
+        }, 3000);*/
       } else {
         showToast(res.data.message || "Failed to reset password.", "error");
+        setFirstLoad(true);
       }
     } catch (err) {
       console.error(err);
@@ -188,9 +192,11 @@ export default function ResetPasswordPage() {
             <button 
               className="reset-btn" 
               onClick={handleSendReset}
-              disabled={loading}
+              disabled={!firstload}
             >
-              {loading ? "Sending..." : "Send Reset Link"}
+              {firstload && !loading && "Send Reset Link"}
+              {!firstload && loading && "Sending..."}
+              {!firstload && !loading && "Sent"}
             </button>
 
             <p className="reset-footer">
@@ -236,9 +242,11 @@ export default function ResetPasswordPage() {
             <button 
               className="reset-btn" 
               onClick={handleResetPassword}
-              disabled={loading}
+              disabled={!firstload}
             >
-              {loading ? "Saving..." : "Save New Password"}
+              {firstload && !loading && "Reset Password"}
+              {!firstload && loading && "Reseting..."}
+              {!firstload && !loading && "Reset Password Complete"}
             </button>
 
             <p className="reset-footer">
