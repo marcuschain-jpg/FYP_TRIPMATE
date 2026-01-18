@@ -773,20 +773,186 @@
     display: flex;
     justify-content: flex-end; 
     margin: -40px 0 20px; 
-  }
-  
-  .collaborate-btn {
+    }
+    
+.collaborate-btn {
     background-color: #ffffff;
     border: 1px solid #ccc;
     padding: 6px 10px;
     border-radius: 50%;
     cursor: pointer;
     font-size: 18px;
-  }
-  
-  .collaborate-btn:hover {
+    }
+    
+.collaborate-btn:hover {
     background-color: #f0f0f0;
-  }
+    }
+    
+/*Overlay*/
+.collab-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    }
+    
+/*Card/modal*/
+.collab-card {
+    background: white;
+    width: 380px;
+    padding: 22px;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    }
+    
+.collab-title {
+    margin-bottom: 14px;
+    }
+    
+/*Input row*/
+.collab-input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    }
+    
+.collab-input {
+    flex: 1;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    }
+    
+.add-btn {
+    background: #0b5c6b;
+    color: white;
+    border: none;
+    padding: 0 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    }
+    
+.add-btn:hover {
+    opacity: 0.9;
+    }
+    
+/*Members alr added*/
+.members-section {
+    margin-bottom: 18px;
+    }
+    
+.members-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+    }
+    
+.empty-text {
+    color: #888;
+    font-size: 14px;
+    }
+    
+/*Member item*/
+.member-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    margin-bottom: 8px;
+    }
+    
+.member-name {
+    flex: 1;
+    font-size: 14px;
+    color: #333;
+    }
+    
+/*Delete collaborator button*/
+.delete-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: none;
+    background-color: #fce4e4;
+    color: #d32f2f;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    padding: 0;
+    }
+    
+.delete-btn:hover {
+    background-color: #ffcdd2;
+    transform: scale(1.05);
+    }
+    
+.delete-btn:active {
+    transform: scale(0.95);
+    }
+    
+/*Actions*/
+.collab-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    }
+    
+.cancel-btn {
+    background: #ddd;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    }
+    
+.save-btn {
+    background: #0b5c6b;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    }
+    
+/*Share images*/
+.share-icons {
+    max-width: 80%;
+    max-height: 20%;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    }
+    
+.collab-img {
+    max-width: 10%;
+    max-height: 10%;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    }
+    
+.collab-img:hover {
+    transform: scale(1.1);
+    }
+    
+.collab-img2 {
+    max-width: 10%;
+    max-height: 10%;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    }
+    
+.collab-img2:hover {
+    transform: scale(1.1);
+    }
+
+  
   
 /*Checkbox to mark start point of itinerary*/
 .startpoint-checkbox-row {

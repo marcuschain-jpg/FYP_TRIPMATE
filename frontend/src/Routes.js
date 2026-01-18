@@ -26,6 +26,7 @@ import ChatbotPage from "./pages/ChatbotPage";
 import GroupTripsPage from "./pages/GroupTripsPage";
 import GroupChatPage from "./pages/GroupChatPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import ViewItineraryOnlyPage from "./pages/ViewItineraryOnlyPage";
 
 //import ItineraryFeedPage from "./pages/ItineraryFeedPage";
 import ProfilePage from "./pages/ProfilePage"; 
@@ -222,6 +223,9 @@ function AppRoutes() {
 
         {/* ================= EMAIL CONFIRMATION (TOP LEVEL) ================= */}
         <Route path="/confirm/:invID" element={<ConfirmationFromEmail/>}/>
+
+        {/* ================= VIEW-ONLY ITINERARY (TOP LEVEL - NO NAVBAR) ================= */}
+        <Route path="/itineraryviewonly/:uuid" element={<ViewItineraryOnlyPage />} />
 
         {/* ================= PUBLIC ================= */}
         <Route element={<UnregisteredUserNavbar />}>
