@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import "../styles/ViewItineraryOnly.css";
-import axios from "axios";
+import Axios from '../hooks/Axios.js';
 
 //Normalize any date string to YYYY-MM-DD
 function normDate(d) {
@@ -35,8 +35,8 @@ function ViewItineraryOnlyPage() {
   const markersRef = useRef([]);
 
   useEffect(() => {
-    axios
-      .get("http://localhost:8080/Itinerary/maps", {
+    Axios
+      .get("Itinerary/maps", {
         withCredentials: true, 
       })
       .then((res) => {
@@ -102,11 +102,7 @@ function ViewItineraryOnlyPage() {
   }, [mapConfig]);
 
   useEffect(() => {
-    axios
-      .post(
-        "http://localhost:8080/Itinerary/GetAllActivitiesViewOnly",
-        { token: uuid }
-      )
+    Axios.get("Itinerary/GetAllActivitiesViewOnly",{params:{token: uuid}})
       .then((res) => {
         const data = Array.isArray(res.data) ? res.data : [];
 
