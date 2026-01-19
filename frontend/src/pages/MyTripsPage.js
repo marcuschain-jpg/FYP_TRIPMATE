@@ -684,16 +684,16 @@ function MyTripsPage() {
                     setShowLocSearch(false);
                   }}
                 />
+                { showLocSearch && (
+                  <div className="form-input-search">
+                    {searchResult.map(res => (
+                      <div key={res.placeid} className="form-input-search-res" onClick={() => updateFormBasedOnLoc(res)}>
+                        {res.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              { showLocSearch && (
-                <div className="form-input-search">
-                  {searchResult.map(res => (
-                    <div key={res.placeid} className="form-input-search-res" onClick={() => updateFormBasedOnLoc(res)}>
-                      {res.name}
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
 
             <div className="modal-row">

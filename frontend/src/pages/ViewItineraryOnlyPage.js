@@ -9,11 +9,24 @@ function normDate(d) {
   return String(d).slice(0, 10);
 }
 
-//Date formatting (DD/MM/YYYY)
+//Date formatting (DD/MM/YYYY format)
 function formatDateForDisplay(dateValue) {
   if (!dateValue) return "";
-  const date = new Date(dateValue);
-  if (isNaN(date.getTime())) return "";
+  
+  let date;
+  
+  if (typeof dateValue === "string") {
+    date = new Date(dateValue);
+  } else if (dateValue instanceof Date) {
+    date = dateValue;
+  } else {
+    return "";
+  }
+  
+  if (isNaN(date.getTime())) {
+    return "";
+  }
+  
   return date.toLocaleDateString("en-GB");
 }
 
@@ -23,7 +36,7 @@ function ViewItineraryOnlyPage() {
   const [trip, setTrip] = useState(null);
   const [activities, setActivities] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [Loading, setLoading] = useState(true);
   const [activityCoords, setActivityCoords] = useState([]);
   const [mapConfig, setMapConfig] = useState(null);
 
@@ -34,21 +47,29 @@ function ViewItineraryOnlyPage() {
   const directionsRendererRef = useRef(null);
   const markersRef = useRef([]);
 
+  //Get google maps key from backend
   useEffect(() => {
     Axios
       .get("Itinerary/maps", {
         withCredentials: true, 
       })
       .then((res) => {
+        console.log("✓ Maps config response:", res.data);
         if (res.data?.apiKey) {
-          setMapConfig({
-            apiKey: res.data.apiKey,
-            center: res.data.center || { lat: 1.3521, lng: 103.8198 },
-          });
+          setMapConfig(res.data);
+          console.log("✓ Map config set successfully with apiKey from backend");
+        } else {
+          console.error("✗ No apiKey in response:", res.data);
         }
       })
       .catch((err) => {
-        console.error("Failed to load map config", err);
+        console.error(
+          "✗ Failed to retrieve Google Maps config from backend.",
+          "Status:",
+          err?.response?.status,
+          "Message:",
+          err.message
+        );
       });
   }, []);
 
@@ -56,19 +77,22 @@ function ViewItineraryOnlyPage() {
     return new Promise((resolve, reject) => {
       if (window.google && window.google.maps) return resolve();
 
+      const existing = document.querySelector('script[data-google-maps="true"]');
+      if (existing) {
+        existing.addEventListener("load", () => resolve());
+        existing.addEventListener("error", reject);
+        return;
+      }
+
       const script = document.createElement("script");
+      script.dataset.googleMaps = "true";
       script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
       script.async = true;
       script.defer = true;
-      script.onload = resolve;
+      script.onload = () => resolve();
       script.onerror = reject;
       document.head.appendChild(script);
     });
-  }
-
-  function clearMarkers() {
-    markersRef.current.forEach((m) => m.setMap(null));
-    markersRef.current = [];
   }
 
   function clearDirections() {
@@ -76,48 +100,96 @@ function ViewItineraryOnlyPage() {
       directionsRendererRef.current.setDirections({ routes: [] });
     }
   }
-  /*Init map*/
+
+  function clearMarkers() {
+    markersRef.current.forEach(marker => marker.setMap(null));
+    markersRef.current = [];
+  }
+
+  //Initialize maps 
   useEffect(() => {
     if (!mapConfig?.apiKey) return;
 
+    let cancelled = false;
+
     (async () => {
-      await loadGoogleMaps(mapConfig.apiKey);
+      try {
+        console.log("Loading Google Maps...");
+        await loadGoogleMaps(mapConfig.apiKey);
+        
+        if (cancelled) return;
 
-      if (mapDivRef.current && !mapRef.current) {
-        mapRef.current = new window.google.maps.Map(mapDivRef.current, {
-          center: mapConfig.center,
-          zoom: 12,
-        });
+        if (mapDivRef.current && !mapRef.current) {
+          console.log("Creating map instance");
+          const center = mapConfig.center || { lat: 1.3521, lng: 103.8198 };
 
-        directionsServiceRef.current =
-          new window.google.maps.DirectionsService();
+          mapRef.current = new window.google.maps.Map(mapDivRef.current, {
+            center,
+            zoom: 12,
+            styles: [],
+            mapTypeControl: true,
+            streetViewControl: false,
+            fullscreenControl: true,
+          });
 
-        directionsRendererRef.current =
-          new window.google.maps.DirectionsRenderer({
+          //Initialize directions objects
+          directionsServiceRef.current = new window.google.maps.DirectionsService();
+          directionsRendererRef.current = new window.google.maps.DirectionsRenderer({
             map: mapRef.current,
             suppressMarkers: true,
+            preserveViewport: false,
+            polylineOptions: {
+              strokeColor: "#393F86", 
+              strokeOpacity: 0.9,
+              strokeWeight: 6,
+            },
           });
+
+          console.log("Map created successfully");
+        }
+      } catch (e) {
+        console.error("Google Maps initialization failed:", e);
       }
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [mapConfig]);
 
+  //Load activities
   useEffect(() => {
+    if (!uuid) {
+      console.error("No UUID provided");
+      setLoading(false);
+      return;
+    }
+
+    console.log("Loading activities for UUID:", uuid);
+
     Axios.get("Itinerary/GetAllActivitiesViewOnly",{params:{token: uuid}})
       .then((res) => {
         const data = Array.isArray(res.data) ? res.data : [];
 
-        if (data.length === 0) {
+        if (!data || data.length === 0) {
+          console.warn("No activities found for this itinerary");
           setLoading(false);
           return;
         }
 
-        setTrip({
-          name: data[0].itinerary_name,
-          start: formatDateForDisplay(data[0].start_date),
-          end: formatDateForDisplay(data[0].end_date),
-        });
+        //Format trip dates
+        const mapTrips = {
+          id: uuid,
+          name: data?.[0]?.itinerary_name,
+          start: formatDateForDisplay(data?.[0]?.start_date),
+          end: formatDateForDisplay(data?.[0]?.end_date),
+          type: data?.[0]?.type,
+          numPpl: data?.[0]?.num_ppl
+        };
+        console.log("Trip object:", mapTrips);
+        setTrip(mapTrips);
 
-        const acts = data.map((a) => ({
+        const mapAct = data.map((a) => ({
           id: a.activity_id,
           name: a.activity_name,
           date: normDate(a.activity_date),
@@ -125,125 +197,203 @@ function ViewItineraryOnlyPage() {
           location: a.activity_location,
         }));
 
-        const coords = data
-          .filter((a) => a.latitude && a.longitude)
-          .map((a) => ({
-            id: a.activity_id,
-            date: normDate(a.activity_date),
-            coords: {
-              lat: Number(a.latitude),
-              lng: Number(a.longitude),
-            },
-          }));
+        const coordAct = data.map((a) => ({
+          id: a.activity_id,
+          coords: {
+            lng: parseFloat(a.longitude),
+            lat: parseFloat(a.latitude),
+          },
+          date: normDate(a.activity_date),
+        }));
 
-        setActivities(acts);
-        setActivityCoords(coords);
+        console.log("Activity coords created:", coordAct);
+        setActivities(mapAct);
+        setActivityCoords(coordAct);
 
-        const dates = [...new Set(acts.map((a) => a.date))].sort();
-        if (dates.length > 0) setSelectedDate(dates[0]);
+        //Set default date to first date
+        const uniqueDates = Array.from(new Set(mapAct.map((x) => x.date))).sort();
+        if (uniqueDates.length > 0) setSelectedDate(uniqueDates[0]);
 
         setLoading(false);
       })
       .catch((err) => {
-        console.error("Failed to load view-only itinerary", err);
         setLoading(false);
+        console.error("Error loading itinerary:", err);
+        console.error("Error response:", err?.response?.data);
+        console.error("Error status:", err?.response?.status);
       });
   }, [uuid]);
 
+  //List matches map date logic
   const filteredActivities = useMemo(
-    () => activities.filter((a) => a.date === selectedDate),
+    () => activities.filter((a) => normDate(a.date) === normDate(selectedDate)),
     [activities, selectedDate]
   );
 
+  //Draw driving route and markers
   useEffect(() => {
-    if (!mapRef.current || !selectedDate) return;
+    if (!mapRef.current || !(window.google && window.google.maps)) return;
+    if (!selectedDate) return;
+    if (!directionsServiceRef.current || !directionsRendererRef.current) return;
 
-    const points = activityCoords
-      .filter((a) => a.date === selectedDate)
+    console.log("Route effect triggered. selectedDate:", selectedDate);
+    console.log("All activityCoords:", activityCoords);
+
+    const filteredCoord = activityCoords.filter(
+      (a) => normDate(a.date) === normDate(selectedDate)
+    );
+
+    console.log("Filtered coords for date:", filteredCoord);
+
+    const points = (filteredCoord || [])
       .map((a) => a.coords)
-      .filter((c) => Number.isFinite(c.lat) && Number.isFinite(c.lng));
+      .filter((c) => Number.isFinite(c?.lat) && Number.isFinite(c?.lng))
+      .map((c) => ({ lat: c.lat, lng: c.lng }));
 
+    console.log("Valid points:", points);
+
+    //Clear previous markers and route
     clearMarkers();
     clearDirections();
 
-    points.forEach((p, i) => {
-      markersRef.current.push(
-        new window.google.maps.Marker({
-          position: p,
-          map: mapRef.current,
-          label: String(i + 1),
-        })
-      );
+    //Add markers for all points
+    points.forEach((point, index) => {
+      const marker = new window.google.maps.Marker({
+        position: point,
+        map: mapRef.current,
+        title: `Activity ${index + 1}`,
+        label: String(index + 1),
+      });
+      markersRef.current.push(marker);
+      console.log(`Marker ${index + 1} created at:`, point);
     });
 
-    if (points.length < 2) return;
+    if (points.length === 0) {
+      const defaultCenter = mapConfig?.center || { lat: 1.3521, lng: 103.8198 };
+      mapRef.current.setCenter(defaultCenter);
+      mapRef.current.setZoom(12);
+      console.log("No activities - centered to default location");
+      return;
+    }
+
+    if (points.length === 1) {
+      mapRef.current.setCenter(points[0]);
+      mapRef.current.setZoom(14);
+      console.log("Single activity - centered on activity");
+      return;
+    }
+
+    //Multiple activities - show all with route
+    const bounds = new window.google.maps.LatLngBounds();
+    points.forEach((point) => bounds.extend(point));
+
+    const origin = points[0];
+    const destination = points[points.length - 1];
+    const waypoints = points.slice(1, -1).map((p) => ({
+      location: p,
+      stopover: true,
+    }));
+
+    console.log("Drawing route with origin:", origin, "destination:", destination, "waypoints:", waypoints);
 
     directionsServiceRef.current.route(
       {
-        origin: points[0],
-        destination: points[points.length - 1],
-        waypoints: points.slice(1, -1).map((p) => ({ location: p })),
+        origin,
+        destination,
+        waypoints,
         travelMode: window.google.maps.TravelMode.DRIVING,
+        optimizeWaypoints: false,
       },
       (result, status) => {
+        console.log("Directions API response status:", status);
         if (status === "OK" && result) {
           directionsRendererRef.current.setDirections(result);
+          
+          const routeBounds = new window.google.maps.LatLngBounds();
+          result.routes[0].overview_path.forEach((point) => {
+            routeBounds.extend(point);
+          });
+          
+          mapRef.current.fitBounds(routeBounds);
+          mapRef.current.panBy(0, -50);
+          console.log("Route drawn and map fitted to bounds successfully");
+        } else {
+          console.error("Directions request failed:", status, result);
+          mapRef.current.fitBounds(bounds);
+          console.log("Directions failed - fallback to activity bounds");
         }
       }
     );
-  }, [activityCoords, selectedDate]);
+  }, [activityCoords, selectedDate, mapConfig]);
 
-  /*Render*/
+  //Render
+  const tripName = trip?.name || "Trip";
+  const tripStart = trip?.start || "";
+  const tripEnd = trip?.end || "";
+
   return (
-    <div className="view-only-container">
-      <div className="view-only-header">
-        <h1>{trip?.name}</h1>
-        <p className="trip-date">
-          {trip?.start} – {trip?.end}
-        </p>
+    <div className="itinerary-view">
+      <div className="itinerary-top-row">
+        <div>
+          <h1>{tripName}</h1>
+          <p className="date-text">
+            {tripStart} – {tripEnd}
+          </p>
+        </div>
       </div>
 
-      <div className="view-only-layout">
-        <div className="view-only-left">
+      <div className="view-layout">
+        <div className="left-side">
           <h2>Activities</h2>
 
-          {!loading && (
+          {!Loading && activities.length > 0 && (
             <div className="date-row">
               <select
                 className="date-filter-dropdown"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(normDate(e.target.value))}
               >
-                {[...new Set(activities.map((a) => a.date))].map((d) => (
-                  <option key={d} value={d}>
-                    {new Date(d).toLocaleDateString("en-GB", {
-                      weekday: "short",
-                      day: "numeric",
-                      month: "long",
-                    })}
-                  </option>
-                ))}
+                {Array.from(new Set(activities.map((a) => normDate(a.date))))
+                  .sort()
+                  .map((d) => (
+                    <option key={d} value={d}>
+                      {new Date(d).toLocaleDateString("en-GB", {
+                        weekday: "short",
+                        day: "numeric",
+                        month: "long",
+                      })}
+                    </option>
+                  ))}
               </select>
             </div>
           )}
 
           <div className="activities-section">
-            {filteredActivities.map((act) => (
-              <div key={act.id} className="activity-card-view-only">
-                <h3>{act.name}</h3>
-                <p><strong>{act.date}</strong></p>
-                <p>{act.location}</p>
-                {act.address && <p>{act.address}</p>}
-              </div>
-            ))}
+            {Loading && <p>Loading itinerary...</p>}
+            {!Loading && filteredActivities.length === 0 && <p>No activities for this day.</p>}
+
+            {!Loading &&
+              filteredActivities.map((act) => (
+                <div key={act.id} className="activity-card-view-only">
+                  <h3>{act.name}</h3>
+                  <p>
+                    <strong>{act.date}</strong>
+                  </p>
+                  <p>{act.location}</p>
+                  {act.address && <p>{act.address}</p>}
+                </div>
+              ))}
           </div>
         </div>
 
-        <div className="view-only-right">
+        <div className="right-side">
           {!mapConfig ? (
             <p className="map-loading-text">Loading map…</p>
           ) : (
-            <div ref={mapDivRef} style={{ width: "100%", height: "100%" }} />
+            <div
+              ref={mapDivRef}
+              style={{ width: "100%", height: "100%", borderRadius: "12px" }}
+            />
           )}
         </div>
       </div>
