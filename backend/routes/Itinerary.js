@@ -532,7 +532,8 @@ router.get("/ArrangeItinerary", RequireAuth(["registered", "premium"]), (req, re
     // get all dates in array
     let data = await pool.query(
         `SELECT DISTINCT(TO_CHAR(activity_date, 'YYYY-MM-DD')) AS date
-         FROM activity`
+         FROM activity
+         WHERE itinerary_id = $1`, [i_id]
     );
     const dates = data.rows.map(row => row.date);
     const transitMode = "DRIVE";
@@ -560,7 +561,7 @@ router.get("/ArrangeItinerary", RequireAuth(["registered", "premium"]), (req, re
         // update order in db
         newOrderActID = await OrderActID.slice(1);
         const orderUpdate = await newOrderActID.map((id, idx) =>`WHEN ${id} THEN ${idx+1}`).join(' ');
-        console.log(orderUpdate);
+        //console.log(orderUpdate);
         const a_idUpdate = await newOrderActID.join(', ');
 
         await pool.query(

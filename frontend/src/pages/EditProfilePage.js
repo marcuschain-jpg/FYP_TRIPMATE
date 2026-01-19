@@ -118,7 +118,7 @@ function EditProfilePage() {
     const newAccType = "registered";
     try{
       const res = Axios.patch("Users/UserChangeType", {newType: newAccType}, {withCredentials:true})
-      if(res.send) alert ("Unsubscribe successful")
+      if(res.data.send) alert ("Unsubscribe successful")
     }
     catch(err){
       if(err.response){

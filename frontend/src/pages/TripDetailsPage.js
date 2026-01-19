@@ -348,13 +348,13 @@ function TripDetailsPage() {
 
                   <span className="member-name">{item.name}</span>
 
-                  <button
+                  {trip.isHost && <button
                     className="delete-btn"
                     onClick={() => handleDeleteCollaborator(item)}
                     title="Remove collaborator"
                   >
                     ✕
-                  </button>
+                  </button>}
 
                 </div>
               ))}
