@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import "../styles/ViewItineraryOnly.css";
-import Axios from "../hooks/Axios.js";
+import Axios from '../hooks/Axios.js';
 
 //Normalize any date string to YYYY-MM-DD
 function normDate(d) {
@@ -50,8 +50,8 @@ function ViewItineraryOnlyPage() {
   //Get google maps key from backend
   useEffect(() => {
     Axios
-      .get("/Itinerary/maps", {
-        withCredentials: true,
+      .get("Itinerary/maps", {
+        withCredentials: true, 
       })
       .then((res) => {
         console.log("✓ Maps config response:", res.data);
@@ -167,13 +167,9 @@ function ViewItineraryOnlyPage() {
 
     console.log("Loading activities for UUID:", uuid);
 
-    Axios
-      .post("Itinerary/GetAllActivitiesViewOnly", {
-        token: uuid,
-      })
+    Axios.get("Itinerary/GetAllActivitiesViewOnly",{params:{token: uuid}})
       .then((res) => {
-        const data = res.data;
-        console.log("Activity data:", data);
+        const data = Array.isArray(res.data) ? res.data : [];
 
         if (!data || data.length === 0) {
           console.warn("No activities found for this itinerary");

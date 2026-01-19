@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import Axios from '../hooks/Axios.js';
 import "../styles/Itinerary.css";
 import "../styles/Collab.css";
 import link from "../Assets/link.png"
@@ -52,7 +52,7 @@ function TripDetailsPage() {
 
   //Load trips and set current trip
   useEffect(() => {
-    axios.get("http://localhost:8080/Itinerary/GetItinerary", {
+    Axios.get("Itinerary/GetItinerary", {
         params: { i_id: tripId },
         withCredentials: true
       })
@@ -69,7 +69,7 @@ function TripDetailsPage() {
           }      
       });
       
-    axios.post("http://localhost:8080/GetRoleForUser", {}, {withCredentials:true})
+    Axios.post("GetRoleForUser", {}, {withCredentials:true})
     .then(res => {
       setUserRole(res.data.role);
     })
@@ -111,8 +111,8 @@ function TripDetailsPage() {
 
   const updateTripStatus = (status) => {
     //main method to update completed
-    axios
-      .patch("http://localhost:8080/Itinerary/UpdateItineraryComplete", {
+    Axios
+      .patch("Itinerary/UpdateItineraryComplete", {
         i_id: tripId,
         completed: status,
       }, {withCredentials:true})
@@ -142,7 +142,7 @@ function TripDetailsPage() {
     }
 
     try{
-      const res = await axios.post("http://localhost:8080/Itinerary/AddCollaborator", {i_id:tripId, email:newCollaborator, i_name: trip.name}, {withCredentials:true})
+      const res = await Axios.post("Itinerary/AddCollaborator", {i_id:tripId, email:newCollaborator, i_name: trip.name}, {withCredentials:true})
       if(res.data){
       //setCollaborators(prev => [...prev, {name: `${res.data[0].first_name} ${res.data[0].last_name}`, email: res.data[0].email}]);
       alert("Email invitation sent!")
@@ -150,18 +150,23 @@ function TripDetailsPage() {
     }
     }
     catch(err) {
-      if(err.response.status === 401 || err.response.status === 403)
-      {
-        const errData = err.response;
-        const errorMsg = errData.status + ": " + errData.data.message;
-        navigate(`/login/${errorMsg}`);
-      }      
-      if(err.response.status === 500)
-      {
-        const errData = err.response;
-        const errorMsg = errData.data.message;
-        setNewCollaborator("");
-        alert(errorMsg);
+      if(err.response){
+        if(err.response.status === 401 || err.response.status === 403)
+        {
+          const errData = err.response;
+          const errorMsg = errData.status + ": " + errData.data.message;
+          navigate(`/login/${errorMsg}`);
+        }      
+        if(err.response.status === 500)
+        {
+          const errData = err.response;
+          const errorMsg = errData.data.message;
+          setNewCollaborator("");
+          alert(errorMsg);
+        }
+      }
+      else{
+        console.log(err);
       }
     }
   };
@@ -175,7 +180,7 @@ function TripDetailsPage() {
     if (confirmDelete) {
       let deleteConfirm = false; // Check if db returns true if already deleted
       try{
-        const res = await axios.delete("http://localhost:8080/Itinerary/DeleteCollaborator", {data:{i_id:tripId, email:item.email, type:trip.type}, withCredentials:true})
+        const res = await Axios.delete("Itinerary/DeleteCollaborator", {data:{i_id:tripId, email:item.email, type:trip.type}, withCredentials:true})
         deleteConfirm = res.data;
       }
       catch(err){
@@ -213,6 +218,49 @@ function TripDetailsPage() {
     window.dispatchEvent(event);
     setShowCollaborators(false);
   };
+
+  // Handle sharing itinerary externally
+  const handleShareExt = async(shareType) => {
+    // link, ws, tele
+    let link = '';
+
+    try{
+      if(shareType === "ws" || shareType === "tele"){
+        const res = await Axios.post("Itinerary/ShareExt", {i_id: tripId, shareType}, {withCredentials:true});
+        if(res.data){
+          window.open(res.data, '_blank', 'noopener, noreferrer');
+          alert("Shared successfully!");
+        }
+      }
+      else{
+        const { ClipboardItem } = window;
+          await navigator.clipboard.write([new ClipboardItem({"text/plain": getURL(shareType)})])
+          .then(() => alert("Link copied!"));
+      }
+    }
+    catch(err){
+      if(err.response){
+        if(err.response.status === 401 || err.response.status === 403)
+        {
+          const errData = err.response;
+          const errorMsg = errData.status + ": " + errData.data.message;
+          navigate(`/login/${errorMsg}`);
+        }      
+        if(err.response.status === 500)
+        {
+          alert(err.response.data.message);
+        }
+      }
+      else{
+        console.log(err);
+      }
+    }
+  }
+
+  const getURL = async() => {
+    const{data: url} = await Axios.post("Itinerary/ShareExt", {i_id: tripId, shareType:"link"}, {withCredentials:true});
+    return url;
+  }
 
   if (loading) return <p>Loading..</p>;
 
@@ -348,13 +396,13 @@ function TripDetailsPage() {
 
                   <span className="member-name">{item.name}</span>
 
-                  <button
+                  {trip.isHost && <button
                     className="delete-btn"
                     onClick={() => handleDeleteCollaborator(item)}
                     title="Remove collaborator"
                   >
                     ✕
-                  </button>
+                  </button>}
 
                 </div>
               ))}
@@ -367,9 +415,9 @@ function TripDetailsPage() {
               }
               <p className="members-title">Share</p>
               <div className="share-icons">
-                <img src={link} alt="link.img" className="collab-img" />
-                <img src={whatsapp} alt="whatsapp.img" className="collab-img2" />
-                <img src={telegram} alt="tele.img" className="collab-img2" />
+                <img src={link} alt="link.img" className="collab-img" onClick={() => handleShareExt("link")}/>
+                <img src={whatsapp} alt="whatsapp.img" className="collab-img2" onClick={() => handleShareExt("ws")}/>
+                <img src={telegram} alt="tele.img" className="collab-img2" onClick={() => handleShareExt("tele")}/>
               </div>
             </div>
 
