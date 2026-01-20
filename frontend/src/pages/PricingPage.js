@@ -1,12 +1,14 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Pricing.css";
+import { useTranslation } from 'react-i18next';
 
 //Import background picture
 import PricingBG from "../Assets/Pricing.jpg";
 
 export default function PricingPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <div
@@ -17,16 +19,16 @@ export default function PricingPage() {
 
         {/*Free version card */}
         <div className="pricing-card free">
-          <h2 className="pricing-title">Free Version</h2>
+          <h2 className="pricing-title">{t("free_version_title")}</h2>
           <p className="pricing-price">
-            $0<span>/month</span>
+            $0<span>/{t("month")}</span>
           </p>
 
           <ul className="pricing-list">
-            <li>1 time trial of AI trip planning</li>
-            <li>Get inspiration from itineraries by other users</li>
-            <li>Document your journey</li>
-            <li>Create your own itineraries</li>
+            <li>{t("fp_list_1")}</li>
+            <li>{t("fp_list_2")}</li>
+            <li>{t("fp_list_3")}</li>
+            <li>{t("fp_list_4")}</li>
           </ul>
 
           <button
@@ -39,17 +41,16 @@ export default function PricingPage() {
 
         {/*premium version card*/}
         <div className="pricing-card premium">
-          <h2 className="pricing-title">Premium Version</h2>
+          <h2 className="pricing-title">{t("premium_version_title")}</h2>
           <p className="pricing-price">
-            $4.99<span>/month</span>
+            $4.99<span>/{t("month")}</span>
           </p>
 
           <ul className="pricing-list">
-            <li>All free version functions</li>
-            <li>Unlimited trip planning with AI</li>
-            <li>Collaborate with friends & family</li>
-            <li>Connect & join trips with other users</li>
-            <li>Copy and edit itineraries from other users</li>
+            <li>{t("pp_list_1")}</li>
+            <li>{t("pp_list_2")}</li>
+            <li>{t("pp_list_3")}</li>
+            <li>{t("pp_list_4")}</li>
           </ul>
 
           <button

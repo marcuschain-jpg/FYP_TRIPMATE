@@ -3,12 +3,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Landing.css";
 import Axios from '../hooks/Axios.js';
+import { useTranslation } from "react-i18next";
 
 //Import images
 import landingImage from "../Assets/Landing.jpg";
 
 function Landing() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   //Redirect logged in users away from landing page
   useEffect(() => {
@@ -50,7 +52,7 @@ function Landing() {
         style={{ backgroundImage: `url(${landingImage})` }}
       >
         <div className="hero-overlay">
-          <h1 className="hero-title">Trip Planning just got SIMPLER</h1>
+          <h1 className="hero-title">{t("landing_title")}</h1>
           
           {/*Temporary placeholder for marketing vid*/}
           <div className="video-placeholder">
@@ -77,8 +79,8 @@ function Landing() {
                 />
               </div>
               <div className="feature-text">
-                <h3 className="feature-title">{feature.title}</h3>
-                <p className="feature-description">{feature.description}</p>
+                <h3 className="feature-title">{t("feature_title", {feature_title: feature.title})}</h3>
+                <p className="feature-description">{t("feature_description", {feature_desc: feature.description})}</p>
               </div>
             </div>
           ))}

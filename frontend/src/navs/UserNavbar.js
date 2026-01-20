@@ -1,16 +1,40 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from "react";
+import Axios from "../hooks/Axios.js";
+import { useTranslation } from "react-i18next";
 
 function UserNavbar({ outletContext }) {
     const [showMenu, setShowMenu] = useState(false);
+    const [defaultLang, setDefaultLang] = useState("English");
     const navigate = useNavigate();
+    // use effect load user pref lang
+    useEffect(() => {
+        const loadLang = async() => {
+            try{
+                const res = await Axios.get("Navbar/LoadUsernav", {withCredentials:true});
+                changeLanguage(res.data);
+                setDefaultLang(res.data);
+            }
+            catch(err){
+                if(err.response){
+                    if(err.response.status === 401 || err.response.status === 403){
+                        const errorMsg = err.response.status + ": " + err.response.data?.message;
+                        navigate(`/login/${errorMsg}`);
+                    }
+                    else if(err.response.status === 500) console.log(err.response.data.message);
+                }
+                else console.log(err);
+            }
+        }
+        loadLang();
+    }, [])
+    
 
     const handleLogout = async () => {
         localStorage.removeItem("user");
-        await axios
+        await Axios
             .post(
-                "http://localhost:8080/AuthService/Logout",
+                "AuthService/Logout",
                 {},
                 { withCredentials: true }
             )
@@ -20,6 +44,25 @@ function UserNavbar({ outletContext }) {
             .catch((err) => console.error(err));
 
         navigate("/"); //send user to landing page (marketing page)
+    };
+
+    const { i18n } = useTranslation();
+    const { t } = useTranslation();
+    const changeLanguage = async(lng) => {
+        try{
+            const res = await Axios.patch("Navbar/ChangeLang", {lng}, {withCredentials:true});
+            if(res.data) i18n.changeLanguage(lng);
+        }
+        catch(err){
+            if(err.response){
+                if(err.response.status === 401 || err.response.status === 403){
+                    const errorMsg = err.response.status + ": " + err.response.data?.message;
+                    navigate(`/login/${errorMsg}`);
+                }
+                else if(err.response.status === 500) console.log(err.response.data.message);
+            }
+            else console.log(err);
+        }
     };
 
     return (
@@ -105,6 +148,15 @@ function UserNavbar({ outletContext }) {
                 .profile-menu-item:hover {
                     background: #eeeeee;
                 }
+                .locale-selector {
+                    background: transparent;
+                    color: white;
+                    border: 1px solid white;
+                    border-radius: 5px;
+                    padding: 3px 3px;
+                    font-size: 14px;
+                    cursor: pointer;
+                }
             `}</style>
 
             <nav className="main-navbar">
@@ -131,6 +183,14 @@ function UserNavbar({ outletContext }) {
                     </div>
 
                     <div className="nav-right">
+                        <select className="locale-selector" value={i18n.language} onChange={(e) => changeLanguage(e.target.value)}>
+                            <option value="en">English</option>
+                            <option value="zh">中文</option>
+                            <option value="ja">日本語</option>
+                            <option value="ar">عربي</option>
+                            <option value="es">Español</option>
+                            <option value="fr">Français</option>
+                        </select>
                         <img
                             src="/profileicon.png"
                             alt="profile"
