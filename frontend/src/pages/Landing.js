@@ -10,7 +10,7 @@ import landingImage from "../Assets/Landing.jpg";
 
 function Landing() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   //Redirect logged in users away from landing page
   useEffect(() => {
@@ -23,11 +23,13 @@ function Landing() {
   //Feature cards
   const [features, setFeatures] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [lang, setLang] = useState(i18n.language||"");
 
   useEffect(() => {
+    if(!lang || !loading) return;
     const LoadLanding = async() => {
       try{
-        const res = await Axios.get("Landing/LoadLanding")
+        const res = await Axios.get("Landing/LoadLanding", {params:{lang}})
         console.log(res.data);
         setLoading(false);
         setFeatures(res.data.map(d => ({
@@ -43,7 +45,45 @@ function Landing() {
       }
     }
     LoadLanding();
-  }, [])
+  }, [lang])
+
+  useEffect(() => {
+    // Run when ititialized(default) & lang changed
+    i18n.on("languageChanged", function(lng) {
+      setLang(lng);
+    });
+
+    return() => {
+      i18n.off("languageChanged", function(lng) {});
+    };
+  }, [i18n])
+
+  useEffect(() => {
+    if(lang && !loading){
+      const LoadLanding = async() => {
+        try{
+          const idNums = features.map(i => ({
+            id: i.id
+          }));
+          const cidNums = JSON.stringify(idNums);
+          const res = await Axios.get("Landing/ReloadLanding", {params:{lang, idNums:cidNums}})
+          console.log(res.data);
+          res.data.map(item => {
+            setFeatures(prev => prev.map(i => i.id === item.content_id ? {
+              ...i,
+              title: item.title,
+              description: item.description,
+            }: i))
+          })
+        }
+        catch(err){
+          if(err.response) console.log(err.response.data.message);
+          else console.log(err);
+        }
+      }
+    LoadLanding();
+    }
+  }, [lang])
 
   return (
     <div className="landing-container">
