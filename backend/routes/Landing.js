@@ -105,7 +105,6 @@ router.get("/ReloadLanding", async(req,res) => {
 
 router.get("/LoadReviews", async(req,res) => {
     const langChanged = req.query['lang'];
-    console.log(langChanged);
     if(langChanged !== "en"){
         try{
             const [premUserRev, normUserRev] = await Promise.all([
@@ -157,7 +156,6 @@ router.get("/LoadReviews", async(req,res) => {
                 }
                 return item;
             });
-            console.log(finalReviews);
             res.send(finalReviews);
         }
         catch(err) {console.log(err); res.status(500).send({message: "Failed to load reviews"})}

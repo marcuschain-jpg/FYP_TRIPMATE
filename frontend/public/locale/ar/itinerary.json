@@ -1,0 +1,31 @@
+{
+    "__ITINERARY PAGE": "========= ITINERARY PAGE ==========",
+    "msg_confirmdel": "هل أنت متأكد أنك تريد حذف هذا النشاط؟",
+    "msg_deleted": "تم حذف النشاط بنجاح!",
+
+    "back_btn": "رجوع",
+    "title": "الأنشطة",
+    "arranging": "جارٍ الترتيب...",
+    "arrange": "ترتيب",
+    "Loading": "جارٍ التحميل..",
+    "no_act": "لا توجد أنشطة لهذا اليوم.",
+    "edit_btn": "تعديل",
+    "delete_btn": "حذف",
+    "addact_btn": "إضافة نشاط",
+    "loading_map": "جارٍ تحميل الخريطة...",
+    "chat_btn": "الدردشة",
+
+    "__ACTIVITY FORM PAGE": "========= ACTIVITY FORM PAGE ==========",
+    "succ_createact": "تم إنشاء النشاط بنجاح!",
+    "ad_edit": "تعديل النشاط",
+    "af_add": "إضافة نشاط",
+    "af_title": "اسم الحدث",
+    "af_start_pt": "هذه هي نقطة البداية",
+    "af_location_tb": "الموقع",
+    "af_address_tb": "العنوان",
+    "af_date_picker": "التاريخ",
+    "af_upload_media": "تحميل الوسائط",
+    "af_cancel_btn": "إلغاء",
+    "af_save_btn": "حفظ التغييرات",
+    "af_create_btn": "إنشاء نشاط"
+}

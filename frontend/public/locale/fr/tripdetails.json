@@ -1,0 +1,31 @@
+{
+    "__TRIP DETAILS PAGE": "========== TRIP DETAILS PAGE ==========",
+    "back_to_mytrips": "Retour à mes voyages",
+    "trip_completed": "Voyage terminé",
+    "itinerary": "Itinéraire",
+    "itinerary_title": "Voir ou modifier l’itinéraire ici",
+    "view_btn": "Voir",
+    "timeline": "Chronologie",
+    "timeline_title": "Générer ou voir la chronologie ici",
+    "media": "Médias",
+    "media_title": "Modifier ou voir les médias ici",
+    "chat_btn": "Discussion",
+    "loading": "Chargement…",
+
+    "modal_title": "Ajouter des collaborateurs",
+    "modal_member": "membre",
+    "modal_emailph": "Entrer l’email du collaborateur",
+    "modal_add_btn": "Ajouter",
+    "modal_members_title": "Membres",
+    "modal_nocolab": "Aucun collaborateur trouvé !",
+    "modal_share": "Partager",
+    "modal_cancel_btn": "Annuler",
+    "modal_save_btn": "Enregistrer",
+    "modal_confirmdel_pt1": "Êtes-vous sûr de vouloir supprimer",
+    "modal_confirmdel_pt2": "en tant que collaborateur ?",
+
+    "err_enteremail": "Veuillez entrer un email",
+    "err_maxcollab": "Nombre maximum de collaborateurs atteint !",
+    "err_alrcollab": "L’utilisateur est déjà collaborateur",
+    "succ_email": "Invitation par email envoyée !"
+}

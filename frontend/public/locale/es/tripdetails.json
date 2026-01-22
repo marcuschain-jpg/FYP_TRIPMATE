@@ -1,0 +1,31 @@
+{
+    "__TRIP DETAILS PAGE": "========== TRIP DETAILS PAGE ==========",
+    "back_to_mytrips": "Volver a mis viajes",
+    "trip_completed": "Viaje completado",
+    "itinerary": "Itinerario",
+    "itinerary_title": "Ver o editar el itinerario aquí",
+    "view_btn": "Ver",
+    "timeline": "Línea de tiempo",
+    "timeline_title": "Generar o ver la línea de tiempo aquí",
+    "media": "Medios",
+    "media_title": "Editar o ver los medios aquí",
+    "chat_btn": "Chat",
+    "loading": "Cargando…",
+
+    "modal_title": "Agregar colaboradores",
+    "modal_member": "miembro",
+    "modal_emailph": "Ingrese el correo del colaborador",
+    "modal_add_btn": "Agregar",
+    "modal_members_title": "Miembros",
+    "modal_nocolab": "¡No se encontraron colaboradores!",
+    "modal_share": "Compartir",
+    "modal_cancel_btn": "Cancelar",
+    "modal_save_btn": "Guardar",
+    "modal_confirmdel_pt1": "¿Estás seguro de que deseas eliminar a",
+    "modal_confirmdel_pt2": "como colaborador?",
+
+    "err_enteremail": "Por favor ingrese un correo electrónico",
+    "err_maxcollab": "¡Se alcanzó el máximo de colaboradores!",
+    "err_alrcollab": "El usuario ya es colaborador",
+    "succ_email": "¡Invitación por correo enviada!"
+}

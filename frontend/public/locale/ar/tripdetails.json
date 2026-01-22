@@ -1,0 +1,31 @@
+{
+    "__TRIP DETAILS PAGE": "========== TRIP DETAILS PAGE ==========",
+    "back_to_mytrips": "العودة إلى رحلاتي",
+    "trip_completed": "تم إكمال الرحلة",
+    "itinerary": "خط سير الرحلة",
+    "itinerary_title": "عرض أو تعديل خط سير الرحلة هنا",
+    "view_btn": "عرض",
+    "timeline": "الجدول الزمني",
+    "timeline_title": "إنشاء أو عرض الجدول الزمني هنا",
+    "media": "الوسائط",
+    "media_title": "تعديل أو عرض الوسائط هنا",
+    "chat_btn": "الدردشة",
+    "loading": "جارٍ التحميل…",
+
+    "modal_title": "إضافة متعاونين",
+    "modal_member": "عضو",
+    "modal_emailph": "أدخل بريد المتعاون الإلكتروني",
+    "modal_add_btn": "إضافة",
+    "modal_members_title": "الأعضاء",
+    "modal_nocolab": "لم يتم العثور على متعاونين!",
+    "modal_share": "مشاركة",
+    "modal_cancel_btn": "إلغاء",
+    "modal_save_btn": "حفظ",
+    "modal_confirmdel_pt1": "هل أنت متأكد أنك تريد إزالة",
+    "modal_confirmdel_pt2": "كمتعاون؟",
+
+    "err_enteremail": "يرجى إدخال البريد الإلكتروني",
+    "err_maxcollab": "تم الوصول إلى الحد الأقصى لعدد المتعاونين!",
+    "err_alrcollab": "المستخدم متعاون بالفعل",
+    "succ_email": "تم إرسال دعوة عبر البريد الإلكتروني!"
+}

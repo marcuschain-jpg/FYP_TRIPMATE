@@ -1,0 +1,31 @@
+{
+    "__TRIP DETAILS PAGE": "========== TRIP DETAILS PAGE ==========",
+    "back_to_mytrips": "Back to My Trips",
+    "trip_completed": "Trip Completed",
+    "itinerary": "Itinerary",
+    "itinerary_title": "View or edit itinerary here",
+    "view_btn": "View",
+    "timeline": "Timeline",
+    "timeline_title": "Generate or view timeline here",
+    "media": "Media",
+    "media_title": "Edit or view media here",
+    "chat_btn": "Chat",
+    "loading": "Loading...",
+
+    "modal_title": "Add Collaborators",
+    "modal_member": "member",
+    "modal_emailph": "Enter collaborator email",
+    "modal_add_btn": "Add",
+    "modal_members_title": "Members", 
+    "modal_nocolab": "No collaborators found!",
+    "modal_share": "Share",
+    "modal_cancel_btn": "Cancel",
+    "modal_save_btn": "Save",
+    "modal_confirmdel_pt1": "Are you sure you want to remove",
+    "modal_confirmdel_pt2": "as a collaborator?",
+
+    "err_enteremail": "Please enter an email",
+    "err_maxcollab": "Max amount of collaborators reached!",
+    "err_alrcollab": "User is already a collaborator",
+    "succ_email": "Email invitation sent!"
+}

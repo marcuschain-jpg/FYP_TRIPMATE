@@ -1,0 +1,31 @@
+{
+    "__ITINERARY PAGE": "========= ITINERARY PAGE ==========",
+    "msg_confirmdel": "Are you sure you want to delete this activity?",
+    "msg_deleted": "Activity deleted successfully!",
+    
+    "back_btn": "Back",
+    "title": "Activities",
+    "arranging": "Arranging...",
+    "arrange": "Arrange",
+    "Loading": "Loading..",
+    "no_act": "No activities for this day.",
+    "edit_btn": "Edit",
+    "delete_btn": "Delete",
+    "addact_btn": "Add Activity",
+    "loading_map": "Loading map...",
+    "chat_btn": "Chat",
+
+    "__ACTIVITY FORM PAGE": "========= ACTIVITY FORM PAGE ==========",
+    "succ_createact": "Successfully created activity!",
+    "ad_edit": "Edit Activity",
+    "af_add": "Add Activity",
+    "af_title": "Event Name",
+    "af_start_pt": "This is my starting point",
+    "af_location_tb": "Location",
+    "af_address_tb": "Address",
+    "af_date_picker": "Date",
+    "af_upload_media": "Upload Media",
+    "af_cancel_btn": "Cancel",
+    "af_save_btn": "Save Changes",
+    "af_create_btn": "Create Activity"
+}

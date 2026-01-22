@@ -1,0 +1,31 @@
+{
+    "__TRIP DETAILS PAGE": "========== TRIP DETAILS PAGE ==========",
+    "back_to_mytrips": "返回我的行程",
+    "trip_completed": "行程已完成",
+    "itinerary": "行程表",
+    "itinerary_title": "在此查看或編輯行程表",
+    "view_btn": "查看",
+    "timeline": "時間軸",
+    "timeline_title": "在此產生或查看時間軸",
+    "media": "媒體",
+    "media_title": "在此編輯或查看媒體",
+    "chat_btn": "聊天",
+    "loading": "載入中…",
+
+    "modal_title": "新增協作者",
+    "modal_member": "成員",
+    "modal_emailph": "輸入協作者電子郵件",
+    "modal_add_btn": "新增",
+    "modal_members_title": "成員",
+    "modal_nocolab": "找不到協作者！",
+    "modal_share": "分享",
+    "modal_cancel_btn": "取消",
+    "modal_save_btn": "儲存",
+    "modal_confirmdel_pt1": "您確定要移除",
+    "modal_confirmdel_pt2": "作為協作者嗎？",
+
+    "err_enteremail": "請輸入電子郵件",
+    "err_maxcollab": "已達到協作者上限！",
+    "err_alrcollab": "使用者已是協作者",
+    "succ_email": "電子郵件邀請已送出！"
+}
