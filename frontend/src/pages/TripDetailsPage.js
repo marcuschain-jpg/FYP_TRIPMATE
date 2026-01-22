@@ -7,6 +7,7 @@ import link from "../Assets/link.png"
 import whatsapp from "../Assets/Whatsapp.png"
 import telegram from "../Assets/Telegram.png"
 import ItineraryChat from "../components/ItineraryChat";
+import { useTranslation } from "react-i18next";
 
 //Date formatter function--> so that correct data appears across all pages and can be updatd through edit button
 const formatDateForDisplay = (dateValue) => {
@@ -32,6 +33,7 @@ const formatDateForDisplay = (dateValue) => {
 function TripDetailsPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation("tripdetails");
 
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -126,18 +128,18 @@ function TripDetailsPage() {
   //Add collaborator (dummy only)
   const handleAddCollaborator = async() => {
     if (newCollaborator.trim() === "") {
-      alert("Please enter an email");
+      alert(t("err_enteremail"));
       return;
     }
     if (trip.numPpl >= 5){
       console.log(trip.numPpl)
-      alert("Max amount of collaborators reached!");
+      alert(t("err_maxcollab"));
       return;
     }
 
     //Prevent duplicates
     if (collaborators.includes(newCollaborator)){
-      alert("User is already a collaborator")
+      alert(t("err_alrcollab"))
       return;
     }
 
@@ -145,7 +147,7 @@ function TripDetailsPage() {
       const res = await Axios.post("Itinerary/AddCollaborator", {i_id:tripId, email:newCollaborator, i_name: trip.name}, {withCredentials:true})
       if(res.data){
       //setCollaborators(prev => [...prev, {name: `${res.data[0].first_name} ${res.data[0].last_name}`, email: res.data[0].email}]);
-      alert("Email invitation sent!")
+      alert(t("succ_email"));
       setNewCollaborator("");
     }
     }
@@ -174,7 +176,7 @@ function TripDetailsPage() {
   //Delete collaborator with confirmation
   const handleDeleteCollaborator = async(item) => {
     const confirmDelete = window.confirm(
-      `Are you sure you want to remove ${item.name} as a collaborator?`
+      `${t("modal_confirmdel_pt1")} ${item.name} ${t("modal_confirmdel_pt2")}`
     );
 
     if (confirmDelete) {
@@ -262,13 +264,13 @@ function TripDetailsPage() {
     return url;
   }
 
-  if (loading) return <p>Loading..</p>;
+  if (loading) return <p>{t("loading")}</p>;
 
   return (
     <div className="tripdetails-page">
       <div className="tripdetails-inner">
         <button className="back-btn" onClick={() => navigate(`/mytrips`)}>
-          ← Back to My Trips
+          ← {t("back_to_mytrips")}
         </button>
 
         <h1 className="tripdetails-title">{trip.name}</h1>
@@ -295,21 +297,21 @@ function TripDetailsPage() {
               updateTripStatus(e.target.checked ? true : false)
             }
           />
-          Trip Completed
+          {t("trip_completed")}
         </label>
 
         {/*Itinerary card*/}
         <div className="section-card">
           <div className="section-content">
-            <h2>Itinerary</h2>
-            <p>View or edit itinerary here</p>
+            <h2>{t("itinerary")}</h2>
+            <p>{t("itinerary_title")}</p>
             <button
               className="view-btn"
               onClick={() =>
                 navigate(`/mytrips/trip/itinerary/${trip.id}/default`)
               }
             >
-              View
+              {t("view_btn")}
             </button>
           </div>
         </div>
@@ -317,15 +319,15 @@ function TripDetailsPage() {
         {/*Timeline card*/}
         <div className="section-card">
           <div className="section-content">
-            <h2>Timeline</h2>
-            <p>Generate or view timeline here</p>
+            <h2>{t("timeline")}</h2>
+            <p>{t("timeline_title")}</p>
             <button
               className="view-btn"
               onClick={() =>
                 navigate(`/mytrips/trip/timeline/${trip.id}`)
               }
             >
-              View
+              {t("view_btn")}
             </button>
           </div>
         </div>
@@ -333,15 +335,15 @@ function TripDetailsPage() {
         {/*Media card*/}
         <div className="section-card">
           <div className="section-content">
-            <h2>Media</h2>
-            <p>Edit or view media here</p>
+            <h2>{t("media")}</h2>
+            <p>{t("media_title")}</p>
             <button
               className="view-btn"
               onClick={() =>
                 navigate(`/mytrips/trip/media/${trip.id}`)
               }
             >
-              View
+              {t("view_btn")}
             </button>
           </div>
         </div>
@@ -349,7 +351,7 @@ function TripDetailsPage() {
 
       {(trip.type === "Group") && 
       (<button className="floating-chat-btn" onClick={() => setShowChat(true)} title="Chat">
-        Chat
+        {t("chat_btn")}
       </button>)}
 
       {/*Collaborators modal*/}
@@ -358,9 +360,9 @@ function TripDetailsPage() {
           <div className="collab-card">
             {isPremium && (
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-                <h3 className="collab-title">Add Collaborators</h3>
+                <h3 className="collab-title">{t("modal_title")}</h3>
                 <div style={{ background: "#e3f2fd", color: "#0a3d62", padding: "4px 12px", borderRadius: "20px", fontSize: "13px", fontWeight: "600" }}>
-                  {collaborators.length} member{collaborators.length !== 1 ? "s" : ""}
+                  {collaborators.length} {t("modal_member")}{collaborators.length !== 1 ? "s" : ""}
                 </div>
               </div>
             )}
@@ -370,7 +372,7 @@ function TripDetailsPage() {
               <input
                 type="text"
                 className="collab-input"
-                placeholder="Enter collaborator email"
+                placeholder= {t("modal_emailph")}
                 value={newCollaborator}
                 onChange={(e) =>
                   setNewCollaborator(e.target.value)
@@ -380,13 +382,13 @@ function TripDetailsPage() {
                 className="add-btn"
                 onClick={handleAddCollaborator}
               >
-                Add
+                {t("modal_add_btn")}
               </button>
             </div>}
 
             {/*Members*/}
             <div className="members-section">
-              {isPremium && <p className="members-title">Members</p>}
+              {isPremium && <p className="members-title">{t("modal_members_title")}</p>}
 
               {(isPremium && collaborators) && collaborators.map((item, index) => (
                 <div key={index} className="member-item">
@@ -409,11 +411,11 @@ function TripDetailsPage() {
               {(isPremium && !collaborators) &&
                 <div className="member-item">
 
-                  <span className="member-name">No collaborators found!</span>
+                  <span className="member-name">{t("modal_nocolab")}</span>
 
                 </div>
               }
-              <p className="members-title">Share</p>
+              <p className="members-title">{t("modal_share")}</p>
               <div className="share-icons">
                 <img src={link} alt="link.img" className="collab-img" onClick={() => handleShareExt("link")}/>
                 <img src={whatsapp} alt="whatsapp.img" className="collab-img2" onClick={() => handleShareExt("ws")}/>
@@ -427,13 +429,13 @@ function TripDetailsPage() {
                 className="cancel-btn"
                 onClick={() => setShowCollaborators(false)}
               >
-                Cancel
+                {t("modal_cancel_btn")}
               </button>
               {isPremium && <button
                 className="save-btn"
                 onClick={handleSaveCollaborators}
               >
-                Save
+                {t("modal_save_btn")}
               </button>}
             </div>
           </div>

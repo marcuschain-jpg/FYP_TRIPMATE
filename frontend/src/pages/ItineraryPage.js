@@ -4,6 +4,7 @@ import "../styles/Itinerary.css";
 import axios from "axios";
 import { socket } from "../hooks/Socket";
 import ItineraryChat from "../components/ItineraryChat";
+import { useTranslation } from "react-i18next";
 
 //Normalize any date string to YYYY-MM-DD
 function normDate(d) {
@@ -35,6 +36,7 @@ function formatDateForDisplay(dateValue) {
 function ItineraryPage() {
   const { tripId, firstdate } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation("itinerary");
 
   const [trip, setTrip] = useState(null);
   const [activities, setActivities] = useState([]);
@@ -432,7 +434,7 @@ function ItineraryPage() {
 
   //Delete activity
   const handleDeleteActivity = async (index) => {
-    if (!window.confirm("Are you sure you want to delete this activity?")) return;
+    if (!window.confirm(t("msg_confirmdel"))) return;
 
     await axios
       .delete("http://localhost:8080/Itinerary/DeleteActivity", {
@@ -446,7 +448,7 @@ function ItineraryPage() {
         }
       });
 
-    alert("Activity deleted successfully!");
+    alert(t("msg_deleted"));
   };
 
   const arrangeItinerary = async () => {
@@ -464,7 +466,7 @@ function ItineraryPage() {
   return (
     <div className="itinerary-view">
       <button className="back-btn" onClick={() => navigate(`/mytrips/trip/${tripId}`)}>
-        ← Back
+        ← {t("back_btn")}
       </button>
 
       <div className="itinerary-top-row">
@@ -478,7 +480,7 @@ function ItineraryPage() {
 
       <div className="view-layout">
         <div className="left-side">
-          <h2>Activities</h2>
+          <h2>{t("title")}</h2>
 
           {!Loading && activities.length > 0 && (
             <div className="date-row">
@@ -505,14 +507,14 @@ function ItineraryPage() {
                 onClick={() => arrangeItinerary()}
                 disabled={isArranging}
               >
-                {isArranging ? "Arranging..." : "Arrange"}
+                {isArranging ? t("arranging") : t("arrange")}
               </button>
             </div>
           )}
 
           <div className="activities-section">
             {Loading && <p>Loading..</p>}
-            {!Loading && filteredActivities.length === 0 && <p>No activities for this day.</p>}
+            {!Loading && filteredActivities.length === 0 && <p>{t("no_act")}</p>}
 
             {!Loading &&
               filteredActivities.map((act) => (
@@ -532,7 +534,7 @@ function ItineraryPage() {
                         navigate(`/mytrips/trip/activity/edit/${tripId}/${act.id}`)
                       }
                     >
-                      Edit
+                      {t("edit_btn")}
                     </button>
 
                     <button
@@ -540,7 +542,7 @@ function ItineraryPage() {
                       disabled={isArranging}
                       onClick={() => handleDeleteActivity(act.id)}
                     >
-                      Delete
+                      {t("delete_btn")}
                     </button>
                   </div>
                 </div>
@@ -552,13 +554,13 @@ function ItineraryPage() {
             disabled={isArranging}
             onClick={() => navigate(`/mytrips/trip/activity/create/${tripId}`)}
           >
-            Add Activity +
+            {t("addact_btn")} +
           </button>
         </div>
 
         <div className="right-side">
           {!mapConfig ? (
-            <p className="map-loading-text">Loading map…</p>
+            <p className="map-loading-text">{t("loading_map")}</p>
           ) : (
             <div
               ref={mapDivRef}
@@ -570,7 +572,7 @@ function ItineraryPage() {
 
       {!Loading && trip?.type === "Group" && 
       (<button className="floating-chat-btn" onClick={() => setShowChat(true)} title="Chat">
-        Chat
+        {t("chat_btn")}
       </button>)}
       {showChat && ( <ItineraryChat onClose={() => {setShowChat(false);}} i_id={tripId}/>)}
     </div>

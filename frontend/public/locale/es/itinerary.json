@@ -1,0 +1,31 @@
+{
+    "__ITINERARY PAGE": "========= ITINERARY PAGE ==========",
+    "msg_confirmdel": "¿Estás seguro de que deseas eliminar esta actividad?",
+    "msg_deleted": "¡Actividad eliminada con éxito!",
+
+    "back_btn": "Volver",
+    "title": "Actividades",
+    "arranging": "Organizando...",
+    "arrange": "Organizar",
+    "Loading": "Cargando..",
+    "no_act": "No hay actividades para este día.",
+    "edit_btn": "Editar",
+    "delete_btn": "Eliminar",
+    "addact_btn": "Agregar actividad",
+    "loading_map": "Cargando mapa...",
+    "chat_btn": "Chat",
+
+    "__ACTIVITY FORM PAGE": "========= ACTIVITY FORM PAGE ==========",
+    "succ_createact": "¡Actividad creada con éxito!",
+    "ad_edit": "Editar actividad",
+    "af_add": "Agregar actividad",
+    "af_title": "Nombre del evento",
+    "af_start_pt": "Este es mi punto de inicio",
+    "af_location_tb": "Ubicación",
+    "af_address_tb": "Dirección",
+    "af_date_picker": "Fecha",
+    "af_upload_media": "Subir medios",
+    "af_cancel_btn": "Cancelar",
+    "af_save_btn": "Guardar cambios",
+    "af_create_btn": "Crear actividad"
+}

@@ -1,0 +1,31 @@
+{
+    "__ITINERARY PAGE": "========= ITINERARY PAGE ==========",
+    "msg_confirmdel": "您確定要刪除此活動嗎？",
+    "msg_deleted": "活動已成功刪除！",
+
+    "back_btn": "返回",
+    "title": "活動",
+    "arranging": "正在排列中...",
+    "arrange": "排列",
+    "Loading": "載入中..",
+    "no_act": "此日期沒有活動。",
+    "edit_btn": "編輯",
+    "delete_btn": "刪除",
+    "addact_btn": "新增活動",
+    "loading_map": "地圖載入中...",
+    "chat_btn": "聊天",
+
+    "__ACTIVITY FORM PAGE": "========= ACTIVITY FORM PAGE ==========",
+    "succ_createact": "活動建立成功！",
+    "ad_edit": "編輯活動",
+    "af_add": "新增活動",
+    "af_title": "活動名稱",
+    "af_start_pt": "這是我的起點",
+    "af_location_tb": "地點",
+    "af_address_tb": "地址",
+    "af_date_picker": "日期",
+    "af_upload_media": "上傳媒體",
+    "af_cancel_btn": "取消",
+    "af_save_btn": "儲存變更",
+    "af_create_btn": "建立活動"
+}

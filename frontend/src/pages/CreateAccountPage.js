@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/CreateAccount.css";
 import axios from 'axios';
+import { useTranslation } from "react-i18next";
 
 export default function CreateAccountPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   //Form states
   const [email, setEmail] = useState("");
@@ -76,41 +78,41 @@ export default function CreateAccountPage() {
           className="register-logo"
         />
 
-        <h2 className="register-title">Create An Account</h2>
+        <h2 className="register-title">{t("cacc_title")}</h2>
 
         <div className="register-form">
-          <label>Email</label>
+          <label>{t("cacc_email")}</label>
           <input
             type="email"
-            placeholder="Enter your email"
+            placeholder={t("cacc_email_ph")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          <label>Password</label>
+          <label>{t("cacc_password")}</label>
           <input
             type="password"
-            placeholder="Enter your password"
+            placeholder={t("cacc_password_ph")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
 
           <div className="name-row">
             <div>
-              <label>First Name</label>
+              <label>{t("cacc_firstname")}</label>
               <input
                 type="text"
-                placeholder="First Name"
+                placeholder={t("cacc_firstname")}
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
               />
             </div>
 
             <div>
-              <label>Last Name</label>
+              <label>{t("cacc_lastname")}</label>
               <input
                 type="text"
-                placeholder="Last Name"
+                placeholder={t("cacc_lastname")}
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
               />
@@ -118,17 +120,17 @@ export default function CreateAccountPage() {
           </div>
 
           <button className="register-btn" onClick={handleRegister}>
-            Register
+            {t("cacc_register")}
           </button>
         </div>
 
         <p className="register-login-text">
-            Already have an account?{" "}
+            {t("cacc_acc_exist")}{" "}
             <span 
                 className="create-login-link"
                 onClick={() => navigate("/login")}
             >
-                Log In
+                {t("cacc_login")}
             </span>
         </p>
 

@@ -4,6 +4,7 @@ import "../styles/Login.css";
 import axios from "axios";
 //Import background picture
 import LoginBG from "../Assets/Login.jpg";
+import { useTranslation } from "react-i18next"; 
 
 export default function LoginPage({ setCurrentUserProfile, markAsFirstTimeUser }) {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ export default function LoginPage({ setCurrentUserProfile, markAsFirstTimeUser }
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
   const [toast, setToast] = useState(null);
+  const { t } = useTranslation();
 
   const showToast = (msg, type) => {
     setToast({ msg, type });
@@ -27,7 +29,7 @@ export default function LoginPage({ setCurrentUserProfile, markAsFirstTimeUser }
 
   const handleLogin = async() => {
     if (!email || !password || !role) {
-      showToast("Please fill in all fields.", "error");
+      showToast(t("login_validate"), "error");
       return;
     }
 
@@ -44,7 +46,7 @@ export default function LoginPage({ setCurrentUserProfile, markAsFirstTimeUser }
         const isFirstLogin = res.data.isFirstLogin || false;
         
         console.log("Login successful. isFirstLogin:", isFirstLogin);
-        showToast("Login successful! Redirecting...", "success");
+        showToast(t("login_success"), "success");
 
         //Mark if this is first-time user
         markAsFirstTimeUser(isFirstLogin);
@@ -66,7 +68,7 @@ export default function LoginPage({ setCurrentUserProfile, markAsFirstTimeUser }
     }
     catch (err) {
       console.error(err);
-      showToast("Login failed. Please try again.", "error");
+      showToast(t("login_failed"), "error");
     }
   };
 
@@ -86,44 +88,44 @@ export default function LoginPage({ setCurrentUserProfile, markAsFirstTimeUser }
       <div className="login-left">
         <h1 className="login-left-title">TripMate</h1>
         <p className="login-left-subtitle">
-          Where Your Dream Destinations <br />
-          Become Reality
+          {t("login_subtitle_1")} <br />
+          {t("login_subtitle_2")}
         </p>
       </div>
 
       {/*Login card section --> contains login fields*/}
       <div className="login-card">
-        <h2 className="login-title">Welcome Back!</h2>
-        <p className="login-subtitle">Login to continue your journey</p>
+        <h2 className="login-title">{t("login_welcomeback")}</h2>
+        <p className="login-subtitle">{t("login_afterwbmsg")}</p>
 
         {/*User role dropdown*/}
-        <label className="login-label">Role</label>
+        <label className="login-label">{t("login_role")}</label>
         <select
           className="login-input"
           value={role}
           onChange={(e) => setRole(e.target.value)}
         >
-          <option value="">Select Role</option>
-          <option value="user">User</option>
-          <option value="admin">Admin</option>
+          <option value="">{t("login_role_select")}</option>
+          <option value="user">{t("login_role_user")}</option>
+          <option value="admin">{t("login_role_admin")}</option>
         </select>
 
         {/*Email field*/}
-        <label className="login-label">Email</label>
+        <label className="login-label">{t("login_email_title")}</label>
         <input
           type="email"
           className="login-input"
-          placeholder="Enter your email"
+          placeholder={t("enter_email")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
 
         {/*Password field*/}
-        <label className="login-label">Password</label>
+        <label className="login-label">{t("login_password_title")}</label>
         <input
           type="password"
           className="login-input"
-          placeholder="Enter your password"
+          placeholder={t("enter_password")}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
@@ -131,23 +133,23 @@ export default function LoginPage({ setCurrentUserProfile, markAsFirstTimeUser }
         {/*Forgot password link*/}
         <p className="forgot-password-link">
           <span onClick={() => navigate("/reset-password")}>
-            Forgot Password?
+            {t("login_forget_password_title")}
           </span>
         </p>
 
         {/*Login button*/}
         <button className="login-btn" onClick={handleLogin}>
-          Login
+          {t("login_login_title")}
         </button>
 
         {/*Takes user to create account page if they do not have an account*/}
         <p className="login-footer">
-          Don't have an account?{" "}
+          {t("login_noacc")}{" "}
           <span
             className="login-link"
             onClick={() => navigate("/register")}
           >
-            Create Account
+            {t("login_createacc_title")}
           </span>
         </p>
       </div>

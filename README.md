@@ -1,4 +1,4 @@
-Last update: 31/12/2025
+Last update: 20/1/2025
 
 # FYP_TRIPMATE
 FYP Group: FYP-25-S4-27
@@ -52,7 +52,8 @@ your own node_modules
 Frontend:
 
 Consist of frontend components(sub-html pages) of all functions
-- public --- contains real DOM & browser tab icon image, only change browser icon here if needed
+- public --- contains real DOM & browser tab icon image, title and static files for localisation
+    - public/locale --- contains locale files(en, zh, ja..), aid with localising static fields
 - node_modules --- downloaded libraries that can be used in code, ignored files
 - src --- where we create our individual 'pages', or helper componenets
     - /src/pages/.js files --- individual pages (itinerary page, feed page..)
@@ -75,7 +76,7 @@ Consist of frontend components(sub-html pages) of all functions
 Backend:
 
 Inner workings of events(btn click, page render..)
-- helper (db.js, realtime..) --- components that helps with functions and are not necessarily accessed through routing
+- helper (db.js, realtime..) --- components that helps with functions in different routes
 - routes --- main logic & routes of different components of prototypes
 - index.js --- main file of backend, initialize & help with real time updates with socket.io
 - keys.env --- all api keys/passwords needed to access external services
@@ -94,12 +95,12 @@ Inner workings of events(btn click, page render..)
 - FE files + main function + BE files + Primary Routes> CapitalizeEveryWord (to reduce typescript error)
 - Frontend internal functions + Secondary Routes > Use camelCasing
     - example: const activitySelect = ['a','b','c']..
-- Frontend > Backend AXIOS http calls:
+- Frontend > Backend AXIOS http calls(import Axios from '../hooks/Axios.js'):
     Use withCredentials to authenticate first > then call backend function
-    - axios.get("http://..", {params:{id:Act_id..}, withCredentials:true})
-    - axios.post("http://..", {id:Act_id, id2:id..}, {withCredentials:true})
-    - axios.delete("http://..", {data:{id:Act_id..}, withCredentials:true})
-    - axios.patch("http://..", {id:Act_id..}, {withCredentials:true})
+    - Axios.get("Itinerary/..", {params:{id:Act_id..}, withCredentials:true})
+    - Axios.post("Itinerary/..", {id:Act_id, id2:id..}, {withCredentials:true})
+    - Axios.delete("Itinerary/..", {data:{id:Act_id..}, withCredentials:true})
+    - Axios.patch("Itinerary/..", {id:Act_id..}, {withCredentials:true})
 
 - Backend build function:
     - router.get/post/patch/delete("/NameOfFunction", RequireAuth(["Insert roles", "premium"]), async(req,res)=>{

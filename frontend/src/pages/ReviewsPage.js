@@ -3,18 +3,22 @@ import { useNavigate } from "react-router-dom";
 import "../styles/Reviews.css";
 import reviewsBg from "../Assets/Reviews.jpg";
 import Axios from '../hooks/Axios.js';
+import { useTranslation } from "react-i18next";
 
 
 function ReviewsPage() {
   //Render star rating based on number
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [lang, setLang] = useState(i18n.language||"")
 
   useEffect(() => {
+    if(!lang||!loading) return;
     const LoadReviews = async() => {
       try{
-        const res = await Axios.get(`Landing/LoadReviews`)
+        const res = await Axios.get(`Landing/LoadReviews`, {params:{lang}});
         setLoading(false);
         setReviews(res.data);
       }
@@ -32,7 +36,45 @@ function ReviewsPage() {
       }
     };
     LoadReviews();
-  }, [])
+  }, [lang])
+
+  useEffect(() => {
+    if(lang && !loading){
+      const LoadReviews = async() => {
+        try{
+          const idNums = reviews.map(i => ({
+            id: i.id
+          }));
+          const cidNums = JSON.stringify(idNums);
+          const res = await Axios.get("Landing/ReloadReviews", {params:{lang, idNums:cidNums}})
+          console.log(res.data);
+          res.data.map(item => {
+            setReviews(prev => prev.map(i => i.id === item.review_id ? {
+              ...i,
+              text: item.text,
+            }: i))
+          })
+        }
+        catch(err){
+          if(err.response) console.log(err.response.data.message);
+          else console.log(err);
+        }
+      }
+    LoadReviews();
+    }
+  }, [lang])
+
+  useEffect(() => {
+    // Run when ititialized(default) & lang changed
+    i18n.on("languageChanged", function(lng) {
+      setLang(lng);
+    });
+
+    return() => {
+      i18n.off("languageChanged", function(lng) {});
+    };
+  }, [i18n])
+
   const renderStars = (rating) => {
     return (
       <div className="stars">
