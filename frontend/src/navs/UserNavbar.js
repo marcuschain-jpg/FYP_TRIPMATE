@@ -169,16 +169,16 @@ function UserNavbar({ outletContext }) {
 
                     <div className="nav-center">
                         <Link to="/home" className="nav-link">
-                            Home
+                            {t("reg_nav_home")}
                         </Link>
                         <Link to="/mytrips" className="nav-link">
-                            My Trips
+                            {t("reg_nav_mytrips")}
                         </Link>
                         <Link to="/profile" className="nav-link">
-                            My Profile
+                            {t("reg_nav_myprofile")}
                         </Link>
                         <Link to="/join-trip" className="nav-link">
-                            Join A Trip
+                            {t("reg_nav_joinatrip")}
                         </Link>
                     </div>
 

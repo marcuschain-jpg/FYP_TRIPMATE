@@ -68,6 +68,40 @@ router.get("/LoadLanding", async(req,res) => {
     }
 });
 
+router.get("/ReloadLanding", async(req,res) => {
+    const langChanged = req.query['lang'];
+    const rawIDNums = req.query['idNums'];
+    let idNums;
+    if(rawIDNums) idNums = JSON.parse(rawIDNums);
+    if(langChanged !== "en" && idNums){
+        const dynamicWhere = await idNums.map((i, idx) =>`content_id = $${idx+1}`).join(' OR ');
+        const dynamicParams = await idNums.map(i => i.id);
+        try{
+            const content = await pool.query(
+                `SELECT content_id, c_title as title, c_content AS description
+                 FROM marketing_content
+                 WHERE ${dynamicWhere}`, dynamicParams
+            )
+            translatedData = await TranslateFunc("content_id", content.rows, langChanged);
+            return res.send(translatedData);
+        }
+        catch(err) {console.log(err);}
+    }
+    else if(langChanged === "en" && idNums){
+        const dynamicWhere = await idNums.map((i, idx) =>`content_id = $${idx+1}`).join(' OR ');
+        const dynamicParams = await idNums.map(i => i.id);
+        try{
+            const content = await pool.query(
+                `SELECT content_id, c_title as title, c_content AS description
+                 FROM marketing_content
+                 WHERE ${dynamicWhere}`, dynamicParams
+            )
+            return res.send(content.rows);
+        }
+        catch(err) {console.log(err);}
+    }
+});
+
 
 router.get("/LoadReviews", async(req,res) => {
     const langChanged = req.query['lang'];

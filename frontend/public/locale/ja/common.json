@@ -5,6 +5,12 @@
     "unreg_nav_login": "ログイン",
     "unreg_nav_cacc": "アカウント作成",
 
+    "__REG NAV BAR": " ========== REGISTERED NAV BAR ==========",
+    "reg_nav_home": "ホーム",
+    "reg_nav_mytrips": "マイトリップ",
+    "reg_nav_myprofile": "マイプロフィール",
+    "reg_nav_joinatrip": "旅行に参加",
+
     "__LANDING PAGE": " ========== LANDING PAGE ==========",
     "landing_title": "旅行計画がさらにシンプルに",
     "loading": "読み込み中..",
@@ -54,5 +60,13 @@
     "cacc_acc_exist": "すでにアカウントをお持ちですか？",
     "cacc_login": "ログイン",
     "cacc_email_ph": "メールを入力してください",
-    "cacc_password_ph": "パスワードを入力してください"
+    "cacc_password_ph": "パスワードを入力してください",
+
+    "__HOME PAGE": " ========== HOME PAGE ==========",
+    "hp_welcome": "おかえりなさい、",
+    "hp_mycalendar": "マイカレンダー",
+    "hp_viewcalendar": "今後の旅行やイベントを一か所で確認できます。整理整頓して、大切な瞬間を逃さないようにしましょう！",
+    "hp_view_btn": "表示",
+    "hp_viewmytrips": "日常の忙しさから離れたいですか？今すぐ次の旅行を計画しましょう！",
+    "hp_mytrips": "マイトリップ"
 }

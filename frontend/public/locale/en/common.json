@@ -5,6 +5,12 @@
         "unreg_nav_login": "Login",
         "unreg_nav_cacc": "Create Account",
 
+        "__REG NAV BAR": " ========== REGISTERED NAV BAR ==========",
+        "reg_nav_home": "Home",
+        "reg_nav_mytrips": "My Trips",
+        "reg_nav_myprofile": "My Profile",
+        "reg_nav_joinatrip": "Join A Trip",
+
         "__LANDING PAGE": " ========== LANDING PAGE ==========",
         "landing_title": "Trip Planning just got SIMPLER",
         "loading": "Loading..",
@@ -56,5 +62,13 @@
         "cacc_acc_exist": "Already have an account?",
         "cacc_login": "Log in",
         "cacc_email_ph": "Enter your email",
-        "cacc_password_ph": "Enter your password"
+        "cacc_password_ph": "Enter your password",
+
+        "__HOME PAGE": " ========== HOME PAGE ==========",
+        "hp_welcome": "Welcome Back,",
+        "hp_mycalendar": "My Calendar",
+        "hp_viewcalendar": "View your upcoming trips and events all in one place. Stay organized and never miss a moment!",
+        "hp_view_btn": "View",
+        "hp_viewmytrips": "Looking for a getaway from all the hustle and bustle? Plan your next trip now!",
+        "hp_mytrips": "My Trips"
 }

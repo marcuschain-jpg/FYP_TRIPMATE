@@ -8,10 +8,12 @@ i18n
 .use(initReactI18next)
 .init({
     lng: "en", // default locale
+    ns: ["common", "mytrips"],
+    defaultNS: "common",
     fallbackLng: "en", // fallback used when translation is missing in active locale
     debug: true, // enable output in browser console
     backend: {
-        loadPath: "/locale/{{lng}}/common.json"
+        loadPath: "/locale/{{lng}}/{{ns}}.json"
     },
     interpolation:{
         escapeValue: false

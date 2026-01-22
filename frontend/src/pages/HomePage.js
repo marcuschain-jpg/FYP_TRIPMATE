@@ -5,9 +5,11 @@ import axios from 'axios';
 import HomeMainPhoto from "../Assets/HomeMainPhoto.jpg";
 import HomeSmall1 from "../Assets/HomeSmall1.jpg";
 import HomeSmall2 from "../Assets/HomeSmall2.jpg";
+import { useTranslation } from "react-i18next";
 
 export default function HomePage() {
   const navigate = useNavigate();  
+  const { t } = useTranslation(); 
   const [role, setRole] = useState("");
   const [name, setName] = useState("");
 
@@ -34,7 +36,7 @@ export default function HomePage() {
       {/*Banner on top of page*/}
       <div className="home-banner">
         <img src={HomeMainPhoto} alt="Main" className="home-banner-img" />
-        <h1 className="home-banner-text">Welcome Back,<br />{name}</h1>
+        <h1 className="home-banner-text">{t("hp_welcome")}<br />{name}</h1>
       </div>
 
       {/*2 Cards*/}
@@ -42,24 +44,24 @@ export default function HomePage() {
         {/*My calendar card--> brings user to profile page*/}
         <div className="home-card">
           <img src={HomeSmall1} className="home-card-img" alt=""/>
-          <h2 className="home-card-title">My Calendar</h2>
+          <h2 className="home-card-title">{t("hp_mycalendar")}</h2>
           <p className="home-card-desc">
-            View your upcoming trips and events all in one place. Stay organized and never miss a moment!
+            {t("hp_viewcalendar")}
           </p>
           <button className="home-card-btn" onClick={() => navigate("/profile")}>
-            View
+            {t("hp_view_btn")}
           </button>
         </div>
 
         {/*My trips card*/}
         <div className="home-card">
           <img src={HomeSmall2} className="home-card-img" alt="" />
-          <h2 className="home-card-title">My Trips</h2>
+          <h2 className="home-card-title">{t("hp_mytrips")}</h2>
           <p className="home-card-desc">
-            Looking for a getaway from all the hustle and bustle? Plan your next trip now!
+            {t("hp_viewmytrips")}
           </p>
           <button className="home-card-btn" onClick={() => navigate("/mytrips")}>
-            View
+            {t("hp_view_btn")}
           </button>
         </div>
       </div>

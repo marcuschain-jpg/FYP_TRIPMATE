@@ -5,6 +5,12 @@
     "unreg_nav_login": "تسجيل الدخول",
     "unreg_nav_cacc": "إنشاء حساب",
 
+    "__REG NAV BAR": " ========== REGISTERED NAV BAR ==========",
+    "reg_nav_home": "الرئيسية",
+    "reg_nav_mytrips": "رحلاتي",
+    "reg_nav_myprofile": "ملفي الشخصي",
+    "reg_nav_joinatrip": "الانضمام إلى رحلة",
+
     "__LANDING PAGE": " ========== LANDING PAGE ==========",
     "landing_title": "أصبح تخطيط الرحلات أسهل",
     "loading": "تحميل..",
@@ -54,5 +60,14 @@
     "cacc_acc_exist": "هل لديك حساب بالفعل؟",
     "cacc_login": "تسجيل الدخول",
     "cacc_email_ph": "أدخل بريدك الإلكتروني",
-    "cacc_password_ph": "أدخل كلمة المرور"
+    "cacc_password_ph": "أدخل كلمة المرور",
+
+    "__HOME PAGE": " ========== HOME PAGE ==========",
+    "hp_welcome": "مرحبًا بعودتك،",
+    "hp_mycalendar": "تقويمي",
+    "hp_viewcalendar": "اعرض رحلاتك وأحداثك القادمة في مكان واحد. حافظ على تنظيمك ولا تفوت أي لحظة!",
+    "hp_view_btn": "عرض",
+    "hp_viewmytrips": "هل تبحث عن استراحة من صخب الحياة؟ خطط لرحلتك القادمة الآن!",
+    "hp_mytrips": "رحلاتي"
+
 }
