@@ -1,3 +1,41 @@
 {
+    "__PROFILE PAGE": "=========== PROFILE PAGE =============",
+        "pp_edit_btn": "Edit Profile",
+        "pp_help_btn": "Help",
+        "pp_premium_badge": "Premium",
     
-}
+        "pp_loading_username": "Loading..",
+        "pp_default_avatar_alt": "User Avatar",
+    
+        "pp_calendar_title": "Trip Calendar",
+        "pp_calendar_loading": "Loading calendar...",
+    
+        "pp_calendar_today_btn": "Today",
+        "pp_calendar_prev_month": "Previous Month",
+        "pp_calendar_next_month": "Next Month",
+    
+        "pp_calendar_legend_private": "Private Trips",
+        "pp_calendar_legend_group": "Group Trips",
+    
+        "pp_calendar_day_sun": "Sun",
+        "pp_calendar_day_mon": "Mon",
+        "pp_calendar_day_tue": "Tue",
+        "pp_calendar_day_wed": "Wed",
+        "pp_calendar_day_thu": "Thu",
+        "pp_calendar_day_fri": "Fri",
+        "pp_calendar_day_sat": "Sat",
+    
+        "pp_calendar_month_january": "January",
+        "pp_calendar_month_february": "February",
+        "pp_calendar_month_march": "March",
+        "pp_calendar_month_april": "April",
+        "pp_calendar_month_may": "May",
+        "pp_calendar_month_june": "June",
+        "pp_calendar_month_july": "July",
+        "pp_calendar_month_august": "August",
+        "pp_calendar_month_september": "September",
+        "pp_calendar_month_october": "October",
+        "pp_calendar_month_november": "November",
+        "pp_calendar_month_december": "December"
+  }
+  

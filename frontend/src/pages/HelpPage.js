@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Help.css";
 import Axios from '../hooks/Axios.js';
+import { useTranslation } from "react-i18next";
 
 //Success message section
 const SuccessMessage = ({ message, onClose }) => (
@@ -49,6 +50,7 @@ const ReviewStarRating = () => {
 };
 
 function HelpPage() {
+  const { t } = useTranslation("helpcentre");
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("faq");
   const [successMessage, setSuccessMessage] = useState("");
@@ -58,28 +60,28 @@ function HelpPage() {
   const faqs = [
     {
       id: 1,
-      question: "How do I create a new trip?",
-      answer: "To create a new trip, click on 'My Trips' in the navigation bar, then click the 'Create New Trip' button. Enter your trip details, add a cover photo, and start adding activities!"
+      question: t("hp_faq_q1"),
+      answer: t("hp_faq_a1")
     },
     {
       id: 2,
-      question: "Can I share my itinerary with friends?",
-      answer: "Yes! When creating or editing a trip, you can add collaborators by entering their email addresses. They'll receive an invitation to join your trip."
+      question: t("hp_faq_q2"),
+      answer: t("hp_faq_a2")
     },
     {
       id: 3,
-      question: "How do I add activities to my itinerary?",
-      answer: "Open your trip, go to the Itinerary tab, and click 'Add Activity'. Fill in the activity details like name, location, address, and date. You can also upload photos!"
+      question: t("hp_faq_q3"),
+      answer: t("hp_faq_a3")
     },
     {
       id: 4,
-      question: "How can I bookmark other people's itineraries?",
-      answer: "Visit the Feed page, browse itineraries shared by other users, and click the bookmark icon on any post to save it to your profile."
+      question: t("hp_faq_q4"),
+      answer: t("hp_faq_a4")
     },
     {
       id: 5,
-      question: "Can I edit or delete my activities?",
-      answer: "Yes! Open your trip, click on the activity you want to modify, and use the Edit or Delete buttons. Changes are saved instantly."
+      question: t("hp_faq_q5"),
+      answer: t("hp_faq_a5")
     },
   ];
 
@@ -93,7 +95,7 @@ function HelpPage() {
       const res = await Axios.post("Users/SubmitTicket", {category:category, title:subject, contents:message}, {withCredentials:true})
       if(res.data){
         console.log("Ticket submitted");
-        setSuccessMessage("Your support ticket has been submitted successfully! Our team will respond within 24 hours.");
+        setSuccessMessage(t("hp_ticket_success"));
         setTimeout(() => {
           e.target.reset();
         }, 100);
@@ -120,7 +122,7 @@ function HelpPage() {
     let rating = document.getElementById("rating-input").value;
     const content = document.getElementById("review-message").value;
     if (rating === "0") {
-      alert("Please select a rating before submitting");
+      alert(t("hp_review_rating_alert"));
       return;
     }
     rating = parseInt(rating);
@@ -129,7 +131,7 @@ function HelpPage() {
       const res = await Axios.post("Users/SubmitReview", {content:content, rating:rating}, {withCredentials:true})
       if(res.data){
         console.log("Review submitted with rating:", rating);
-        setSuccessMessage("Thank you for your review! We appreciate your feedback.");
+        setSuccessMessage(t("hp_review_success"));
       }
     }
     catch(err){
@@ -153,9 +155,9 @@ function HelpPage() {
     <div className="help-page">
       <div className="help-header">
         <button className="help-back-btn" onClick={() => navigate("/profile")}>
-          ← Back
+          ← {t("hp_back_btn")}
         </button>
-        <h1>Help Centre</h1>
+        <h1>{t("hp_title")}</h1>
         <div></div>
       </div>
 
@@ -166,26 +168,26 @@ function HelpPage() {
             className={`help-tab-btn ${activeTab === "faq" ? "active" : ""}`}
             onClick={() => setActiveTab("faq")}
           >
-            FAQ
+            {t("hp_tab_faq")}
           </button>
           <button
             className={`help-tab-btn ${activeTab === "ticket" ? "active" : ""}`}
             onClick={() => setActiveTab("ticket")}
           >
-            Submit Ticket
+            {t("hp_tab_ticket")}
           </button>
           <button
             className={`help-tab-btn ${activeTab === "review" ? "active" : ""}`}
             onClick={() => setActiveTab("review")}
           >
-            Submit Review
+            {t("hp_tab_review")}
           </button>
         </div>
 
         {/*FAQ tab*/}
         {activeTab === "faq" && (
           <div className="help-content faq-section">
-            <h2>Frequently Asked Questions</h2>
+            <h2>{t("hp_faq_title")}</h2>
             <div className="faq-list">
               {faqs.map((faq) => (
                 <FAQItem key={faq.id} faq={faq} />
@@ -197,44 +199,44 @@ function HelpPage() {
         {/*Submit ticket tab*/}
         {activeTab === "ticket" && (
           <div className="help-content ticket-section">
-            <h2>Submit a Support Ticket</h2>
+            <h2>{t("hp_ticket_title")}</h2>
             <p className="form-intro">
-              Have an issue or need assistance? Let us know and our support team will help you resolve it.
+              {t("hp_ticket_intro")}
             </p>
             <form className="help-form" onSubmit={handleTicketSubmit}>
               <div className="form-group">
-                <label htmlFor="category">Issue Category</label>
+                <label htmlFor="category">{t("hp_ticket_category_label")}</label>
                 <select id="category" required>
-                  <option value="">Select a category</option>
-                  <option value="bug">Bug Report</option>
-                  <option value="account">Account Issue</option>
-                  <option value="technical">Technical Support</option>
-                  <option value="other">Other</option>
+                  <option value="">{t("hp_ticket_category_placeholder")}</option>
+                  <option value="bug">{t("hp_ticket_category_bug")}</option>
+                  <option value="account">{t("hp_ticket_category_account")}</option>
+                  <option value="technical">{t("hp_ticket_category_technical")}</option>
+                  <option value="other">{t("hp_ticket_category_other")}</option>
                 </select>
               </div>
 
               <div className="form-group">
-                <label htmlFor="subject">Subject</label>
+                <label htmlFor="subject">{t("hp_ticket_subject_label")}</label>
                 <input
                   type="text"
                   id="subject"
-                  placeholder="Brief description of your issue"
+                  placeholder={t("hp_ticket_subject_placeholder")}
                   required
                 />
               </div>
 
               <div className="form-group">
-                <label htmlFor="message">Details</label>
+                <label htmlFor="message">{t("hp_ticket_details_label")}</label>
                 <textarea
                   id="message"
-                  placeholder="Please provide detailed information about your issue..."
+                  placeholder={t("hp_ticket_details_placeholder")}
                   rows="6"
                   required
                 ></textarea>
               </div>
 
               <button type="submit" className="submit-btn">
-                Submit Ticket
+                {t("hp_ticket_submit_btn")}
               </button>
             </form>
           </div>
@@ -243,29 +245,29 @@ function HelpPage() {
         {/*Submit review tab*/}
         {activeTab === "review" && (
           <div className="help-content review-section" key={reviewKey}>
-            <h2>Submit a Review</h2>
+            <h2>{t("hp_review_title")}</h2>
             <p className="form-intro">
-              Share your experience with TripMate! Your feedback helps us improve.
+              {t("hp_review_intro")}
             </p>
             <form className="help-form" onSubmit={handleReviewSubmit}>
               <div className="form-group">
-                <label>Rate Your Experience</label>
+                <label>{t("hp_review_rating_label")}</label>
                 <ReviewStarRating />
                 <input type="hidden" id="rating-input" name="rating" defaultValue="0" />
               </div>
 
               <div className="form-group">
-                <label htmlFor="review-message">Your Review</label>
+                <label htmlFor="review-message">{t("hp_review_message_label")}</label>
                 <textarea
                   id="review-message"
-                  placeholder="Tell us about your experience with TripMate..."
+                  placeholder={t("hp_review_message_placeholder")}
                   rows="6"
                   required
                 ></textarea>
               </div>
 
               <button type="submit" className="submit-btn">
-                Submit Review
+                {t("hp_review_submit_btn")}
               </button>
             </form>
           </div>

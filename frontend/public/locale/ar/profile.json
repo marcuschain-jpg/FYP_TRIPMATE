@@ -1,0 +1,41 @@
+{
+    "__PROFILE PAGE": "=========== صفحة الملف الشخصي =============",
+        "pp_edit_btn": "تعديل الملف الشخصي",
+        "pp_help_btn": "مساعدة",
+        "pp_premium_badge": "بريميوم",
+    
+        "pp_loading_username": "جارٍ التحميل..",
+        "pp_default_avatar_alt": "صورة المستخدم",
+    
+        "pp_calendar_title": "تقويم الرحلات",
+        "pp_calendar_loading": "جارٍ تحميل التقويم...",
+    
+        "pp_calendar_today_btn": "اليوم",
+        "pp_calendar_prev_month": "الشهر السابق",
+        "pp_calendar_next_month": "الشهر التالي",
+    
+        "pp_calendar_legend_private": "رحلات خاصة",
+        "pp_calendar_legend_group": "رحلات جماعية",
+    
+        "pp_calendar_day_sun": "الأحد",
+        "pp_calendar_day_mon": "الاثنين",
+        "pp_calendar_day_tue": "الثلاثاء",
+        "pp_calendar_day_wed": "الأربعاء",
+        "pp_calendar_day_thu": "الخميس",
+        "pp_calendar_day_fri": "الجمعة",
+        "pp_calendar_day_sat": "السبت",
+    
+        "pp_calendar_month_january": "يناير",
+        "pp_calendar_month_february": "فبراير",
+        "pp_calendar_month_march": "مارس",
+        "pp_calendar_month_april": "أبريل",
+        "pp_calendar_month_may": "مايو",
+        "pp_calendar_month_june": "يونيو",
+        "pp_calendar_month_july": "يوليو",
+        "pp_calendar_month_august": "أغسطس",
+        "pp_calendar_month_september": "سبتمبر",
+        "pp_calendar_month_october": "أكتوبر",
+        "pp_calendar_month_november": "نوفمبر",
+        "pp_calendar_month_december": "ديسمبر"
+  }
+  

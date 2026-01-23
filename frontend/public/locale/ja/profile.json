@@ -1,0 +1,41 @@
+{
+    "__PROFILE PAGE": "=========== プロフィールページ =============",
+        "pp_edit_btn": "プロフィールを編集",
+        "pp_help_btn": "ヘルプ",
+        "pp_premium_badge": "プレミアム",
+    
+        "pp_loading_username": "読み込み中..",
+        "pp_default_avatar_alt": "ユーザーアバター",
+    
+        "pp_calendar_title": "旅行カレンダー",
+        "pp_calendar_loading": "カレンダーを読み込み中...",
+    
+        "pp_calendar_today_btn": "今日",
+        "pp_calendar_prev_month": "前の月",
+        "pp_calendar_next_month": "次の月",
+    
+        "pp_calendar_legend_private": "プライベート旅行",
+        "pp_calendar_legend_group": "グループ旅行",
+    
+        "pp_calendar_day_sun": "日",
+        "pp_calendar_day_mon": "月",
+        "pp_calendar_day_tue": "火",
+        "pp_calendar_day_wed": "水",
+        "pp_calendar_day_thu": "木",
+        "pp_calendar_day_fri": "金",
+        "pp_calendar_day_sat": "土",
+    
+        "pp_calendar_month_january": "1月",
+        "pp_calendar_month_february": "2月",
+        "pp_calendar_month_march": "3月",
+        "pp_calendar_month_april": "4月",
+        "pp_calendar_month_may": "5月",
+        "pp_calendar_month_june": "6月",
+        "pp_calendar_month_july": "7月",
+        "pp_calendar_month_august": "8月",
+        "pp_calendar_month_september": "9月",
+        "pp_calendar_month_october": "10月",
+        "pp_calendar_month_november": "11月",
+        "pp_calendar_month_december": "12月"
+  }
+  

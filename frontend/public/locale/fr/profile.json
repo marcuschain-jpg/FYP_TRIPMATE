@@ -1,0 +1,41 @@
+{
+    "__PROFILE PAGE": "=========== PAGE DE PROFIL =============",
+        "pp_edit_btn": "Modifier le profil",
+        "pp_help_btn": "Aide",
+        "pp_premium_badge": "Premium",
+    
+        "pp_loading_username": "Chargement..",
+        "pp_default_avatar_alt": "Avatar de l'utilisateur",
+    
+        "pp_calendar_title": "Calendrier des voyages",
+        "pp_calendar_loading": "Chargement du calendrier...",
+    
+        "pp_calendar_today_btn": "Aujourd’hui",
+        "pp_calendar_prev_month": "Mois précédent",
+        "pp_calendar_next_month": "Mois suivant",
+    
+        "pp_calendar_legend_private": "Voyages privés",
+        "pp_calendar_legend_group": "Voyages en groupe",
+    
+        "pp_calendar_day_sun": "Dim",
+        "pp_calendar_day_mon": "Lun",
+        "pp_calendar_day_tue": "Mar",
+        "pp_calendar_day_wed": "Mer",
+        "pp_calendar_day_thu": "Jeu",
+        "pp_calendar_day_fri": "Ven",
+        "pp_calendar_day_sat": "Sam",
+    
+        "pp_calendar_month_january": "Janvier",
+        "pp_calendar_month_february": "Février",
+        "pp_calendar_month_march": "Mars",
+        "pp_calendar_month_april": "Avril",
+        "pp_calendar_month_may": "Mai",
+        "pp_calendar_month_june": "Juin",
+        "pp_calendar_month_july": "Juillet",
+        "pp_calendar_month_august": "Août",
+        "pp_calendar_month_september": "Septembre",
+        "pp_calendar_month_october": "Octobre",
+        "pp_calendar_month_november": "Novembre",
+        "pp_calendar_month_december": "Décembre"
+  }
+  

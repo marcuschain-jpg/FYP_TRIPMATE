@@ -1,0 +1,19 @@
+{
+    "__GROUP TRIP PAGE": "=========== PÁGINA DE VIAJE EN GRUPO =============",
+    "gt_join_btn": "Unirse",
+    "gt_exit_btn": "Salir",
+    "gt_create_new_trip_btn": "Crear nuevo viaje",
+    "gt_search_trip_name": "Buscar_nombre_del_viaje",
+    "gt_message_exit": "¿Seguro que deseas salir de este viaje?",
+    "gt_cancel_exit_btn": "Cancelar",
+    "gt_confirm_exit_btn": "OK",
+    "gt_modal_trip_name": "Nombre del viaje",
+    "gt_modal_no_of_pax": "N.º de personas (MÁX 5)",
+    "gt_modal_start_date": "Fecha de inicio",
+    "gt_modal_end_date": "Fecha de finalización",
+    "gt_modal_location": "Ubicación",
+    "gt_modal_description": "Descripción",
+    "gt_modal_cancel_btn": "Cancelar",
+    "gt_modal_update_btn": "Actualizar",
+    "gt_errmsg_fields": "Por favor, completa todos los campos."
+}
