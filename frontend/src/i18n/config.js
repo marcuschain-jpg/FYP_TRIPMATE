@@ -8,7 +8,7 @@ i18n
 .use(initReactI18next)
 .init({
     lng: "en", // default locale
-    ns: ["common", "mytrips", "itinerary", "tripdetails", "grouptrips", "profile"],
+    ns: ["common", "mytrips", "itinerary", "tripdetails", "grouptrips", "profile", "confirmation"],
     defaultNS: "common",
     fallbackLng: "en", // fallback used when translation is missing in active locale
     debug: true, // enable output in browser console

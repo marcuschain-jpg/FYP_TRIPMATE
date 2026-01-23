@@ -1,5 +1,5 @@
 {
-    "__PROFILE PAGE": "=========== PAGE DE PROFIL =============",
+    "__PROFILE PAGE": "=========== PROFILE PAGE =============",
         "pp_edit_btn": "Modifier le profil",
         "pp_help_btn": "Aide",
         "pp_premium_badge": "Premium",
@@ -36,6 +36,59 @@
         "pp_calendar_month_september": "Septembre",
         "pp_calendar_month_october": "Octobre",
         "pp_calendar_month_november": "Novembre",
-        "pp_calendar_month_december": "Décembre"
+        "pp_calendar_month_december": "Décembre",
+
+
+    "__EDIT PROFILE PAGE": "========== EDIT PROFILE PAGE ==========",
+        "ep_succ_unsubscribe": "Désabonnement réussi",
+        "ep_err_card_number": "Le numéro de carte doit comporter 16 chiffres",
+        "ep_err_card_cvv": "Le CVV doit comporter 3 chiffres",
+        "ep_err_card_date": "Veuillez entrer la date d’expiration au format MM/AA",
+        "ep_err_password_match": "Les mots de passe ne correspondent pas",
+        "ep_err_password_digit": "Le mot de passe doit comporter au moins 6 caractères",
+
+        "ep_title": "Modifier le profil",
+        "ep_changephoto": "Changer la photo",
+        "ep_email": "Email",
+        "ep_email_ph": "Entrez l’email",
+        "ep_fname": "Prénom",
+        "ep_fname_ph": "Entrez le prénom",
+        "ep_lname": "Nom",
+        "ep_lname_ph": "Entrez le nom",
+        "ep_bio": "Bio",
+        "ep_bio_ph": "Parlez-nous de vous",
+        "ep_password": "Mot de passe",
+        "ep_password_ph": "Laissez vide pour conserver le mot de passe actuel",
+        "ep_confirmpassword": "Confirmer le mot de passe",
+        "ep_confirmpassword_ph": "Confirmez le nouveau mot de passe",
+        "ep_acctype_title": "Type de compte",
+        "ep_acctype_premium": "Premium",
+        "ep_acctype_free": "Gratuit",
+        "ep_save_btn": "Enregistrer les modifications",
+        "ep_cancel_btn": "Annuler",
+
+        "ep_unsubmodal_title": "Se désabonner de TripMate Premium ?",
+        "ep_unsubmodal_text": "La communauté ne sera pas la même sans vous :(",
+        "ep_unsubmodal_warning1": "Se désabonner signifie perdre des avantages comme rejoindre des voyages de groupe et collaborer.",
+        "ep_unsubmodal_warning2": "Êtes-vous sûr de vouloir vous désabonner ?",
+        "ep_unsub_btn": "Se désabonner",
+
+        "ep_submodal_title": "Améliorez votre expérience !",
+        "ep_submodal_text": "Passez à TripMate Premium pour débloquer des avantages exclusifs et une planification de voyage plus intelligente.",
+        "ep_sub_btn": "S’abonner",
+
+        "ep_cardmodal_title": "Détails de paiement",
+        "ep_cardmodal_name_tb": "Nom sur la carte",
+        "ep_cardmodal_name_ph": "John Smith",
+        "ep_cardmodal_num_tb": "N° de carte",
+        "ep_cardmodal_num_ph": "1234 5678 9012 3456",
+        "ep_cardmodal_expdate_tb": "Date d’expiration",
+        "ep_cardmodal_expdate_ph": "MM/AA",
+        "ep_cardmodal_cvv_tb": "CVV",
+        "ep_cardmodal_cvv_ph": "123",
+        "ep_pay_btn": "Effectuer le paiement",
+
+        "ep_succmodal_title": "Bienvenue en Premium !",
+        "ep_succmodal_text": "Votre compte a été mis à niveau avec succès."
   }
   

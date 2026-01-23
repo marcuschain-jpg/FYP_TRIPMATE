@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/EditProfile.css";
 import Axios from '../hooks/Axios.js';
+import { useTranslation } from "react-i18next";
 
 //Initial user profile information before editing
 const initialProfile = {
@@ -24,6 +25,7 @@ function EditProfilePage() {
   const navigate = useNavigate();
   const location = useLocation();
   const incomingProfile = initialProfile;
+  const { t } = useTranslation("profile");
 
   const [loading, setLoading] = useState(true);
 
@@ -118,7 +120,7 @@ function EditProfilePage() {
     const newAccType = "registered";
     try{
       const res = Axios.patch("Users/UserChangeType", {newType: newAccType}, {withCredentials:true})
-      if(res.data.send) alert ("Unsubscribe successful")
+      if(res.data.send) alert (t("ep_succ_unsubscribe"))
     }
     catch(err){
       if(err.response){
@@ -149,11 +151,11 @@ function EditProfilePage() {
   const handlePaymentSubmit = (e) => {
     e.preventDefault();
     const cleanCardNumber = paymentDetails.cardNumber.replace(/\s+/g, "");
-    if (cleanCardNumber.length !== 16) return alert("Card number must be 16 digits");
-    if (paymentDetails.cvv.length !== 3) return alert("CVV must be 3 digits");
+    if (cleanCardNumber.length !== 16) return alert(t("ep_err_card_number"));
+    if (paymentDetails.cvv.length !== 3) return alert(t("ep_err_card_cvv"));
     const expParts = paymentDetails.expDate.split("/");
     if (expParts.length !== 2 || expParts[0].length !== 2 || expParts[1].length !== 2) {
-      return alert("Please enter expiry date in MM/YY format");
+      return alert(t("ep_err_card_date"));
     }
 
     const newAccType = "premium";
@@ -201,10 +203,10 @@ function EditProfilePage() {
 
     if (password || confirmPassword) {
       if (password !== confirmPassword) {
-        return alert("Passwords do not match");
+        return alert(t("ep_err_password_match"));
       }
       if (password.length < 6) {
-        return alert("Password must be at least 6 characters long");
+        return alert(t("ep_err_password_"));
       }
     }
 
@@ -254,7 +256,7 @@ function EditProfilePage() {
     <div className="edit-profile-page">
       <div className="edit-profile-main">
         <div className="edit-profile-container">
-          <h1 className="edit-profile-title">Edit Profile</h1>
+          <h1 className="edit-profile-title">{t("ep_title")}</h1>
           <form onSubmit={handleSaveChanges}>
             <div className="profile-pic-section">
               <div className="profile-pic-wrapper">
@@ -278,7 +280,7 @@ function EditProfilePage() {
                 )}
               </div>
               <label htmlFor="profile-pic-input" className="change-pic-btn">
-                Change Photo
+                {t("ep_changephoto")}
               </label>
               <input
                 type="file"
@@ -290,69 +292,69 @@ function EditProfilePage() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="email">Email</label>
+              <label htmlFor="email">{t("ep_email")}</label>
               <input
                 type="email"
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter email"
+                placeholder={t("ep_email_ph")}
               />
             </div>
 
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="firstName">First Name</label>
+                <label htmlFor="firstName">{t("ep_fname")}</label>
                 <input
                   type="text"
                   id="firstName"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="Enter first name"
+                  placeholder={t("ep_fname_ph")}
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="lastName">Last Name</label>
+                <label htmlFor="lastName">{t("ep_lname")}</label>
                 <input
                   type="text"
                   id="lastName"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Enter last name"
+                  placeholder={t("ep_lname_ph")}
                 />
               </div>
             </div>
 
             <div className="form-group">
-              <label htmlFor="bio">Bio</label>
+              <label htmlFor="bio">{t("ep_bio")}</label>
               <input
                 type="text"
                 id="bio"
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                placeholder="Tell us about yourself"
+                placeholder={t("ep_bio_ph")}
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="password">Password</label>
+              <label htmlFor="password">{t("ep_password")}</label>
               <input
                 type="password"
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Leave blank to keep current password"
+                placeholder={t("ep_password_ph")}
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm Password</label>
+              <label htmlFor="confirmPassword">{t("ep_confirmpassword")}</label>
               <input
                 type="password"
                 id="confirmPassword"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm new password"
+                placeholder={t("ep_confirmpassword_ph")}
               />
             </div>
 
@@ -379,31 +381,31 @@ function EditProfilePage() {
             </div>
 
             <div className="form-group">
-              <label>Account Type</label>
+              <label>{t("ep_acctype_title")}</label>
               <div className="account-type-buttons">
                 <button
                   type="button"
                   className={`account-type-btn ${accountType === "premium" ? "active" : ""}`}
                   onClick={() => handleAccountTypeClick("Premium")}
                 >
-                  Premium
+                  {t("ep_acctype_premium")}
                 </button>
                 <button
                   type="button"
                   className={`account-type-btn ${accountType === "registered" ? "active" : ""}`}
                   onClick={() => handleAccountTypeClick("Free")}
                 >
-                  Free
+                  {t("ep_acctype_free")}
                 </button>
               </div>
             </div>
 
             <div className="form-actions">
               <button type="submit" className="save-btn">
-                Save Changes
+                {t("ep_save_btn")}
               </button>
               <button type="button" className="cancel-btn" onClick={handleCancel}>
-                Cancel
+                {t("ep_cancel_btn")}
               </button>
             </div>
           </form>
@@ -414,18 +416,18 @@ function EditProfilePage() {
       {showUnsubscribeModal && (
         <div className="modal-overlay" onClick={cancelUnsubscribe}>
           <div className="unsubscribe-modal" onClick={(e) => e.stopPropagation()}>
-            <h2>Unsubscribe from TripMate Premium?</h2>
-            <p>The community won't be the same without you :(</p>
+            <h2>{t("ep_unsubmodal_title")}</h2>
+            <p>{t("ep_unsubmodal_text")}</p>
             <p className="modal-warning">
-              Unsubscribing to premium would mean losing perks like joining group trips and collaboration.
-              Are you sure you want to unsubscribe?
+              {t("ep_unsubmodal_warning1")}
+              {t("ep_unsubmodal_warning2")}
             </p>
             <div className="modal-actions">
               <button className="unsubscribe-confirm-btn" onClick={confirmUnsubscribe}>
-                Unsubscribe
+                {t("ep_unsub_btn")}
               </button>
               <button className="unsubscribe-cancel-btn" onClick={cancelUnsubscribe}>
-                Cancel
+                {t("ep_cancel_btn")}
               </button>
             </div>
           </div>
@@ -436,16 +438,16 @@ function EditProfilePage() {
       {showUpgradeModal && (
         <div className="modal-overlay" onClick={cancelUpgrade}>
           <div className="upgrade-modal" onClick={(e) => e.stopPropagation()}>
-            <h2>Level up your journey!</h2>
+            <h2>{t("ep_submodal_title")}</h2>
             <p className="upgrade-description">
-              Upgrade to TripMate premium to unlock exclusive perks and smarter trip planning.
+              {t("ep_submodal_text")}
             </p>
             <div className="modal-actions">
               <button className="subscribe-btn" onClick={handleUpgradeClick}>
-                Subscribe
+                {t("ep_sub_btn")}
               </button>
               <button className="modal-cancel-btn" onClick={cancelUpgrade}>
-                Cancel
+                {t("ep_cancel_btn")}
               </button>
             </div>
           </div>
@@ -456,60 +458,60 @@ function EditProfilePage() {
       {showPaymentModal && (
         <div className="modal-overlay" onClick={cancelPayment}>
           <div className="payment-modal" onClick={(e) => e.stopPropagation()}>
-            <h2>Payment Details</h2>
+            <h2>{t("ep_cardmodal_title")}</h2>
             <form onSubmit={handlePaymentSubmit}>
               <div className="payment-form-group">
-                <label>Name on card</label>
+                <label>{t("ep_cardmodal_name_tb")}</label>
                 <input
                   type="text"
                   value={paymentDetails.cardName}
                   onChange={(e) => setPaymentDetails({ ...paymentDetails, cardName: e.target.value })}
-                  placeholder="John Smith"
+                  placeholder={t("ep_cardmodal_name_ph")}
                   required
                 />
               </div>
               <div className="payment-form-group">
-                <label>Card no.</label>
+                <label>{t("ep_cardmodal_num_tb")}</label>
                 <input
                   type="text"
                   value={paymentDetails.cardNumber}
                   onChange={(e) =>
                     setPaymentDetails({ ...paymentDetails, cardNumber: formatCardNumber(e.target.value) })
                   }
-                  placeholder="1234 5678 9012 3456"
+                  placeholder={t("ep_cardmodal_num_ph")}
                   required
                 />
               </div>
               <div className="payment-row">
                 <div className="payment-form-group">
-                  <label>Exp date</label>
+                  <label>{t("ep_cardmodal_expdate_tb")}</label>
                   <input
                     type="text"
                     value={paymentDetails.expDate}
                     onChange={(e) =>
                       setPaymentDetails({ ...paymentDetails, expDate: formatExpDate(e.target.value) })
                     }
-                    placeholder="MM/YY"
+                    placeholder={t("ep_cardmodal_expdate_ph")}
                     required
                   />
                 </div>
                 <div className="payment-form-group">
-                  <label>CVV</label>
+                  <label>{t("ep_cardmodal_cvv_tb")}</label>
                   <input
                     type="text"
                     value={paymentDetails.cvv}
                     onChange={(e) => setPaymentDetails({ ...paymentDetails, cvv: formatCVV(e.target.value) })}
-                    placeholder="123"
+                    placeholder={t("ep_cardmodal_cvv_ph")}
                     required
                   />
                 </div>
               </div>
               <div className="payment-modal-actions">
                 <button type="button" className="payment-cancel-btn" onClick={cancelPayment}>
-                  Cancel
+                  {t("ep_cancel_btn")}
                 </button>
                 <button type="submit" className="payment-submit-btn">
-                  Make Payment
+                  {t("ep_cancel_btn")}
                 </button>
               </div>
             </form>
@@ -522,8 +524,8 @@ function EditProfilePage() {
         <div className="modal-overlay">
           <div className="success-modal">
             <div className="success-icon">✓</div>
-            <h2>Welcome to Premium!</h2>
-            <p>Your account has been upgraded successfully.</p>
+            <h2>{t("ep_succmodal_title")}</h2>
+            <p>{t("ep_succmodal_text")}</p>
           </div>
         </div>
       )}

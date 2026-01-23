@@ -1,5 +1,5 @@
 {
-    "__PROFILE PAGE": "=========== صفحة الملف الشخصي =============",
+    "__PROFILE PAGE": "=========== PROFILE PAGE =============",
         "pp_edit_btn": "تعديل الملف الشخصي",
         "pp_help_btn": "مساعدة",
         "pp_premium_badge": "بريميوم",
@@ -36,6 +36,61 @@
         "pp_calendar_month_september": "سبتمبر",
         "pp_calendar_month_october": "أكتوبر",
         "pp_calendar_month_november": "نوفمبر",
-        "pp_calendar_month_december": "ديسمبر"
+        "pp_calendar_month_december": "ديسمبر",
+
+    
+    "__EDIT PROFILE PAGE": "========== EDIT PROFILE PAGE ==========",
+        "ep_succ_unsubscribe": "تم إلغاء الاشتراك بنجاح",
+        "ep_err_card_number": "رقم البطاقة يجب أن يتكون من 16 رقمًا",
+        "ep_err_card_cvv": "رمز CVV يجب أن يكون 3 أرقام",
+        "ep_err_card_date": "الرجاء إدخال تاريخ انتهاء الصلاحية بصيغة MM/YY",
+        "ep_err_password_match": "كلمات المرور غير متطابقة",
+        "ep_err_password_digit": "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
+
+        "ep_title": "تعديل الملف الشخصي",
+        "ep_changephoto": "تغيير الصورة",
+        "ep_email": "البريد الإلكتروني",
+        "ep_email_ph": "أدخل البريد الإلكتروني",
+        "ep_fname": "الاسم الأول",
+        "ep_fname_ph": "أدخل الاسم الأول",
+        "ep_lname": "اسم العائلة",
+        "ep_lname_ph": "أدخل اسم العائلة",
+        "ep_bio": "نبذة عنك",
+        "ep_bio_ph": "أخبرنا عن نفسك",
+        "ep_password": "كلمة المرور",
+        "ep_password_ph": "اتركه فارغًا للاحتفاظ بكلمة المرور الحالية",
+        "ep_confirmpassword": "تأكيد كلمة المرور",
+        "ep_confirmpassword_ph": "تأكيد كلمة المرور الجديدة",
+        "ep_acctype_title": "نوع الحساب",
+        "ep_acctype_premium": "مميز",
+        "ep_acctype_free": "مجاني",
+        "ep_save_btn": "حفظ التغييرات",
+        "ep_cancel_btn": "إلغاء",
+
+        "ep_unsubmodal_title": "إلغاء الاشتراك في TripMate Premium؟",
+        "ep_unsubmodal_text": "المجتمع لن يكون كما هو بدونك :(",
+        "ep_unsubmodal_warning1": "إلغاء الاشتراك يعني فقدان المزايا مثل الانضمام إلى الرحلات الجماعية والتعاون.",
+        "ep_unsubmodal_warning2": "هل أنت متأكد أنك تريد إلغاء الاشتراك؟",
+        "ep_unsub_btn": "إلغاء الاشتراك",
+
+        "ep_submodal_title": "ارتق برحلتك!",
+        "ep_submodal_text": "قم بالترقية إلى TripMate Premium للحصول على مزايا حصرية وتخطيط رحلات أذكى.",
+        "ep_sub_btn": "اشترك",
+
+        "ep_cardmodal_title": "تفاصيل الدفع",
+        "ep_cardmodal_name_tb": "الاسم على البطاقة",
+        "ep_cardmodal_name_ph": "جون سميث",
+        "ep_cardmodal_num_tb": "رقم البطاقة",
+        "ep_cardmodal_num_ph": "1234 5678 9012 3456",
+        "ep_cardmodal_expdate_tb": "تاريخ الانتهاء",
+        "ep_cardmodal_expdate_ph": "MM/YY",
+        "ep_cardmodal_cvv_tb": "رمز CVV",
+        "ep_cardmodal_cvv_ph": "123",
+        "ep_pay_btn": "إجراء الدفع",
+
+        "ep_succmodal_title": "مرحبًا بك في Premium!",
+        "ep_succmodal_text": "تم ترقية حسابك بنجاح."
+
+
   }
   

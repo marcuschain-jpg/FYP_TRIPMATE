@@ -47,7 +47,6 @@ function formatDateForCalendar(dateValue) {
 }
 
 function ProfilePage() {
-  const { t } = useTranslation("profile");
   const navigate = useNavigate();
   const location = useLocation();
   const { t,i18n } = useTranslation("profile");

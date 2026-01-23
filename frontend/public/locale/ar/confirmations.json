@@ -1,0 +1,11 @@
+{
+    "__CONFIRMATION FROM EMAIL PAGE": " ========== CONFIRMATION FROM EMAIL PAGE ==========",
+    "cp_confirm_title": "لقد تمت دعوتك!",
+    "cp_confirm_text": "قام أصدقاؤك بدعوتك للتعاون في التخطيط لرحلتهم",
+    "cp_accept_btn": "قبول الدعوة",
+    "cp_invalid_title": "الدعوة غير صالحة!",
+    "cp_login_btn": "العودة إلى تسجيل الدخول",
+    "cp_accept_title": "تم قبول الدعوة!",
+    "cp_accept_text": "رائع! كل شيء جاهز. سجّل الدخول لبدء التخطيط للرحلة معًا.",
+    "cp_accept_login_btn": "الانتقال إلى تسجيل الدخول"
+}

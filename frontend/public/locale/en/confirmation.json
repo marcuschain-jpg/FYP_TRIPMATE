@@ -1,0 +1,11 @@
+{
+    "__CONFIRMATION FROM EMAIL PAGE": " ========== CONFIRMATION FROM EMAIL PAGE ==========",
+        "cp_confirm_title": "You've Been Invited!",
+        "cp_confirm_text": "Your friends have invited you to collaborate on their trip",
+        "cp_accept_btn": "Accept Invitation",
+        "cp_invalid_title": "Invitation Invalid!",
+        "cp_login_btn": "Go Back to Login",
+        "cp_accept_title": "Invitation Accepted!",
+        "cp_accept_text": "Great! You're all set. Log in to start planning your trip together.",
+        "cp_accept_login_btn": "Go to Login"
+}

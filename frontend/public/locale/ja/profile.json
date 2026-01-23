@@ -1,5 +1,5 @@
 {
-    "__PROFILE PAGE": "=========== プロフィールページ =============",
+    "__PROFILE PAGE": "=========== PROFILE PAGE =============",
         "pp_edit_btn": "プロフィールを編集",
         "pp_help_btn": "ヘルプ",
         "pp_premium_badge": "プレミアム",
@@ -36,6 +36,60 @@
         "pp_calendar_month_september": "9月",
         "pp_calendar_month_october": "10月",
         "pp_calendar_month_november": "11月",
-        "pp_calendar_month_december": "12月"
+        "pp_calendar_month_december": "12月",
+
+
+    "__EDIT PROFILE PAGE": "========== EDIT PROFILE PAGE ==========",
+        "ep_succ_unsubscribe": "解約が完了しました",
+        "ep_err_card_number": "カード番号は16桁で入力してください",
+        "ep_err_card_cvv": "CVVは3桁で入力してください",
+        "ep_err_card_date": "有効期限をMM/YY形式で入力してください",
+        "ep_err_password_match": "パスワードが一致しません",
+        "ep_err_password_digit": "パスワードは6文字以上である必要があります",
+
+        "ep_title": "プロフィール編集",
+        "ep_changephoto": "写真を変更",
+        "ep_email": "メール",
+        "ep_email_ph": "メールを入力",
+        "ep_fname": "名",
+        "ep_fname_ph": "名を入力",
+        "ep_lname": "姓",
+        "ep_lname_ph": "姓を入力",
+        "ep_bio": "自己紹介",
+        "ep_bio_ph": "自己紹介を入力",
+        "ep_password": "パスワード",
+        "ep_password_ph": "現在のパスワードを保持する場合は空欄",
+        "ep_confirmpassword": "パスワード確認",
+        "ep_confirmpassword_ph": "新しいパスワードを確認",
+        "ep_acctype_title": "アカウントタイプ",
+        "ep_acctype_premium": "プレミアム",
+        "ep_acctype_free": "無料",
+        "ep_save_btn": "変更を保存",
+        "ep_cancel_btn": "キャンセル",
+
+        "ep_unsubmodal_title": "TripMate Premiumを解約しますか？",
+        "ep_unsubmodal_text": "あなたがいないとコミュニティは同じではありません :(",
+        "ep_unsubmodal_warning1": "解約すると、グループ旅行への参加やコラボ機能などの特典が失われます。",
+        "ep_unsubmodal_warning2": "本当に解約しますか？",
+        "ep_unsub_btn": "解約する",
+
+        "ep_submodal_title": "旅をレベルアップ！",
+        "ep_submodal_text": "TripMate Premiumにアップグレードして、限定特典とよりスマートな旅行プランを手に入れましょう。",
+        "ep_sub_btn": "購読する",
+
+        "ep_cardmodal_title": "支払い情報",
+        "ep_cardmodal_name_tb": "カード名義",
+        "ep_cardmodal_name_ph": "John Smith",
+        "ep_cardmodal_num_tb": "カード番号",
+        "ep_cardmodal_num_ph": "1234 5678 9012 3456",
+        "ep_cardmodal_expdate_tb": "有効期限",
+        "ep_cardmodal_expdate_ph": "MM/YY",
+        "ep_cardmodal_cvv_tb": "CVV",
+        "ep_cardmodal_cvv_ph": "123",
+        "ep_pay_btn": "支払う",
+
+        "ep_succmodal_title": "プレミアムへようこそ！",
+        "ep_succmodal_text": "アカウントが正常にアップグレードされました。"
+
   }
   

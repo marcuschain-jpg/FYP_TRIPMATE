@@ -1,0 +1,11 @@
+{
+    "__CONFIRMATION FROM EMAIL PAGE": " ========== CONFIRMATION FROM EMAIL PAGE ==========",
+    "cp_confirm_title": "你已被邀請！",
+    "cp_confirm_text": "你的朋友邀請你一起協作規劃他們的行程",
+    "cp_accept_btn": "接受邀請",
+    "cp_invalid_title": "邀請無效！",
+    "cp_login_btn": "返回登入頁面",
+    "cp_accept_title": "邀請已接受！",
+    "cp_accept_text": "太好了！一切準備就緒。登入後即可一起開始規劃行程。",
+    "cp_accept_login_btn": "前往登入"
+}
