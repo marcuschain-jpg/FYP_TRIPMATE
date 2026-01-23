@@ -39,7 +39,7 @@ function UserNavbar({ outletContext }) {
                 { withCredentials: true }
             )
             .then((res) => {
-                if (res.data.success) alert("Successfully Logged Out!");
+                if (res.data.success) alert(t("Successfully Logged Out"));
             })
             .catch((err) => console.error(err));
 
@@ -204,7 +204,7 @@ function UserNavbar({ outletContext }) {
                                     className="profile-menu-item"
                                     onClick={handleLogout}
                                 >
-                                    Logout
+                                    {t("reg_nav_logout")}
                                 </button>
                             </div>
                         )}

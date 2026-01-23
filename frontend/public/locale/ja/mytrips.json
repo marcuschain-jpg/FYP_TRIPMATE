@@ -24,6 +24,8 @@
     "mt_btn_delete": "削除",
     "mt_btn_exit": "退出",
     "mt_btn_chat": "チャット",
+    "mt_modal_edittrip": "旅行を編集",
+    "mt_modal_tripdetails": "旅行の詳細",
     "mt_modal_tripname": "旅行名",
     "mt_modal_destination": "目的地の都市",
     "mt_modal_startdate": "開始日",

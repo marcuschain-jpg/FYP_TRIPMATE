@@ -25,6 +25,8 @@
     "mt_btn_delete": "刪除",
     "mt_btn_exit": "退出",
     "mt_btn_chat": "聊天",
+    "mt_modal_edittrip": "編輯行程",
+    "mt_modal_tripdetails": "行程詳情",
     "mt_modal_tripname": "旅程名稱",
     "mt_modal_destination": "目的地城市",
     "mt_modal_startdate": "開始日期",

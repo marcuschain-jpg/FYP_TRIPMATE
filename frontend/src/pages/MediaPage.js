@@ -2,10 +2,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "../styles/Media.css";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 
 function MediaPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation("itinerary");
 
   const [trip, setTrip] = useState(null);
   const [activities, setActivities] = useState([]);
@@ -190,7 +192,7 @@ function MediaPage() {
               ...prev,
               [activity.id]: [...(prev[activity.id] || []), ...mediaRes],
             }));
-            alert("Media uploaded successfully!");
+            alert(t("md_succ_upload"));
             setUploadingActivityId(null);
             e.target.value = "";
       }
@@ -207,7 +209,7 @@ function MediaPage() {
   //Save edit changes
   const saveEditChanges = async () => {
     if (!editTitle.trim()) {
-      alert("Title cannot be empty");
+      alert(t("md_err_title"));
       return;
     }
     let updateComplete = false;
@@ -242,14 +244,14 @@ function MediaPage() {
         ),
       }));
 
-      alert("Media updated successfully!");
+      alert(("md_succ_update"));
       setShowEditModal(false); 
     }
   };
 
   //Delete media
   const handleDelete = async (media, activityId) => {
-    if (!window.confirm("Delete this media?")) return;
+    if (!window.confirm(t("md_confirmdel"))) return;
     let deleteConfirm = false;
     console.log("media: ", media.photo_id);
     console.log("media: ", media.photo_url);
@@ -279,11 +281,11 @@ function MediaPage() {
       [activityId]: prev[activityId].filter((m) => m.photo_id !== media.photo_id),
       }));
 
-      alert("Media deleted successfully!");
+      alert(t("md_succ_delete"));
     }
   };
 
-  if (loading) return <p className="loading-text">Loading media...</p>;
+  if (loading) return <p className="loading-text">{t("Loading")}</p>;
 
   if (error) return <p className="loading-text">{error}</p>;
 
@@ -293,11 +295,11 @@ function MediaPage() {
         className="back-btn"
         onClick={() => navigate(`/mytrips/trip/${tripId}`)}
       >
-        ← Back
+        ← {t("back_btn")}
       </button>
 
       <div className="media-header">
-        <h1 className="media-title">{trip?.name || "Trip"} — Media</h1>
+        <h1 className="media-title">{trip?.name || "Trip"} — {t("md_mediatitle")}</h1>
         <p className="media-date-range">
           {trip ? `${trip.start} – ${trip.end}` : ""}
         </p>
@@ -306,13 +308,13 @@ function MediaPage() {
       {/*Date filter--> only shows dates that contain acitivities created by users*/}
       {allDates.length > 0 && (
         <div className="media-filter-bar">
-          <label className="filter-label">Filter by date:</label>
+          <label className="filter-label">{t("md_filtertitle")}:</label>
           <select
             className="filter-select"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
           >
-            <option value="">All Dates</option>
+            <option value="">{t("md_filteralldates")}</option>
             {allDates.map((date) => (
               <option key={date} value={date}>
                 {new Date(date).toLocaleDateString("en-GB", {
@@ -330,7 +332,7 @@ function MediaPage() {
       <div className="activities-container">
         {filteredActivities.length === 0 ? (
           <div className="no-activities">
-            <p>No activities for the selected date. Create one in the Itinerary page first!</p>
+            <p>{t("md_no_dates_for_act")}</p>
           </div>
         ) : (
           filteredActivities.map((activity) => (
@@ -353,7 +355,7 @@ function MediaPage() {
               {/*Add media button*/}
               <label className="upload-btn">
                 <span className="upload-icon">➕</span>
-                <span>Add Media</span>
+                <span>{t("md_add_media")}</span>
                 <input
                   type="file"
                   multiple
@@ -387,20 +389,20 @@ function MediaPage() {
                             className="edit-btn"
                             onClick={() => openEditModal(media, activity.id)}
                           >
-                            Edit
+                            {t("md_edit_btn")}
                           </button>
                           <button
                             className="delete-btn"
                             onClick={() => handleDelete(media || media, activity.id)}
                           >
-                            Delete
+                            {t("md_delete_btn")}
                           </button>
                         </div>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <p className="no-media">No media yet. Upload to get started!</p>
+                  <p className="no-media">{t("md_no_media")}</p>
                 )}
               </div>
             </div>
@@ -417,12 +419,12 @@ function MediaPage() {
             )}
 
             <div className="modal-content">
-              <h3 className="modal-title">Edit Title</h3>
+              <h3 className="modal-title">{t("md_editmodal_title_tb")}</h3>
               <input
                 className="modal-input"
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                placeholder="Enter media title"
+                placeholder={t("md_editmodal_title_ph")}
               />
 
               <div className="modal-buttons">
@@ -430,14 +432,14 @@ function MediaPage() {
                   className="cancel-btn"
                   onClick={() => setShowEditModal(false)}
                 >
-                  Cancel
+                  {t("md_editmodal_cancel_btn")}
                 </button>
 
                 <button
                   className="save-btn"
                   onClick={saveEditChanges}
                 >
-                  Save
+                  {t("md_editmodal_save_btn")}
                 </button>
               </div>
             </div>
