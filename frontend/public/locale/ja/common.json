@@ -10,6 +10,8 @@
     "reg_nav_mytrips": "マイトリップ",
     "reg_nav_myprofile": "マイプロフィール",
     "reg_nav_joinatrip": "旅行に参加",
+    "reg_nav_logout": "ログアウト",
+    "reg_nav_succ_logout": "正常にログアウトしました！",
 
     "__LANDING PAGE": " ========== LANDING PAGE ==========",
     "landing_title": "旅行計画がさらにシンプルに",

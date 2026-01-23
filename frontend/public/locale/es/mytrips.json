@@ -24,6 +24,8 @@
     "mt_btn_delete": "Eliminar",
     "mt_btn_exit": "Salir",
     "mt_btn_chat": "Chat",
+    "mt_modal_edittrip": "Editar viaje",
+    "mt_modal_tripdetails": "Detalles del viaje",
     "mt_modal_tripname": "Nombre del viaje",
     "mt_modal_destination": "Ciudad de destino",
     "mt_modal_startdate": "Fecha de inicio",

@@ -2,87 +2,16 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../styles/Timeline.css";
 import axios from 'axios';
+import { useTranslation } from "react-i18next";
 
 function SavedTimelinesPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation("itinerary");
 
   const [loading, setLoading] = useState(true);
   const [activeTimeline, setActiveTimeline] = useState(null);
-  const [timeline, setTimeline] = useState([
-    {
-      id: 1,
-      name: "new timeline!",
-      nodes:
-      [
-        {
-        date: "2025-12-12",
-        mediaid: 1,
-        name: "me on a beach",
-        url: "http://localhost:8080/images/me_beach.jpg",
-        x: 10,
-        y: 10
-        },
-        {
-          date: "2025-12-24",
-          mediaid: 2,
-          name: "resevoir picture 2",
-          url: "http://localhost:8080/images/image.jpg",
-          x: 50,
-          y: 65
-        },
-        {
-          date: "2025-12-25",
-          mediaid: 3,
-          name: "resevoir picture 3",
-          url: "http://localhost:8080/images/download.jpg",
-          x: 90,
-          y: 20
-        }
-      ]
-    },
-    {
-      id: 2,
-      name: "another timeline!",
-      nodes:
-      [
-        {
-        date: "2025-12-12",
-        mediaid: 1,
-        name: "me on a beach",
-        url: "http://localhost:8080/images/me_beach.jpg",
-        x: 10,
-        y: 10
-        },
-        {
-          date: "2025-12-24",
-          mediaid: 2,
-          name: "resevoir picture 2",
-          url: "http://localhost:8080/images/image.jpg",
-          x: 50,
-          y: 65
-        },
-        {
-          date: "2025-12-25",
-          mediaid: 3,
-          name: "resevoir picture 3",
-          url: "http://localhost:8080/images/download.jpg",
-          x: 90,
-          y: 20
-        }
-      ]
-    }
-  ]);
-
-  //Load saved timelines
-  /*useEffect(() => {
-    const tripKey = getTripKey();
-    const trips = JSON.parse(localStorage.getItem(tripKey) || "[]");
-    const found = trips.find((t) => t.id === Number(tripId));
-    if (found) setTrip(found);
-  }, [tripId]);*/
-
-  //if (!trip) return <p>Trip not found.</p>;
+  const [timeline, setTimeline] = useState([]);
 
   useEffect(() => {
     axios.get("http://localhost:8080/Timeline/GetSavedTimelines", {params:{i_id: tripId}, withCredentials:true})
@@ -130,8 +59,6 @@ function SavedTimelinesPage() {
       });
       }
     });
-    console.log(timelineArr);
-
     setTimeline(timelineArr);
   };
 
@@ -143,35 +70,17 @@ function SavedTimelinesPage() {
     const selectedTimeline = timeline.filter(i => i.id === id)
     //Confirmation popup message
     const ok = window.confirm(
-      `Are you sure you want to delete the timeline "${selectedTimeline[0].name}"?`
+      `${t("stl_confirmdel")} "${selectedTimeline[0].name}"?`
     );
 
     if (!ok) return; 
-
-    /*const tripKey = getTripKey();
-    const trips = JSON.parse(localStorage.getItem(tripKey) || "[]");
-
-    const updatedTrips = trips.map((t) => {
-      if (t.id !== trip.id) return t;
-
-      return {
-        ...t,
-        savedTimelines: t.savedTimelines.filter((tl) => tl.id !== id),
-      };
-    });
-
-    localStorage.setItem(tripKey, JSON.stringify(updatedTrips));
-    setTrip(updatedTrips.find((t) => t.id === trip.id));*/
-
-    //Success popup message 
     
-
     await axios.delete("http://localhost:8080/Timeline/DeleteSavedTimeline", {data:{t_id:id}, withCredentials:true})
     .then(res => {
       if(res.data === true){
         const updatedTimelines = timeline.filter(i => i.id !== id)
         setTimeline(updatedTimelines);
-        alert("Timeline deleted successfully.");
+        alert(t("stl_succ_del"));
       }
     })
     .catch(err => {
@@ -197,7 +106,7 @@ function SavedTimelinesPage() {
     if (tl) setActiveTimeline(tl);
   };
 
-  {loading && <p>Loading..</p>}
+  {loading && <p>{t("Loading")}</p>}
 
   return (
     <div className="timeline-page">
@@ -212,7 +121,7 @@ function SavedTimelinesPage() {
           }
         }}
       >
-        ← Back
+        ← {t("back_btn")}
       </button>
 
       {/*View saved timeline mode*/}
@@ -257,7 +166,7 @@ function SavedTimelinesPage() {
       {/*Displays saved timeline--> grid formatting*/}
       {!activeTimeline && (
         <>
-          <h1 className="timeline-title">Saved Timelines</h1>
+          <h1 className="timeline-title">{t("stl_savedtimelines")}</h1>
 
           <div className="timeline-grid">
             {timelines.map((tl) => {
@@ -275,11 +184,11 @@ function SavedTimelinesPage() {
 
                   <div className="timeline-actions">
                     <button className="view-btn" onClick={() => handleView(tl.id)}>
-                      View
+                      {t("stl_view_btn")}
                     </button>
 
                     <button className="delete-btn" onClick={() => handleDelete(tl.id)}>
-                      Delete
+                      {t("stl_delete_btn")}
                     </button>
                   </div>
                 </div>
@@ -288,7 +197,7 @@ function SavedTimelinesPage() {
           </div>
 
           {timelines.length === 0 && (
-            <p style={{ marginTop: "20px" }}>No saved timelines yet.</p>
+            <p style={{ marginTop: "20px" }}>{t("stl_nosavedtimelines")}</p>
           )}
         </>
       )}

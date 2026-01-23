@@ -10,6 +10,8 @@
     "reg_nav_mytrips": "Mis viajes",
     "reg_nav_myprofile": "Mi perfil",
     "reg_nav_joinatrip": "Unirse a un viaje",
+    "reg_nav_logout": "Cerrar sesión",
+    "reg_nav_succ_logout": "¡Sesión cerrada con éxito!",
 
     "__LANDING PAGE": " ========== LANDING PAGE ==========",
     "landing_title": "Planificar viajes ahora es MÁS SIMPLE",

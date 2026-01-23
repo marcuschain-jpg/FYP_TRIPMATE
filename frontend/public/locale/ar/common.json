@@ -10,6 +10,8 @@
     "reg_nav_mytrips": "رحلاتي",
     "reg_nav_myprofile": "ملفي الشخصي",
     "reg_nav_joinatrip": "الانضمام إلى رحلة",
+    "reg_nav_logout": "تسجيل الخروج",
+    "reg_nav_succ_logout": "تم تسجيل الخروج بنجاح!",
 
     "__LANDING PAGE": " ========== LANDING PAGE ==========",
     "landing_title": "أصبح تخطيط الرحلات أسهل",

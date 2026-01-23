@@ -24,6 +24,8 @@
     "mt_btn_delete": "حذف",
     "mt_btn_exit": "مغادرة",
     "mt_btn_chat": "دردشة",
+    "mt_modal_edittrip": "تعديل الرحلة",
+    "mt_modal_tripdetails": "تفاصيل الرحلة",
     "mt_modal_tripname": "اسم الرحلة",
     "mt_modal_destination": "مدينة الوجهة",
     "mt_modal_startdate": "تاريخ البدء",
