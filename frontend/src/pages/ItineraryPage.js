@@ -36,7 +36,7 @@ function formatDateForDisplay(dateValue) {
 function ItineraryPage() {
   const { tripId, firstdate } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation("itinerary");
+  const { t, i18n } = useTranslation("itinerary");
 
   const [trip, setTrip] = useState(null);
   const [activities, setActivities] = useState([]);
@@ -46,6 +46,7 @@ function ItineraryPage() {
   const [showChat, setShowChat] = useState(false);
   const [activityCoords, setActivityCoords] = useState([]);
   const [mapConfig, setMapConfig] = useState(null);
+  const [lang, setLang] = useState(i18n.language||"en")
 
   //Google Maps refs
   const mapDivRef = useRef(null);
@@ -79,6 +80,17 @@ function ItineraryPage() {
         );
       });
   }, []);
+
+  useEffect(() => {
+    // Run when ititialized(default) & lang changed
+    i18n.on("languageChanged", function(lng) {
+      setLang(lng);
+    });
+
+    return() => {
+      i18n.off("languageChanged", function(lng) {});
+    };
+  }, [i18n])
 
   function loadGoogleMaps(apiKey) {
     return new Promise((resolve, reject) => {
@@ -493,7 +505,7 @@ function ItineraryPage() {
                   .sort()
                   .map((d) => (
                     <option key={d} value={d}>
-                      {new Date(d).toLocaleDateString("en-GB", {
+                      {new Date(d).toLocaleDateString(lang, {
                         weekday: "short",
                         day: "numeric",
                         month: "long",

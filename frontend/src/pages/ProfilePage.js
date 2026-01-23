@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/Profile.css";
 import Axios from '../hooks/Axios';
+import { useTranslation } from "react-i18next";
 
 const BookmarkIcon = ({ active }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={active ? "#333" : "#aaa"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -48,11 +49,13 @@ function formatDateForCalendar(dateValue) {
 function ProfilePage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t,i18n } = useTranslation("profile");
 
   const [profile, setProfile] = useState(initialProfile);
   const [currentDate, setCurrentDate] = useState(new Date(2026, 0, 1)); 
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [lang, setLang] = useState(i18n.language||"en");
 
   //Load trips data
   useEffect(() => {
@@ -103,6 +106,17 @@ function ProfilePage() {
 
     loadTrips();
   }, [navigate]); 
+
+  useEffect(() => {
+    // Run when ititialized(default) & lang changed
+    i18n.on("languageChanged", function(lng) {
+      setLang(lng);
+    });
+
+    return() => {
+      i18n.off("languageChanged", function(lng) {});
+    };
+  }, [i18n])
 
   //Sync profile info when edits are made
   useEffect(() => {

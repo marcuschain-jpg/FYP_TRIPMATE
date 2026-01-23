@@ -17,7 +17,7 @@
 
     "__ACTIVITY FORM PAGE": "========= ACTIVITY FORM PAGE ==========",
     "succ_createact": "Activité créée avec succès !",
-    "ad_edit": "Modifier l’activité",
+    "af_edit": "Modifier l’activité",
     "af_add": "Ajouter une activité",
     "af_title": "Nom de l’événement",
     "af_start_pt": "Ceci est mon point de départ",

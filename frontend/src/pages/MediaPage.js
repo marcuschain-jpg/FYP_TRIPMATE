@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 function MediaPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation("itinerary");
+  const { t, i18n } = useTranslation("itinerary");
 
   const [trip, setTrip] = useState(null);
   const [activities, setActivities] = useState([]);
@@ -19,6 +19,7 @@ function MediaPage() {
   //Filter state
   const [selectedDate, setSelectedDate] = useState("");
   const [allDates, setAllDates] = useState([]);
+  const [lang, setLang] = useState(i18n.language||"");
   const [uploadingActivityId, setUploadingActivityId] = useState(null);
 
   //Modal state
@@ -37,6 +38,17 @@ function MediaPage() {
     filterActivitiesByDate();
     console.log("activityMedia: ", activityMedia);
   }, [activities, selectedDate]);
+
+  useEffect(() => {
+    // Run when ititialized(default) & lang changed
+    i18n.on("languageChanged", function(lng) {
+      setLang(lng);
+    });
+
+    return() => {
+      i18n.off("languageChanged", function(lng) {});
+    };
+  }, [i18n])
 
   const loadTripData = async () => {
     try {
@@ -317,7 +329,7 @@ function MediaPage() {
             <option value="">{t("md_filteralldates")}</option>
             {allDates.map((date) => (
               <option key={date} value={date}>
-                {new Date(date).toLocaleDateString("en-GB", {
+                {new Date(date).toLocaleDateString(lang, {
                   weekday: "short",
                   day: "numeric",
                   month: "long",

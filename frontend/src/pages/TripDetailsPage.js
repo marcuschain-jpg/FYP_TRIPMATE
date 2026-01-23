@@ -33,12 +33,13 @@ const formatDateForDisplay = (dateValue) => {
 function TripDetailsPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation("tripdetails");
+  const { t,i18n } = useTranslation("tripdetails");
 
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState("");
   const [isPremium, setIsPremium] = useState(false);
+  const [lang, setLang] = useState(i18n.language||"en");
 
   //State to control collaborator modal
   const [showCollaborators, setShowCollaborators] = useState(false);
@@ -80,6 +81,17 @@ function TripDetailsPage() {
   useEffect(() => {
     if(userRole === "premium") setIsPremium(true);
   }, [userRole])
+
+  useEffect(() => {
+      // Run when ititialized(default) & lang changed
+      i18n.on("languageChanged", function(lng) {
+        setLang(lng);
+      });
+  
+      return() => {
+        i18n.off("languageChanged", function(lng) {});
+      };
+    }, [i18n])
 
   const renderLoadTrip = (res) => {
     //Format dates using the formatter function
