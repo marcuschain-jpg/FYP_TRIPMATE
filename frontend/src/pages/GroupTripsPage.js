@@ -2,8 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom"; // âœ… ADDED
 import "../styles/GroupTrip.css";
 import axios from 'axios';
+import { useTranslation } from "react-i18next";
 
 function GroupTripsPage() {
+
+  const { t } = useTranslation("groupchat");
 
   //Shared state from Routes.js
   const { myTrips, joinTrip, exitTrip } = useOutletContext();
