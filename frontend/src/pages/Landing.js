@@ -23,7 +23,7 @@ function Landing() {
   //Feature cards
   const [features, setFeatures] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [lang, setLang] = useState(i18n.language||"");
+  const [lang, setLang] = useState(i18n.language||"en");
 
   useEffect(() => {
     if(!lang || !loading) return;

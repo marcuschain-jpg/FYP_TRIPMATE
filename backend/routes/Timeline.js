@@ -12,7 +12,7 @@ router.get("/GetPhotoTimeline", RequireAuth(["registered", "premium"]), async(re
 
     try{
         const data = await pool.query(
-            `SELECT a.activity_id, a.activity_name, ap.photo_id, ap.photo_title, ap.photo_url,
+            `SELECT a.activity_id, a.activity_name, ap.photo_id, ap.photo_title, ap.photo_url, i.itinerary_name,
              TO_CHAR(a.activity_date, 'YYYY-MM-DD') AS activity_date
              FROM activity a
              LEFT JOIN activity_photo ap ON a.activity_id = ap.activity_id

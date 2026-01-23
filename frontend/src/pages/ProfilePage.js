@@ -50,11 +50,13 @@ function ProfilePage() {
   const { t } = useTranslation("profile");
   const navigate = useNavigate();
   const location = useLocation();
+  const { t,i18n } = useTranslation("profile");
 
   const [profile, setProfile] = useState(initialProfile);
   const [currentDate, setCurrentDate] = useState(new Date(2026, 0, 1)); 
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [lang, setLang] = useState(i18n.language||"en");
 
   //Load trips data
   useEffect(() => {
@@ -105,6 +107,17 @@ function ProfilePage() {
 
     loadTrips();
   }, [navigate]); 
+
+  useEffect(() => {
+    // Run when ititialized(default) & lang changed
+    i18n.on("languageChanged", function(lng) {
+      setLang(lng);
+    });
+
+    return() => {
+      i18n.off("languageChanged", function(lng) {});
+    };
+  }, [i18n])
 
   //Sync profile info when edits are made
   useEffect(() => {

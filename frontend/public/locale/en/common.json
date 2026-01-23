@@ -10,6 +10,8 @@
         "reg_nav_mytrips": "My Trips",
         "reg_nav_myprofile": "My Profile",
         "reg_nav_joinatrip": "Join A Trip",
+        "reg_nav_logout": "Logout",
+        "reg_nav_succ_logout": "Successfully Logged Out!",
 
         "__LANDING PAGE": " ========== LANDING PAGE ==========",
         "landing_title": "Trip Planning just got SIMPLER",

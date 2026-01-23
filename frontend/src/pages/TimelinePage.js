@@ -2,14 +2,17 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "../styles/Timeline.css";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 
 function TimelinePage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation("itinerary");
 
   const [gallery, setGallery] = useState([]);
   const [selected, setSelected] = useState([]);
   const [timeline, setTimeline] = useState([]);
+  const [itineraryName, setItineraryName] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,7 +35,6 @@ function TimelinePage() {
   }, [])
 
   const renderLoadGallery = (res) => {
-    
     setGallery(res
     .filter(obj => obj.photo_id !== null)
     .map(obj => ({      
@@ -41,6 +43,7 @@ function TimelinePage() {
         name: obj.photo_title,
         date: obj.activity_date
     })));
+    setItineraryName(res[0].itinerary_name)
   }
 
   //Toggle photo selection
@@ -76,14 +79,14 @@ function TimelinePage() {
   const saveTimeline = async() => {
     if (timeline.length === 0) return;
 
-    const name = prompt("Enter a name for this timeline:");
+    const name = prompt(`${t("tl_err_name")}:`);
     if (!name) return;
 
     await axios.post("http://localhost:8080/Timeline/SaveTimeline", {i_id:tripId, name:name, timeline_photos:timeline}, {withCredentials:true})
     .then(res => {
       if(res.data)
       {
-        alert("Timeline saved!");
+        alert(t("tl_succ_saved"));
       }
     })
     .catch(err =>{
@@ -112,29 +115,29 @@ function TimelinePage() {
     console.log(newTimeline);
   };
 
-  { loading && <p>Loading..</p> }
+  { loading && <p>{t("Loading")}</p> }
 
   return (
     <div className="timeline-page">
       <button className="back-btn" onClick={() => navigate(`/mytrips/trip/${tripId}`)}>
-        ← Back
+        ← {t("back_btn")}
       </button>
 
-      <h1 className="timeline-title">To Singapore — Timeline</h1>
+      <h1 className="timeline-title">{itineraryName} — {t("tl_timeline")}</h1>
 
       {/*"View saved timelines" button*/}
       <button
         className="generate-btn"
         onClick={() => navigate(`/mytrips/trip/saved-timelines/${tripId}`)}
       >
-        View Saved Timelines
+        {t("tl_viewsavedtimeline_btn")}
       </button>
 
       <p className="timeline-subtitle">
-        Select photos from your media library to generate a visual trip timeline.
+        {t("tl_instructions")}
       </p>
 
-      <h2 className="section-heading">Select Photos</h2>
+      <h2 className="section-heading">{t("tl_selectphoto")}</h2>
 
       <div className="timeline-select-grid">
         {gallery.map((item) => (
@@ -157,16 +160,16 @@ function TimelinePage() {
         disabled={selected.length === 0}
         onClick={generateTimeline}
       >
-        Generate Timeline
+        {t("tl_generatetimeline_btn")}
       </button>
 
       {/*Render generated timeline*/}
       {timeline.length > 0 && (
         <>
-          <h2 className="section-heading">Generated Timeline</h2>
+          <h2 className="section-heading">{t("tl_generatetimeline")}</h2>
 
           <button className="generate-btn" onClick={saveTimeline}>
-            Save Timeline
+            {t("tl_savetimeline_btn")}
           </button>
 
           <div className="timeline-render-box">

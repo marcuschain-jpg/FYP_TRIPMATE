@@ -658,7 +658,7 @@ function MyTripsPage() {
       {showAddTripModal && (
         <div className="modal-overlay">
           <div className="modal-box">
-            <h2 className="modal-title">{isEditingTrip ? "Edit Trip" : "Trip Details"}</h2>
+            <h2 className="modal-title">{isEditingTrip ? t("mt_modal_edittrip") : t("mt_modal_tripdetails")}</h2>
 
             {errorMsg && <div className="error-msg">{errorMsg}</div>}
 

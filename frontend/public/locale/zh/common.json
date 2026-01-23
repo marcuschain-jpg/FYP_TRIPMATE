@@ -10,6 +10,8 @@
     "reg_nav_mytrips": "我的旅程",
     "reg_nav_myprofile": "我的個人資料",
     "reg_nav_joinatrip": "加入旅程",
+    "reg_nav_logout": "登出",
+    "reg_nav_succ_logout": "已成功登出！",
 
     "__LANDING PAGE": " ========== LANDING PAGE ==========",
     "landing_title": "旅行計劃變得更簡單了",
