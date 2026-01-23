@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/Profile.css";
 import Axios from '../hooks/Axios';
+import { useTranslation } from "react-i18next";
 
 const BookmarkIcon = ({ active }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={active ? "#333" : "#aaa"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -46,6 +47,7 @@ function formatDateForCalendar(dateValue) {
 }
 
 function ProfilePage() {
+  const { t } = useTranslation("profile");
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -162,11 +164,21 @@ function ProfilePage() {
   };
 
   const monthNames = [
-    "January","February","March","April","May","June",
-    "July","August","September","October","November","December",
+    t("pp_calendar_month_january"),
+    t("pp_calendar_month_february"),
+    t("pp_calendar_month_march"),
+    t("pp_calendar_month_april"),
+    t("pp_calendar_month_may"),
+    t("pp_calendar_month_june"),
+    t("pp_calendar_month_july"),
+    t("pp_calendar_month_august"),
+    t("pp_calendar_month_september"),
+    t("pp_calendar_month_october"),
+    t("pp_calendar_month_november"),
+    t("pp_calendar_month_december"),
   ];
 
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dayNames = [t("pp_calendar_day_sun"), t("pp_calendar_day_mon"), t("pp_calendar_day_tue"), t("pp_calendar_day_wed"), t("pp_calendar_day_thu"), t("pp_calendar_day_fri"), t("pp_calendar_day_sat")];
   const calendarDays = generateCalendarDays();
   const today = new Date();
   const isCurrentMonth =
@@ -182,7 +194,7 @@ function ProfilePage() {
         <div className="profile-header-container">
           <div className="profile-avatar-large">
             {profile.profilePic ? (
-              <img src={profile.profilePic} alt="User Avatar" />
+              <img src={profile.profilePic} alt={t("pp_default_avatar_alt")} />
             ) : (
               <div className="avatar-placeholder-empty" />
             )}
@@ -191,7 +203,7 @@ function ProfilePage() {
           <div className="profile-info">
             <div className="profile-username-row">
               <h1>{profile.username}</h1>
-              {isPremium && <span className="premium-badge">Premium</span>}
+              {isPremium && <span className="premium-badge">{t("pp_premium_badge")}</span>}
             </div>
 
             <p className="profile-bio">{profile.bio}</p>
@@ -201,13 +213,13 @@ function ProfilePage() {
                 className="profile-btn edit-btn"
                 onClick={() => navigate("/edit-profile", { state: { profile } })}
               >
-                Edit Profile
+                {t("pp_edit_btn")}
               </button>
               <button
                 className="profile-btn help-btn"
                 onClick={() => navigate("/help")}
               >
-                Help
+                {t("pp_help_btn")}
               </button>
             </div>
           </div>
@@ -215,16 +227,16 @@ function ProfilePage() {
 
         {/*Calendar section*/}
         <div className="calendar-section">
-          <h2>Trip Calendar</h2>
+          <h2>{t("pp_calendar_title")}</h2>
 
           {loading ? (
-            <p className="loading">Loading calendar...</p>
+            <p className="loading">{t("pp_calendar_loading")}</p>
           ) : (
             <>
               {/*Calendar controls--> navigate between months*/}
               <div className="calendar-controls">
                 <button className="today-btn" onClick={handleToday}>
-                  Today
+                  {t("pp_calendar_today_btn")}
                 </button>
                 <button className="nav-btn" onClick={handlePrevMonth}>
                   ←
@@ -241,11 +253,11 @@ function ProfilePage() {
               <div className="calendar-legend">
                 <div className="legend-item">
                   <div className="legend-color private"></div>
-                  <span>Private Trips</span>
+                  <span>{t("pp_calendar_legend_private")}</span>
                 </div>
                 <div className="legend-item">
                   <div className="legend-color group"></div>
-                  <span>Group Trips</span>
+                  <span>{t("pp_calendar_legend_group")}</span>
                 </div>
               </div>
 
