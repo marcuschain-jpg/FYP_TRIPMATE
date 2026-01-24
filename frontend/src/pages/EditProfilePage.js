@@ -101,14 +101,6 @@ function EditProfilePage() {
 
   const formatCVV = (value) => value.replace(/\D/g, "").substring(0, 3);
 
-  //User interests checkboxes
-  const handleInterestChange = (interest) => {
-    setInterests((prev) => ({
-      ...prev,
-      [interest]: !prev[interest],
-    }));
-  };
-
   //Handle account type click
   const handleAccountTypeClick = (type) => {
     if (accountType === "premium" && type === "Free") setShowUnsubscribeModal(true);
@@ -359,28 +351,6 @@ function EditProfilePage() {
             </div>
 
             <div className="form-group">
-              <label>My Interests</label>
-              <div className="interests-grid">
-                {[
-                  ["food", "Food"],
-                  ["adventure", "Adventure"],
-                  ["artMusic", "Art & Music"],
-                  ["history", "History"],
-                  ["sightseeing", "Sightseeing"],
-                ].map(([key, label]) => (
-                  <label className="interest-checkbox" key={key}>
-                    <input
-                      type="checkbox"
-                      checked={!!interests[key]}
-                      onChange={() => handleInterestChange(key)}
-                    />
-                    <span>{label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div className="form-group">
               <label>{t("ep_acctype_title")}</label>
               <div className="account-type-buttons">
                 <button
@@ -511,7 +481,7 @@ function EditProfilePage() {
                   {t("ep_cancel_btn")}
                 </button>
                 <button type="submit" className="payment-submit-btn">
-                  {t("ep_cancel_btn")}
+                  {t("ep_pay_btn")}
                 </button>
               </div>
             </form>
