@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "../styles/Chat.css";
 import axios from "axios";
 import {socket} from "../hooks/Socket";
+import { useTranslation } from "react-i18next";
 
 
 function ItineraryChat({ onClose, i_id }) {
@@ -13,6 +14,7 @@ function ItineraryChat({ onClose, i_id }) {
     const [loading, setLoading] = useState(true);
     const [messages, setMessages] = useState([]);
     const[chatInput, setChatInput] = useState("");
+    const { t } = useTranslation("grouptrips");
 
     // Default load msg for that room on render
     useEffect(() => {
@@ -149,13 +151,13 @@ function ItineraryChat({ onClose, i_id }) {
                 <div className="message-bubble">{msg.text}</div>
               </div>
             ))}
-            {loading && <p>Loading chat..</p>}
+            {loading && <p>{t("chat_loading")}</p>}
             <div ref={chatEndRef}/>
           </div>
 
           <div className="chat-input-bar">
-            <input value={chatInput} onChange={e => setChatInput(e.target.value)} placeholder="Write a message..."/>
-            <button onClick={sendMessage} disabled={!chatInput}>Send</button>
+            <input value={chatInput} onChange={e => setChatInput(e.target.value)} placeholder={t("message_ph")}/>
+            <button onClick={sendMessage} disabled={!chatInput}>{t("send_btn")}</button>
           </div>
         </div>
     )

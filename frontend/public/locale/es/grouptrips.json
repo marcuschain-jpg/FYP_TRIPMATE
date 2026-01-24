@@ -15,5 +15,10 @@
     "gt_modal_description": "Descripción",
     "gt_modal_cancel_btn": "Cancelar",
     "gt_modal_update_btn": "Actualizar",
-    "gt_errmsg_fields": "Por favor, completa todos los campos."
+    "gt_errmsg_fields": "Por favor, completa todos los campos.",
+
+    "__GROUP CHAT PAGE": "=========== PÁGINA DE CHAT GRUPAL =============",
+        "chat_loading": "Cargando chat...",
+        "message_ph": "Escribe un mensaje...",
+        "send_btn": "Enviar"
 }

@@ -15,5 +15,10 @@
     "gt_modal_description": "描述",
     "gt_modal_cancel_btn": "取消",
     "gt_modal_update_btn": "更新",
-    "gt_errmsg_fields": "請填寫所有欄位。"
+    "gt_errmsg_fields": "請填寫所有欄位。",
+
+    "__GROUP CHAT PAGE": "=========== 群組聊天頁面 =============",
+        "chat_loading": "正在載入聊天...",
+        "message_ph": "輸入訊息...",
+        "send_btn": "傳送"
 }

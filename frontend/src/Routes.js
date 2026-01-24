@@ -217,13 +217,6 @@ function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* ================= RESET PASSWORD (TOP LEVEL - NO NAVBAR) ================= */}
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-
-        {/* ================= EMAIL CONFIRMATION (TOP LEVEL) ================= */}
-        <Route path="/confirm/:invID" element={<ConfirmationFromEmail/>}/>
-
         {/* ================= VIEW-ONLY ITINERARY (TOP LEVEL - NO NAVBAR) ================= */}
         <Route path="/itineraryviewonly/:uuid" element={<ViewItineraryOnlyPage />} />
 
@@ -236,6 +229,12 @@ function AppRoutes() {
           <Route path="/quiz" element={<QuizPage />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/reviews" element={<ReviewsPage />} />
+          {/* ================= RESET PASSWORD (TOP LEVEL - NO NAVBAR) ================= */}
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+
+          {/* ================= EMAIL CONFIRMATION (TOP LEVEL) ================= */}
+          <Route path="/confirm/:invID" element={<ConfirmationFromEmail/>}/>
         </Route>
 
         {/* ================= LOGGED-IN ================= */}

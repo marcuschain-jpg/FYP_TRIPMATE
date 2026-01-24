@@ -7,5 +7,41 @@
         "cp_login_btn": "Go Back to Login",
         "cp_accept_title": "Invitation Accepted!",
         "cp_accept_text": "Great! You're all set. Log in to start planning your trip together.",
-        "cp_accept_login_btn": "Go to Login"
+        "cp_accept_login_btn": "Go to Login",
+
+    "__RESET PASSWORD PAGE": " ========== RESET PASSWORD PAGE ==========",
+        "rp_err_email": "Please enter your email address",
+        "rp_err_sendemail": "Failed to send reset link",
+        "rp_err_sendemail_gen": "Error sending reset link", 
+        "rp_err_pw_fields": "Please fill in all fields",
+        "rp_err_pw_match": "Passwords do not match",
+        "rp_err_pw_length": "Password must be at least 6 characters long", 
+        "rp_err_send_pw": "Failed to reset password",
+        "rp_err_send_pw_gen": "Error resetting password", 
+        "rp_succ_send_pw": "Password reset successfully!",
+        "rp_succ_email": "Reset link sent to your email",
+        
+        "rp_validating": "Validating reset link...",
+        "rp_forgetpassword_title": "Forget Password?",
+        "rp_forgetpassword_text": "Enter your email and we'll send you a link to reset your password",
+        "rp_enteremail_tb": "Email Address",
+        "rp_enteremail_ph": "Enter your email",
+        "rp_send_btn": "Send Reset Link",
+        "rp_sending_btn": "Sending...",
+        "rp_sent_btn": "Sent",
+        "rp_rmbpw_title": "Remember your password?",
+        "rp_login_btn": "Back to Login",
+
+        "rp_resetpassword_title": "Reset Your Password",
+        "rp_resetpassword_text": "Enter your new password below",
+        "rp_password_tb": "New password",
+        "rp_password_ph": "Enter new password",
+        "rp_confirmpassword_tb": "Confirm password",
+        "rp_confirmpassword_ph": "Confirm your password",
+        "rp_save_btn": "Save New Password",
+        "rp_saving_btn": "Saving...",
+        "rp_reset_btn": "Password Reset",
+
+        "rp_complete_title": "Password Reset Complete!",
+        "rp_complete_text": "Your password has been successfully reset. You can now log in with your new password."
 }

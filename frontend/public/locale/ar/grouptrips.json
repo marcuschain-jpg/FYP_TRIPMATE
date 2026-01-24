@@ -15,5 +15,10 @@
     "gt_modal_description": "الوصف",
     "gt_modal_cancel_btn": "إلغاء",
     "gt_modal_update_btn": "تحديث",
-    "gt_errmsg_fields": "يرجى تعبئة جميع الحقول."
+    "gt_errmsg_fields": "يرجى تعبئة جميع الحقول.",
+
+    "__GROUP CHAT PAGE": "=========== صفحة الدردشة الجماعية =============",
+        "chat_loading": "جاري تحميل الدردشة...",
+        "message_ph": "اكتب رسالة...",
+        "send_btn": "إرسال"
 }

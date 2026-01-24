@@ -15,5 +15,10 @@
     "gt_modal_description": "説明",
     "gt_modal_cancel_btn": "キャンセル",
     "gt_modal_update_btn": "更新",
-    "gt_errmsg_fields": "すべての項目を入力してください。"
+    "gt_errmsg_fields": "すべての項目を入力してください。",
+
+    "__GROUP CHAT PAGE": "=========== グループチャットページ =============",
+        "chat_loading": "チャットを読み込み中...",
+        "message_ph": "メッセージを入力...",
+        "send_btn": "送信"
 }

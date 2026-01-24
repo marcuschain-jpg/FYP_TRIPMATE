@@ -7,5 +7,42 @@
     "cp_login_btn": "Volver al inicio de sesión",
     "cp_accept_title": "¡Invitación aceptada!",
     "cp_accept_text": "¡Genial! Todo está listo. Inicia sesión para empezar a planificar el viaje juntos.",
-    "cp_accept_login_btn": "Ir a iniciar sesión"
+    "cp_accept_login_btn": "Ir a iniciar sesión",
+
+
+    "__RESET PASSWORD PAGE": " ========== RESET PASSWORD PAGE ==========",
+        "rp_err_email": "Por favor, introduce tu dirección de correo electrónico",
+        "rp_err_sendemail": "Error al enviar el enlace de restablecimiento",
+        "rp_err_sendemail_gen": "Error al enviar el enlace de restablecimiento",
+        "rp_err_pw_fields": "Por favor, completa todos los campos",
+        "rp_err_pw_match": "Las contraseñas no coinciden",
+        "rp_err_pw_length": "La contraseña debe tener al menos 6 caracteres",
+        "rp_err_send_pw": "Error al restablecer la contraseña",
+        "rp_err_send_pw_gen": "Error al restablecer la contraseña",
+        "rp_succ_send_pw": "¡Contraseña restablecida con éxito!",
+        "rp_succ_email": "El enlace de restablecimiento fue enviado a tu correo electrónico",
+
+        "rp_validating": "Validando el enlace de restablecimiento...",
+        "rp_forgetpassword_title": "¿Olvidaste tu contraseña?",
+        "rp_forgetpassword_text": "Introduce tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña",
+        "rp_enteremail_tb": "Correo electrónico",
+        "rp_enteremail_ph": "Introduce tu correo electrónico",
+        "rp_send_btn": "Enviar enlace de restablecimiento",
+        "rp_sending_btn": "Enviando...",
+        "rp_sent_btn": "Enviado",
+        "rp_rmbpw_title": "¿Recuerdas tu contraseña?",
+        "rp_login_btn": "Volver al inicio de sesión",
+
+        "rp_resetpassword_title": "Restablecer tu contraseña",
+        "rp_resetpassword_text": "Introduce tu nueva contraseña a continuación",
+        "rp_password_tb": "Nueva contraseña",
+        "rp_password_ph": "Introduce la nueva contraseña",
+        "rp_confirmpassword_tb": "Confirmar contraseña",
+        "rp_confirmpassword_ph": "Confirma tu contraseña",
+        "rp_save_btn": "Guardar nueva contraseña",
+        "rp_saving_btn": "Guardando...",
+        "rp_reset_btn": "Contraseña restablecida",
+
+        "rp_complete_title": "¡Restablecimiento de contraseña completado!",
+        "rp_complete_text": "Tu contraseña ha sido restablecida correctamente. Ahora puedes iniciar sesión con tu nueva contraseña."
 }

@@ -1,0 +1,49 @@
+{
+    "__CONFIRMATION FROM EMAIL PAGE": " ========== CONFIRMATION FROM EMAIL PAGE ==========",
+        "cp_confirm_title": "لقد تمت دعوتك!",
+        "cp_confirm_text": "قام أصدقاؤك بدعوتك للتعاون في التخطيط لرحلتهم",
+        "cp_accept_btn": "قبول الدعوة",
+        "cp_invalid_title": "الدعوة غير صالحة!",
+        "cp_login_btn": "العودة إلى تسجيل الدخول",
+        "cp_accept_title": "تم قبول الدعوة!",
+        "cp_accept_text": "رائع! كل شيء جاهز. سجّل الدخول لبدء التخطيط للرحلة معًا.",
+        "cp_accept_login_btn": "الانتقال إلى تسجيل الدخول",
+
+    "__RESET PASSWORD PAGE": " ========== RESET PASSWORD PAGE ==========",
+        "rp_err_email": "يرجى إدخال عنوان بريدك الإلكتروني",
+        "rp_err_sendemail": "فشل في إرسال رابط إعادة التعيين",
+        "rp_err_sendemail_gen": "حدث خطأ أثناء إرسال رابط إعادة التعيين",
+        "rp_err_pw_fields": "يرجى تعبئة جميع الحقول",
+        "rp_err_pw_match": "كلمتا المرور غير متطابقتين",
+        "rp_err_pw_length": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل",
+        "rp_err_send_pw": "فشل في إعادة تعيين كلمة المرور",
+        "rp_err_send_pw_gen": "حدث خطأ أثناء إعادة تعيين كلمة المرور",
+        "rp_succ_send_pw": "تمت إعادة تعيين كلمة المرور بنجاح!",
+        "rp_succ_email": "تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني",
+
+        "rp_validating": "جارٍ التحقق من رابط إعادة التعيين...",
+        "rp_forgetpassword_title": "هل نسيت كلمة المرور؟",
+        "rp_forgetpassword_text": "أدخل بريدك الإلكتروني وسنرسل لك رابطًا لإعادة تعيين كلمة المرور",
+        "rp_enteremail_tb": "عنوان البريد الإلكتروني",
+        "rp_enteremail_ph": "أدخل بريدك الإلكتروني",
+        "rp_send_btn": "إرسال رابط إعادة التعيين",
+        "rp_sending_btn": "جارٍ الإرسال...",
+        "rp_sent_btn": "تم الإرسال",
+        "rp_rmbpw_title": "تتذكر كلمة المرور؟",
+        "rp_login_btn": "العودة إلى تسجيل الدخول",
+
+        "rp_resetpassword_title": "إعادة تعيين كلمة المرور",
+        "rp_resetpassword_text": "أدخل كلمة المرور الجديدة أدناه",
+        "rp_password_tb": "كلمة مرور جديدة",
+        "rp_password_ph": "أدخل كلمة المرور الجديدة",
+        "rp_confirmpassword_tb": "تأكيد كلمة المرور",
+        "rp_confirmpassword_ph": "تأكيد كلمة المرور",
+        "rp_save_btn": "حفظ كلمة المرور الجديدة",
+        "rp_saving_btn": "جارٍ الحفظ...",
+        "rp_reset_btn": "إعادة تعيين كلمة المرور",
+
+        "rp_complete_title": "اكتملت إعادة تعيين كلمة المرور!",
+        "rp_complete_text": "تمت إعادة تعيين كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول باستخدام كلمة المرور الجديدة."
+
+
+}
