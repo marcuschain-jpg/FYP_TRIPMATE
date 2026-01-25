@@ -13,6 +13,7 @@ const mediaRouter = require("./routes/Media");
 const RequireAuths = require('./middlewares/RequireAuths.js');
 const usersRoute = require("./routes/users");
 const groupTripsRouter = require("./routes/GroupTrip.js");
+const ChatbotRouter = require("./routes/ChatbotPage.js")
 const usersAdminRoute = require("./adminroutes/Users.js");
 const contentsAdminRoute = require("./adminroutes/Content.js");
 
@@ -33,10 +34,12 @@ app.use("/Timeline", timelineRouter); // Timeline page
 app.use("/Media", mediaRouter); // Media page
 app.use("/GroupTrips", groupTripsRouter); // Group trips related + chat
 app.use("/Users", usersRoute); //Anything relating to users
+app.use("/Chatbot", ChatbotRouter); //Anything relating to chatbot API
 
 // Admin routes
 //Realtime Update for User in Admin Page
 app.use("/api/users", usersAdminRoute);
+app.use("/content", contentsAdminRoute);
 
 
 // Basic Auth function for pages that dont need get any information
