@@ -10,6 +10,20 @@ export default function ChatbotPage() {
   const [activeChatIndex, setActiveChatIndex] = useState(null);
   const [inputValue, setInputValue] = useState("");
 
+  // Fetch Neccesary Data/Communicate with Backend
+  const sendToBackend = async (text) => {
+    const res = await fetch("http://localhost:8080/Chatbot/message", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: "include",
+      body: JSON.stringify({ message: text })
+    });
+
+    return res.json();
+  };
+
   // Create new chat (DO NOT activate yet)
   const createNewChat = () => {
     const newChat = {
@@ -28,39 +42,84 @@ export default function ChatbotPage() {
   };
 
   // Send message
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!inputValue.trim()) return;
 
-    setChats((prevChats) => {
-      let updatedChats = [...prevChats];
-      let chatIndex = activeChatIndex;
-
-      // Auto-create & activate chat on first message
-      if (chatIndex === null) {
-        updatedChats.push({
-          title: inputValue.slice(0, 30),
-          messages: [],
-        });
-        chatIndex = updatedChats.length - 1;
-        setActiveChatIndex(chatIndex);
-      }
-
-      const updatedChat = { ...updatedChats[chatIndex] };
-
-      if (!updatedChat.title) {
-        updatedChat.title = inputValue.slice(0, 30);
-      }
-
-      updatedChat.messages = [
-        ...updatedChat.messages,
-        { sender: "user", text: inputValue },
-      ];
-
-      updatedChats[chatIndex] = updatedChat;
-      return updatedChats;
-    });
-
+    const userMessage = inputValue;
     setInputValue("");
+
+    let currentIndex = activeChatIndex;
+
+    // Create chat if none
+    if (currentIndex === null) {
+      setChats(prev => [
+        ...prev,
+        {
+          title: userMessage.slice(0, 30),
+          messages: [{ sender: "user", text: userMessage }]
+        }
+      ]);
+
+      currentIndex = chats.length;
+      setActiveChatIndex(currentIndex);
+    } else {
+      setChats(prev => {
+        const updated = [...prev];
+        updated[currentIndex] = {
+          ...updated[currentIndex],
+          messages: [
+            ...updated[currentIndex].messages,
+            { sender: "user", text: userMessage }
+          ]
+        };
+        return updated;
+      });
+    }
+
+    try {
+      const data = await sendToBackend(userMessage);
+
+      setChats(prev => {
+        const updated = [...prev];
+
+        updated[currentIndex] = {
+          ...updated[currentIndex],
+          messages: [
+            ...updated[currentIndex].messages,
+            data.isItinerary
+              ? {
+                  sender: "bot",
+                  text: "Itinerary generated. Click to view.",
+                  tripId: data.tripId,
+                  type: "itinerary"
+                }
+              : {
+                  sender: "bot",
+                  text: data.reply,
+                  type: "text"
+                }
+          ]
+        };
+
+        return updated;
+      });
+
+    } catch (err) {
+      setChats(prev => {
+        const updated = [...prev];
+        updated[currentIndex] = {
+          ...updated[currentIndex],
+          messages: [
+            ...updated[currentIndex].messages,
+            {
+              sender: "bot",
+              text: "Server error. Try again."
+            }
+          ]
+        };
+        return updated;
+      });
+    }
   };
 
   // Enter key support (no double send)
@@ -140,11 +199,20 @@ export default function ChatbotPage() {
               activeChat.messages.map((msg, index) => (
                 <div
                   key={index}
-                  className="chatbot-bubble user"
+                  className={`chatbot-bubble ${msg.sender}`}
+                  style={{
+                    cursor: msg.type === "itinerary" ? "pointer" : "default",
+                    textDecoration: msg.type === "itinerary" ? "underline" : "none"
+                  }}
+                  onClick={() => {
+                    if (msg.type === "itinerary") {
+                      navigate(`/Itinerary/${msg.tripId}/default`);
+                    }
+                  }}
                 >
                   {msg.text}
                 </div>
-              ))}
+            ))}
           </div>
 
           {/* Input */}
@@ -158,6 +226,7 @@ export default function ChatbotPage() {
               onKeyDown={handleKeyDown}
             />
             <button
+              type="button"
               className="chatbot-send-btn"
               onClick={handleSend}
             >
