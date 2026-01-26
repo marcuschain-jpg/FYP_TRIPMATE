@@ -73,21 +73,32 @@ router.post("/message", async (req, res) => {
         .map(c => c.text)
         .join("\n");
 
-    let parsed = outputText;
-
     if (isItinerary) {
-    try {
-        parsed = JSON.parse(outputText);
-    } catch (e) {
+
+      let itineraryJson;
+
+      try {
+        itineraryJson = JSON.parse(outputText);
+      } catch (e) {
         return res.status(500).json({
-        error: "Invalid JSON returned by AI"
+          error: "Invalid JSON returned by AI"
         });
-    }
+      }
+
+      const tripId = await createTripFromItinerary(
+        itineraryJson,
+        req.user.userid   // or your auth user id
+      );
+
+      return res.json({
+        isItinerary: true,
+        tripId
+      });
     }
 
     return res.json({
-    reply: parsed,
-    isItinerary
+      isItinerary: false,
+      reply: outputText
     });
 
   } catch (err) {
