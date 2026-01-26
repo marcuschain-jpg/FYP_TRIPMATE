@@ -1,0 +1,25 @@
+{
+    "__GROUP TRIP PAGE": "=========== PAGE DE VOYAGE EN GROUPE =============",
+    "gt_join_btn": "Rejoindre",
+    "gt_exit_btn": "Quitter",
+    "gt_create_new_trip_btn": "Créer un nouveau voyage",
+    "gt_search_trip_name": "Rechercher_nom_du_voyage",
+    "gt_message_exit": "Êtes-vous sûr de vouloir quitter ce voyage ?",
+    "gt_cancel_exit_btn": "Annuler",
+    "gt_confirm_exit_btn": "OK",
+    "gt_modal_trip_name": "Nom du voyage",
+    "gt_modal_no_of_pax": "Nombre de personnes (MAX 5)",
+    "gt_modal_start_date": "Date de début",
+    "gt_modal_end_date": "Date de fin",
+    "gt_modal_location": "Lieu",
+    "gt_modal_description": "Description",
+    "gt_modal_cancel_btn": "Annuler",
+    "gt_modal_update_btn": "Mettre à jour",
+    "gt_errmsg_fields": "Veuillez remplir tous les champs.",
+
+    "__GROUP CHAT PAGE": "=========== PAGE DE CHAT DE GROUPE =============",
+        "chat_loading": "Chargement du chat...",
+        "message_ph": "Écrire un message...",
+        "send_btn": "Envoyer"
+
+}

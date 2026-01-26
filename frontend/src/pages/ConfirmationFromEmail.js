@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import "../styles/ConfirmationFromEmail.css";
 import logo from "../Assets/Logo.jpg";
 import axios from 'axios';
+import { useTranslation } from "react-i18next";
 
 function ConfirmationFromEmail() {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ function ConfirmationFromEmail() {
   const [invalidMsg, setInvalidMsg] = useState("");
   const [success, setSuccess] = useState(false);
   const { invID } = useParams();
+  const { t } = useTranslation("confirmation");
 
   const acceptCollab = async () => {
     try {
@@ -45,12 +47,12 @@ function ConfirmationFromEmail() {
         {loading && !invalid && (
           <>
             <img src={logo} alt="TripMate Logo" className="confirmation-logo" />
-            <h1 className="confirmation-title">You've Been Invited!</h1>
+            <h1 className="confirmation-title">{t("cp_confirm_title")}</h1>
             <p className="confirmation-subtitle">
-              Your friends have invited you to collaborate on their trip
+              {t("cp_confirm_text")}
             </p>
             <button className="confirmation-button" onClick={acceptCollab}>
-              Accept Invitation
+              {t("cp_accept_btn")}
             </button>
           </>
         )}
@@ -58,13 +60,13 @@ function ConfirmationFromEmail() {
         {invalid && (
           <>
             <span className="confirmation-icon">❌</span>
-            <h1 className="confirmation-title">Invitation Invalid</h1>
+            <h1 className="confirmation-title">{t("cp_invalid_title")}</h1>
             <div className="error-message">{invalidMsg}</div>
             <button 
               className="confirmation-button" 
               onClick={() => navigate('/login')}
             >
-              Go Back to Login
+              {t("cp_login_btn")}
             </button>
           </>
         )}
@@ -72,15 +74,15 @@ function ConfirmationFromEmail() {
         {success && !invalid && (
           <>
             <span className="confirmation-icon success-checkmark">✓</span>
-            <h1 className="confirmation-title">Invitation Accepted!</h1>
+            <h1 className="confirmation-title">{t("cp_accept_title")}</h1>
             <p className="confirmation-subtitle">
-              Great! You're all set. Log in to start planning your trip together.
+              {t("cp_accept_text")}
             </p>
             <button 
               className="confirmation-button" 
               onClick={() => navigate('/login')}
             >
-              Go to Login
+              {t("cp_accept_login_btn")}
             </button>
           </>
         )}

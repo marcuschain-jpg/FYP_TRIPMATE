@@ -1,0 +1,48 @@
+{
+    "__CONFIRMATION FROM EMAIL PAGE": " ========== CONFIRMATION FROM EMAIL PAGE ==========",
+    "cp_confirm_title": "你已被邀請！",
+    "cp_confirm_text": "你的朋友邀請你一起協作規劃他們的行程",
+    "cp_accept_btn": "接受邀請",
+    "cp_invalid_title": "邀請無效！",
+    "cp_login_btn": "返回登入頁面",
+    "cp_accept_title": "邀請已接受！",
+    "cp_accept_text": "太好了！一切準備就緒。登入後即可一起開始規劃行程。",
+    "cp_accept_login_btn": "前往登入",
+
+
+    "__RESET PASSWORD PAGE": " ========== RESET PASSWORD PAGE ==========",
+        "rp_err_email": "請輸入您的電子郵件地址",
+        "rp_err_sendemail": "重設連結發送失敗",
+        "rp_err_sendemail_gen": "發送重設連結時發生錯誤",
+        "rp_err_pw_fields": "請填寫所有欄位",
+        "rp_err_pw_match": "密碼不一致",
+        "rp_err_pw_length": "密碼長度至少需為 6 個字元",
+        "rp_err_send_pw": "重設密碼失敗",
+        "rp_err_send_pw_gen": "重設密碼時發生錯誤",
+        "rp_succ_send_pw": "密碼重設成功！",
+        "rp_succ_email": "重設連結已寄送至您的電子郵件",
+
+        "rp_validating": "正在驗證重設連結...",
+        "rp_forgetpassword_title": "忘記密碼？",
+        "rp_forgetpassword_text": "輸入您的電子郵件，我們將寄送重設密碼的連結給您",
+        "rp_enteremail_tb": "電子郵件地址",
+        "rp_enteremail_ph": "輸入您的電子郵件",
+        "rp_send_btn": "發送重設連結",
+        "rp_sending_btn": "發送中...",
+        "rp_sent_btn": "已發送",
+        "rp_rmbpw_title": "記得您的密碼嗎？",
+        "rp_login_btn": "返回登入",
+
+        "rp_resetpassword_title": "重設您的密碼",
+        "rp_resetpassword_text": "請在下方輸入新密碼",
+        "rp_password_tb": "新密碼",
+        "rp_password_ph": "輸入新密碼",
+        "rp_confirmpassword_tb": "確認密碼",
+        "rp_confirmpassword_ph": "確認您的密碼",
+        "rp_save_btn": "儲存新密碼",
+        "rp_saving_btn": "儲存中...",
+        "rp_reset_btn": "密碼已重設",
+
+        "rp_complete_title": "密碼重設完成！",
+        "rp_complete_text": "您的密碼已成功重設，現在可以使用新密碼登入。"
+}

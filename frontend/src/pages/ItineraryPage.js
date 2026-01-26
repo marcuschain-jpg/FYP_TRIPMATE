@@ -4,6 +4,7 @@ import "../styles/Itinerary.css";
 import axios from "axios";
 import { socket } from "../hooks/Socket";
 import ItineraryChat from "../components/ItineraryChat";
+import { useTranslation } from "react-i18next";
 
 //Normalize any date string to YYYY-MM-DD
 function normDate(d) {
@@ -35,6 +36,7 @@ function formatDateForDisplay(dateValue) {
 function ItineraryPage() {
   const { tripId, firstdate } = useParams();
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation("itinerary");
 
   const [trip, setTrip] = useState(null);
   const [activities, setActivities] = useState([]);
@@ -44,6 +46,7 @@ function ItineraryPage() {
   const [showChat, setShowChat] = useState(false);
   const [activityCoords, setActivityCoords] = useState([]);
   const [mapConfig, setMapConfig] = useState(null);
+  const [lang, setLang] = useState(i18n.language||"en")
 
   //Google Maps refs
   const mapDivRef = useRef(null);
@@ -78,6 +81,17 @@ function ItineraryPage() {
       });
   }, []);
 
+  useEffect(() => {
+    // Run when ititialized(default) & lang changed
+    i18n.on("languageChanged", function(lng) {
+      setLang(lng);
+    });
+
+    return() => {
+      i18n.off("languageChanged", function(lng) {});
+    };
+  }, [i18n])
+
   function loadGoogleMaps(apiKey) {
     return new Promise((resolve, reject) => {
       if (window.google && window.google.maps) return resolve();
@@ -111,7 +125,7 @@ function ItineraryPage() {
     markersRef.current = [];
   }
 
-  //Initialize Google Maps
+  //Initialize maps 
   useEffect(() => {
     if (!mapConfig?.apiKey) return;
 
@@ -329,7 +343,7 @@ function ItineraryPage() {
     [activities, selectedDate]
   );
 
-  //Draw driving route and markers
+  //Draw driving route and markers & center map 
   useEffect(() => {
     if (!mapRef.current || !(window.google && window.google.maps)) return;
     if (!selectedDate) return;
@@ -339,8 +353,8 @@ function ItineraryPage() {
     console.log("All activityCoords:", activityCoords);
 
     const filteredCoord = activityCoords.filter(
-      (a) => normDate(a.date) === normDate(selectedDate))
-    ;
+      (a) => normDate(a.date) === normDate(selectedDate)
+    );
 
     console.log("Filtered coords for date:", filteredCoord);
 
@@ -367,21 +381,27 @@ function ItineraryPage() {
       console.log(`Marker ${index + 1} created at:`, point);
     });
 
-    //Need min 2 points for route
-    if (points.length < 2) {
-      console.log("Less than 2 points, not drawing route");
-      if (points.length === 1) {
-        mapRef.current.setCenter(points[0]);
-        mapRef.current.setZoom(14);
-      }
-      //Center map to default location when no activities 
-      else {
-        const defaultCenter = mapConfig?.center || { lat: 1.3521, lng: 103.8198 };
-        mapRef.current.setCenter(defaultCenter);
-        mapRef.current.setZoom(12);
-      }
+    // IMPROVED CENTERING LOGIC
+    if (points.length === 0) {
+      // No activities: center to default location
+      const defaultCenter = mapConfig?.center || { lat: 1.3521, lng: 103.8198 };
+      mapRef.current.setCenter(defaultCenter);
+      mapRef.current.setZoom(12);
+      console.log("No activities - centered to default location");
       return;
     }
+
+    if (points.length === 1) {
+      //If only single activity-->center on it with closer zoom
+      mapRef.current.setCenter(points[0]);
+      mapRef.current.setZoom(14);
+      console.log("Single activity - centered on activity");
+      return;
+    }
+
+    //More than 1 activity--> center and showall points & routes
+    const bounds = new window.google.maps.LatLngBounds();
+    points.forEach((point) => bounds.extend(point));
 
     const origin = points[0];
     const destination = points[points.length - 1];
@@ -404,15 +424,21 @@ function ItineraryPage() {
         console.log("Directions API response status:", status);
         if (status === "OK" && result) {
           directionsRendererRef.current.setDirections(result);
-          //Autocenter and fit map bounds to show all waypoints
-          const bounds = new window.google.maps.LatLngBounds();
+          
+          //Fit bounds to show entire route
+          const routeBounds = new window.google.maps.LatLngBounds();
           result.routes[0].overview_path.forEach((point) => {
-            bounds.extend(point);
+            routeBounds.extend(point);
           });
-          mapRef.current.fitBounds(bounds);
-          console.log("Route drawn successfully");
+          
+          mapRef.current.fitBounds(routeBounds);
+          
+          mapRef.current.panBy(0, -50);
+          console.log("Route drawn and map fitted to bounds successfully");
         } else {
           console.error("Directions request failed:", status, result);
+          mapRef.current.fitBounds(bounds);
+          console.log("Directions failed - fallback to activity bounds");
         }
       }
     );
@@ -420,7 +446,7 @@ function ItineraryPage() {
 
   //Delete activity
   const handleDeleteActivity = async (index) => {
-    if (!window.confirm("Are you sure you want to delete this activity?")) return;
+    if (!window.confirm(t("msg_confirmdel"))) return;
 
     await axios
       .delete("http://localhost:8080/Itinerary/DeleteActivity", {
@@ -434,7 +460,7 @@ function ItineraryPage() {
         }
       });
 
-    alert("Activity deleted successfully!");
+    alert(t("msg_deleted"));
   };
 
   const arrangeItinerary = async () => {
@@ -452,7 +478,7 @@ function ItineraryPage() {
   return (
     <div className="itinerary-view">
       <button className="back-btn" onClick={() => navigate(`/mytrips/trip/${tripId}`)}>
-        ← Back
+        ← {t("back_btn")}
       </button>
 
       <div className="itinerary-top-row">
@@ -466,7 +492,7 @@ function ItineraryPage() {
 
       <div className="view-layout">
         <div className="left-side">
-          <h2>Activities</h2>
+          <h2>{t("title")}</h2>
 
           {!Loading && activities.length > 0 && (
             <div className="date-row">
@@ -479,7 +505,7 @@ function ItineraryPage() {
                   .sort()
                   .map((d) => (
                     <option key={d} value={d}>
-                      {new Date(d).toLocaleDateString("en-GB", {
+                      {new Date(d).toLocaleDateString(lang, {
                         weekday: "short",
                         day: "numeric",
                         month: "long",
@@ -493,14 +519,14 @@ function ItineraryPage() {
                 onClick={() => arrangeItinerary()}
                 disabled={isArranging}
               >
-                {isArranging ? "Arranging..." : "Arrange"}
+                {isArranging ? t("arranging") : t("arrange")}
               </button>
             </div>
           )}
 
           <div className="activities-section">
             {Loading && <p>Loading..</p>}
-            {!Loading && filteredActivities.length === 0 && <p>No activities for this day.</p>}
+            {!Loading && filteredActivities.length === 0 && <p>{t("no_act")}</p>}
 
             {!Loading &&
               filteredActivities.map((act) => (
@@ -520,7 +546,7 @@ function ItineraryPage() {
                         navigate(`/mytrips/trip/activity/edit/${tripId}/${act.id}`)
                       }
                     >
-                      Edit
+                      {t("edit_btn")}
                     </button>
 
                     <button
@@ -528,7 +554,7 @@ function ItineraryPage() {
                       disabled={isArranging}
                       onClick={() => handleDeleteActivity(act.id)}
                     >
-                      Delete
+                      {t("delete_btn")}
                     </button>
                   </div>
                 </div>
@@ -540,17 +566,17 @@ function ItineraryPage() {
             disabled={isArranging}
             onClick={() => navigate(`/mytrips/trip/activity/create/${tripId}`)}
           >
-            Add Activity +
+            {t("addact_btn")} +
           </button>
         </div>
 
         <div className="right-side">
           {!mapConfig ? (
-            <p className="map-loading-text">Loading map…</p>
+            <p className="map-loading-text">{t("loading_map")}</p>
           ) : (
             <div
               ref={mapDivRef}
-              style={{ width: "100%", height: "600px", borderRadius: "12px" }}
+              style={{ width: "100%", height: "100%", borderRadius: "12px" }}
             />
           )}
         </div>
@@ -558,7 +584,7 @@ function ItineraryPage() {
 
       {!Loading && trip?.type === "Group" && 
       (<button className="floating-chat-btn" onClick={() => setShowChat(true)} title="Chat">
-        Chat
+        {t("chat_btn")}
       </button>)}
       {showChat && ( <ItineraryChat onClose={() => {setShowChat(false);}} i_id={tripId}/>)}
     </div>

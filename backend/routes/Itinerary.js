@@ -19,6 +19,9 @@ const TSPAlgo = require("../helper/TSPAlgo.js");
 const RequireAuth = require("../middlewares/RequireAuths.js"); // Authenticate and authorize user
 // --- Collaboration Invitation ---
 const SendEmail = require("../helper/SendEmail.js");
+const { exit } = require("process");
+// --- Share Externally ---
+const encodeurl = require("encodeurl");
 
 // Default key and center coord to initialize maps
 router.get("/maps", RequireAuth(["registered", "premium"]),(req, res) => {
@@ -297,6 +300,8 @@ router.post("/AddCollaborator", RequireAuth(["premium"]), async(req,res) => {
   let inv_id = null;
   let host_name = "";
   let sentEmail = false;
+  const serviceType = "invitation";
+
 
   try{
     const data = await pool.query(
@@ -315,14 +320,14 @@ router.post("/AddCollaborator", RequireAuth(["premium"]), async(req,res) => {
   if(userid_collab){
     try{
       await pool.query( // Delete previous invitations
-        `DELETE FROM invitation
-         WHERE itinerary_id = $1 AND user_id = $2`, [i_id, userid_collab]
+        `DELETE FROM email_validation
+         WHERE serviceType = $1 AND user_id = $2`, [serviceType, userid_collab]
       );
 
       const data = await pool.query( // Create new invitation
-        `INSERT INTO invitation(itinerary_id, user_id)
-         VALUES($1, $2)
-         RETURNING inv_id`, [i_id, userid_collab]
+        `INSERT INTO email_validation(itinerary_id, user_id, serviceType)
+         VALUES($1, $2, $3)
+         RETURNING inv_id`, [i_id, userid_collab, serviceType]
       );
       await pool.query("COMMIT");
 
@@ -406,7 +411,7 @@ router.post("/AcceptCollabInv", async(req,res) => {
 
   try{
     const rawData = await pool.query(
-      `SELECT num_ppl FROM itinerary WHERE itinerary_id = (SELECT itinerary_id FROM invitation WHERE inv_id =$1)`, [inv_id]
+      `SELECT num_ppl FROM itinerary WHERE itinerary_id = (SELECT itinerary_id FROM email_validation WHERE inv_id =$1)`, [inv_id]
     );
     if(rawData.rows[0].num_ppl >= 5) return res.send({check: false, message: "Itinerary has already reached max capacity!"})
   }
@@ -417,7 +422,7 @@ router.post("/AcceptCollabInv", async(req,res) => {
   try{
     await pool.query(
       `INSERT INTO shared_itinerary(itinerary_id, user_id)
-       SELECT itinerary_id, user_id FROM invitation
+       SELECT itinerary_id, user_id FROM email_validation
        WHERE inv_id =$1
        ON CONFLICT DO NOTHING`, [inv_id]
     );
@@ -426,11 +431,11 @@ router.post("/AcceptCollabInv", async(req,res) => {
       `UPDATE itinerary i
        SET num_ppl=(SELECT count(*) + 1 FROM shared_itinerary si
        WHERE si.itinerary_id = i.itinerary_id)
-       WHERE i.itinerary_id = (SELECT itinerary_id FROM invitation WHERE inv_id =$1)`, [inv_id]
+       WHERE i.itinerary_id = (SELECT itinerary_id FROM email_validation WHERE inv_id =$1)`, [inv_id]
     );
 
     data = await pool.query(
-      `DELETE FROM invitation
+      `DELETE FROM email_validation
        WHERE inv_id = $1`, [inv_id]
     );
     await pool.query("COMMIT")
@@ -530,7 +535,8 @@ router.get("/ArrangeItinerary", RequireAuth(["registered", "premium"]), (req, re
     // get all dates in array
     let data = await pool.query(
         `SELECT DISTINCT(TO_CHAR(activity_date, 'YYYY-MM-DD')) AS date
-         FROM activity`
+         FROM activity
+         WHERE itinerary_id = $1`, [i_id]
     );
     const dates = data.rows.map(row => row.date);
     const transitMode = "DRIVE";
@@ -558,7 +564,7 @@ router.get("/ArrangeItinerary", RequireAuth(["registered", "premium"]), (req, re
         // update order in db
         newOrderActID = await OrderActID.slice(1);
         const orderUpdate = await newOrderActID.map((id, idx) =>`WHEN ${id} THEN ${idx+1}`).join(' ');
-        console.log(orderUpdate);
+        //console.log(orderUpdate);
         const a_idUpdate = await newOrderActID.join(', ');
 
         await pool.query(
@@ -576,6 +582,73 @@ router.get("/ArrangeItinerary", RequireAuth(["registered", "premium"]), (req, re
     console.log("Time took: ", duration);
     console.log("Finished algo for: ", i_id);
   });
+});
+
+router.get("/GetAllActivitiesViewOnly", async(req, res) => {
+  const extID = req.query['token'];
+
+  try{
+    const data = await pool.query(
+      `SELECT a.activity_id, a.activity_name, a.activity_address, i.itinerary_name, a.activity_location, a.longitude, a.latitude, i.type, i.num_ppl,
+       i.longitude as i_longitude, i.latitude as i_latitude,
+       TO_CHAR(i.start_date, 'DD/MM/YYYY') AS start_date,
+       TO_CHAR(i.end_date, 'DD/MM/YYYY') AS end_date,
+       TO_CHAR(a.activity_date, 'YYYY-MM-DD') AS activity_date
+       FROM itinerary i
+       LEFT JOIN activity a ON i.itinerary_id = a.itinerary_id
+       LEFT JOIN itinerary_external_link iel ON i.itinerary_id = iel.itinerary_id
+       WHERE iel.ext_id = $1
+       ORDER BY activity_date ASC, a.activity_order ASC`, [extID]
+    );
+    return res.send(data.rows);
+  }
+  catch(err)
+  {
+    return res.status(500).send("GetAllActivities for viewing only failed");
+  }
+});
+
+router.post("/ShareExt", RequireAuth(["registered", "premium"]), async(req,res) => {
+  const {i_id, shareType} = req.body;
+  let extID = null;
+  // 1. Check if data exist by attempting select
+  try{
+    const data = await pool.query(
+      `SELECT ext_id FROM itinerary_external_link WHERE itinerary_id = $1`, [i_id]
+    )
+    if(data.rowCount > 0) extID = data.rows[0].ext_id;
+  }
+  catch(err) {console.log(err); extID = null;}
+  
+  // Create ext id if it dosent exist
+  if(!extID){
+    try{
+      const data = await pool.query(
+        `INSERT INTO itinerary_external_link(itinerary_id)
+         VALUES($1)
+         RETURNING ext_id`, [i_id]
+      )
+      extID = data.rows[0].ext_id;
+    }
+    catch(err) {console.log(err); return res.status(500).send({ message:"failed to create new external id to share" });}
+  }
+
+  const link = `http://localhost:3000/itineraryviewonly/${extID}`;
+  const msg = `View my itinerary! Click here: ${link}`
+  const encodedMsg = encodeurl(msg)
+
+  // 2. Share to service or copy link
+  if(shareType === "ws"){ // Share to whatsapp
+    const whatsappLink = `https://wa.me/?text=${encodedMsg}`
+    return res.send(whatsappLink)
+  }
+  else if(shareType === "tele"){ // Share to telegram
+    const teleLink = `https://t.me/share/url?url=${encodeurl(link)}&text=${encodeurl('View my itinerary!')}`
+    return res.send(teleLink);
+  }
+  else{ // Copy link in clipboard
+    return res.send(link);
+  }
 });
 
 //==================================================== ActivityFormPage ==========================

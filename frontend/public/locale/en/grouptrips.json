@@ -1,0 +1,27 @@
+{
+
+    "__GROUP TRIP PAGE": "=========== GROUP TRIP PAGE=============",
+        "gt_join_btn": "Join",
+        "gt_exit_btn": "Exit",
+        "gt_create_new_trip_btn": "Create New Trip",
+        "gt_search_trip_name": "Search_Trip_Name",
+        "gt_message_exit": "Are you sure you want to exit this trip?",
+        "gt_cancel_exit_btn": "Cancel",
+        "gt_confirm_exit_btn": "OK",
+        "gt_modal_trip_name": "Trip Name",
+        "gt_modal_no_of_pax": "No. of pax (MAX 5)",
+        "gt_modal_start_date": "Start Date",
+        "gt_modal_end_date": "End Date", 
+        "gt_modal_location": "Location", 
+        "gt_modal_description": "Description",
+        "gt_modal_cancel_btn": "Cancel", 
+        "gt_modal_update_btn": "Update", 
+        "gt_errmsg_fields": "Please fill in all fields.",
+    
+    "__GROUP CHAT PAGE": "=========== GROUP CHAT PAGE=============",
+        "chat_loading": "Loading Chat...",
+        "message_ph": "Write a message...",
+        "send_btn": "Send"
+    
+}
+

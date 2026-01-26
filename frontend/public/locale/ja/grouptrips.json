@@ -1,0 +1,24 @@
+{
+    "__GROUP TRIP PAGE": "=========== グループ旅行ページ =============",
+    "gt_join_btn": "参加",
+    "gt_exit_btn": "退出",
+    "gt_create_new_trip_btn": "新しい旅行を作成",
+    "gt_search_trip_name": "旅行名を検索",
+    "gt_message_exit": "この旅行から退出してもよろしいですか？",
+    "gt_cancel_exit_btn": "キャンセル",
+    "gt_confirm_exit_btn": "OK",
+    "gt_modal_trip_name": "旅行名",
+    "gt_modal_no_of_pax": "人数（最大5名）",
+    "gt_modal_start_date": "開始日",
+    "gt_modal_end_date": "終了日",
+    "gt_modal_location": "場所",
+    "gt_modal_description": "説明",
+    "gt_modal_cancel_btn": "キャンセル",
+    "gt_modal_update_btn": "更新",
+    "gt_errmsg_fields": "すべての項目を入力してください。",
+
+    "__GROUP CHAT PAGE": "=========== グループチャットページ =============",
+        "chat_loading": "チャットを読み込み中...",
+        "message_ph": "メッセージを入力...",
+        "send_btn": "送信"
+}

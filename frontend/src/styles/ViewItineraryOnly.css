@@ -1,0 +1,178 @@
+.view-only-container {
+    background: #e4eeef;
+    min-height: 100vh;
+    padding: 40px;
+    font-family: "Inter", sans-serif;
+  }
+  
+  .error-container {
+    background: white;
+    padding: 60px 40px;
+    border-radius: 12px;
+    text-align: center;
+    max-width: 500px;
+    margin: 100px auto;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .error-container h2 {
+    font-size: 28px;
+    color: #d9534f;
+    margin-bottom: 16px;
+  }
+  
+  .error-container p {
+    font-size: 16px;
+    color: #666;
+    line-height: 1.6;
+  }
+  
+  .view-only-header {
+    max-width: 1200px;
+    margin: 0 auto 30px;
+  }
+  
+  .view-only-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #0f5b86;
+    margin-bottom: 8px;
+  }
+  
+  .trip-date {
+    font-size: 16px;
+    color: #555;
+  }
+  
+  .view-only-layout {
+    display: flex;
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .view-only-left {
+    width: 35%;
+  }
+  
+  .view-only-left h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f5b86;
+    margin-bottom: 20px;
+  }
+  
+  .view-only-right {
+    width: 65%;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    padding: 0;
+    height: 600px;
+    display: flex;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .map-loading-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: #666;
+    font-size: 14px;
+  }
+  
+  .date-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  
+  .date-filter-dropdown {
+    padding: 10px 14px;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background: white;
+    cursor: pointer;
+    font-family: "Inter", sans-serif;
+  }
+  
+  .activities-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .activity-card-view-only {
+    background: white;
+    border: 1px solid #dcdcdc;
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease;
+  }
+  
+  .activity-card-view-only:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-color: #ccc;
+  }
+  
+  .activity-card-view-only h3 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f5b86;
+  }
+  
+  .activity-card-view-only p {
+    margin: 4px 0;
+    font-size: 14px;
+    color: #666;
+    line-height: 1.5;
+  }
+  
+  .activity-card-view-only strong {
+    color: #333;
+  }
+  
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .view-only-layout {
+      flex-direction: column;
+    }
+  
+    .view-only-left {
+      width: 100%;
+    }
+  
+    .view-only-right {
+      width: 100%;
+      height: 500px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .view-only-container {
+      padding: 20px;
+    }
+  
+    .view-only-header h1 {
+      font-size: 24px;
+    }
+  
+    .view-only-right {
+      height: 400px;
+    }
+  
+    .date-filter-dropdown {
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+  
+    .activity-card-view-only {
+      padding: 12px;
+    }
+  }

@@ -1,0 +1,24 @@
+{
+    "__GROUP TRIP PAGE": "=========== 團體行程頁面 =============",
+    "gt_join_btn": "加入",
+    "gt_exit_btn": "退出",
+    "gt_create_new_trip_btn": "建立新行程",
+    "gt_search_trip_name": "搜尋_行程名稱",
+    "gt_message_exit": "確定要退出此行程嗎？",
+    "gt_cancel_exit_btn": "取消",
+    "gt_confirm_exit_btn": "確定",
+    "gt_modal_trip_name": "行程名稱",
+    "gt_modal_no_of_pax": "人數（最多 5 人）",
+    "gt_modal_start_date": "開始日期",
+    "gt_modal_end_date": "結束日期",
+    "gt_modal_location": "地點",
+    "gt_modal_description": "描述",
+    "gt_modal_cancel_btn": "取消",
+    "gt_modal_update_btn": "更新",
+    "gt_errmsg_fields": "請填寫所有欄位。",
+
+    "__GROUP CHAT PAGE": "=========== 群組聊天頁面 =============",
+        "chat_loading": "正在載入聊天...",
+        "message_ph": "輸入訊息...",
+        "send_btn": "傳送"
+}

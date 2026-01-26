@@ -4,11 +4,13 @@ import InitMaps from "../components/InitMaps";
 import useMapData from "../hooks/FetchMapData";
 import "../styles/Itinerary.css";
 import axios from 'axios';
+import { useTranslation } from "react-i18next";
 
 function ActivityFormPage() {
   const { tripId, mode, index } = useParams();
   const navigate = useNavigate();
   const mapData = useMapData();
+  const { t } = useTranslation("itinerary");
 
 
   const [trips, setTrips] = useState([]);
@@ -32,7 +34,6 @@ function ActivityFormPage() {
   const [activityCoords, setActivityCoords] = useState([]); // store coords for maps
   const [itineraryLat, setItineraryLat] = useState(0);
   const [itineraryLng, setItineraryLng] = useState(0);
-  //setMapData(useMapData()) // get API key & set default coordinates to mark on map
 
   //Search bar modal pop out
   const [showLocSearch, setShowLocSearch] = useState(false);
@@ -158,9 +159,9 @@ function ActivityFormPage() {
     if (!trip || !editing) return;
     if (!originalDate) return;
     if (!date) return;
-    if (startPointTouched) return; // User manually chose â†’ respect it
+    if (startPointTouched) return; // User manually chose → respect it
 
-    //Date unchanged â†’ keep current checkbox value
+    //Date unchanged → keep current checkbox value
     if (date === originalDate) return;
 
     //If moving to a day that already has activities, default unchecked
@@ -172,7 +173,7 @@ function ActivityFormPage() {
       //First activity for that day
       setIsStartPoint(true);
     } else {
-      //Day already has activities (and likely has start point) â†’ don't steal start point
+      //Day already has activities (and likely has start point) → don't steal start point
       setIsStartPoint(false);
     }
   }, [date, originalDate, trip, editing, index, startPointTouched]);*/
@@ -221,7 +222,7 @@ function ActivityFormPage() {
     setSearchResult(mapResults);
   };
 
-  if (loading && editing) return <p>Loading..</p>
+  if (loading && editing) return <p>{t("Loading")}</p>
 
   const handlePhotoInput = (e) => {
     const files = e.target.files
@@ -287,7 +288,7 @@ function ActivityFormPage() {
         formData,
         {withCredentials:true})
       .then(res=>{
-        if(res.data === true) alert("Successfully created activity!")
+        if(res.data === true) alert(t("suvv_createact"));
       })
     }
 
@@ -321,18 +322,18 @@ function ActivityFormPage() {
         className="back-btn"
         onClick={() => navigate(`/mytrips/trip/itinerary/${tripId}/default`)}
       >
-        â† Back
+        ← {t("back_btn")}
       </button>
 
       <h1 className="form-title">
-        {editing ? "Edit Activity" : "Add Activity"}
+        {editing ? t("af_edit") : t("af_add")}
       </h1>
 
       <div className="activity-form-layout">
         <div className="activity-left-box">
           {/*Activty and start point*/}
           <div className="event-name-row">
-            <label className="form-label">Event Name</label>
+            <label className="form-label">{t("af_title")}</label>
             <div className="start-point-checkbox">
               <input
                 type="checkbox"
@@ -343,7 +344,7 @@ function ActivityFormPage() {
                 }}
                 disabled={editing && defaultStart}
               />
-              <span>This is my starting point</span>
+              <span>{t("af_start_pt")}</span>
             </div>
           </div>
 
@@ -353,7 +354,7 @@ function ActivityFormPage() {
             onChange={(e) => setName(e.target.value)}
           />
 
-          <label className="form-label">Location</label>
+          <label className="form-label">{t("af_location_tb")}</label>
           <input
             className="form-input"
             value={locationName}
@@ -373,14 +374,14 @@ function ActivityFormPage() {
             </div>
           )}
 
-          <label className="form-label">Address</label>
+          <label className="form-label">{t("af_address_tb")}</label>
           <input
             className="form-input"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
           />
 
-          <label className="form-label">Date</label>
+          <label className="form-label">{t("af_date_picker")}</label>
           <input
             type="date"
             className="form-input"
@@ -396,13 +397,13 @@ function ActivityFormPage() {
                   {m.url ? (
                     <img src={m.url} className="media-preview-img" />
                   ) : (
-                    <div className="media-file-icon">ðŸ“„ {m.name}</div>
+                    <div className="media-file-icon">{m.name}</div>
                   )}
                   <button
                     className="media-delete-existing"
                     onClick={() => handlePhotoDelete(m)}
                   >
-                    âœ•
+                    ×
                   </button>
                 </div>
               ))}
@@ -411,8 +412,7 @@ function ActivityFormPage() {
 
           {/*Upload new media*/}
           <label className="upload-media-btn">
-            <span className="upload-media-icon">ðŸ“</span>
-            Upload Media
+            {t("af_upload_media")}
             <input
               type="file"
               multiple
@@ -432,7 +432,7 @@ function ActivityFormPage() {
                       alt=""
                     />
                   ) : (
-                    <div className="media-file-icon">ðŸ“„ {file.name}</div>
+                    <div className="media-file-icon">{file.name}</div>
                   )}
                 </div>
               ))}
@@ -444,11 +444,11 @@ function ActivityFormPage() {
               className="cancel-btn"
               onClick={() => navigate(`/mytrips/trip/itinerary/${tripId}/default`)}
             >
-              Cancel
+              {t("af_cancel_btn")}
             </button>
 
             <button className="save-btn" onClick={handleSave}>
-              {editing ? "Save Changes" : "Create Activity"}
+              {editing ? t("af_save_btn") : t("af_create_btn")}
             </button>
           </div>
         </div>

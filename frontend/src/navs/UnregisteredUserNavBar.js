@@ -1,7 +1,14 @@
 import { Link, Outlet } from "react-router-dom";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 function UnregisteredUserNavBar() {
+    const { i18n } = useTranslation();
+    const { t } = useTranslation();
+    const changeLanguage = (lng) => {
+        i18n.changeLanguage(lng);
+    };
+
     return (
         <>
             {/*Styling for unregistered user navbar*/}
@@ -49,6 +56,15 @@ function UnregisteredUserNavBar() {
                 .unreg-link:hover {
                     text-decoration: underline;
                 }
+                .locale-selector {
+                    background: transparent;
+                    color: white;
+                    border: 1px solid white;
+                    border-radius: 5px;
+                    padding: 3px 6px;
+                    font-size: 14px;
+                    cursor: pointer;
+                }
             `}</style>
 
             <nav className="unreg-navbar">
@@ -57,13 +73,20 @@ function UnregisteredUserNavBar() {
                     <Link to="/" className="unreg-logo">TripMate</Link>
 
                     <div className="unreg-links">
-                        <Link to="/pricing" className="unreg-link">Pricing</Link>
-                        {/* --- NEW LINK ADDED HERE --- */}
-                        <Link to="/reviews" className="unreg-link">Reviews</Link>
-                        <Link to="/login" className="unreg-link">Login</Link>
-                        <Link to="/register" className="unreg-link">Create Account</Link>
-                    </div>
+                        <Link to="/pricing" className="unreg-link">{t("unreg_nav_pricing")}</Link>
+                        <Link to="/reviews" className="unreg-link">{t("unreg_nav_reviews")}</Link>
+                        <Link to="/login" className="unreg-link">{t("unreg_nav_login")}</Link>
+                        <Link to="/register" className="unreg-link">{t("unreg_nav_cacc")}</Link>
 
+                    <select className="locale-selector" value={i18n.language} onChange={(e) => changeLanguage(e.target.value)}>
+                        <option value="en">English</option>
+                        <option value="zh">中文</option>
+                        <option value="ja">日本語</option>
+                        <option value="ar">عربي</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                    </select>
+                    </div>
                 </div>
             </nav>
 

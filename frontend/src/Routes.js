@@ -25,6 +25,9 @@ import HomePage from "./pages/HomePage";
 import ChatbotPage from "./pages/ChatbotPage";
 import GroupTripsPage from "./pages/GroupTripsPage";
 import GroupChatPage from "./pages/GroupChatPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import ViewItineraryOnlyPage from "./pages/ViewItineraryOnlyPage";
+
 //import ItineraryFeedPage from "./pages/ItineraryFeedPage";
 import ProfilePage from "./pages/ProfilePage"; 
 import EditProfilePage from "./pages/EditProfilePage";
@@ -214,6 +217,9 @@ function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* ================= VIEW-ONLY ITINERARY (TOP LEVEL - NO NAVBAR) ================= */}
+        <Route path="/itineraryviewonly/:uuid" element={<ViewItineraryOnlyPage />} />
+
         {/* ================= PUBLIC ================= */}
         <Route element={<UnregisteredUserNavbar />}>
           <Route path="/" element={<Landing />} />
@@ -223,9 +229,13 @@ function AppRoutes() {
           <Route path="/quiz" element={<QuizPage />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/reviews" element={<ReviewsPage />} />
-          
+          {/* ================= RESET PASSWORD (TOP LEVEL - NO NAVBAR) ================= */}
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+
+          {/* ================= EMAIL CONFIRMATION (TOP LEVEL) ================= */}
+          <Route path="/confirm/:invID" element={<ConfirmationFromEmail/>}/>
         </Route>
-        <Route path="/confirm/:invID" element={<ConfirmationFromEmail/>}/>
 
         {/* ================= LOGGED-IN ================= */}
         <Route

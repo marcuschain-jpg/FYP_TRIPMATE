@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Itinerary.css";
-import { useParams, useNavigate, useOutletContext } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from 'axios';
 import Axios from '../hooks/Axios.js';
 import ItineraryChat from "../components/ItineraryChat";
+import { useTranslation } from 'react-i18next';
 
 //Date formatter function--> for date editing
 const formatDateForInput = (dateValue) => {
@@ -36,8 +37,7 @@ const formatDateForInput = (dateValue) => {
 
 function MyTripsPage() {
   const navigate = useNavigate();
-
-  const { myTrips: joinedGroupTrips } = useOutletContext();
+  const { t } = useTranslation("mytrips");
 
   //Load all existing trips  
   const [trips, setTrips] = useState([]);
@@ -76,25 +76,9 @@ function MyTripsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [tripToDelete, setTripToDelete] = useState(null);
 
-  // For chat
+  //For chat
   const[showChat, setShowChat] = useState(false);
   const [activeTripID, setActiveTripID] = useState(0);
-
-  //Convert a group trip into MyTrips format with member counter
-  const mapGroupTripToMyTrip = (t) => ({
-    id: t.id,
-    name: t.title,
-    destination: "Group Trip",
-    start: "",
-    end: "",
-    status: false,
-    isGroupTrip: true,
-    type: "Group",
-    owner: t.owner,
-    currentMembers: t.currentMembers || 0,
-    maxCapacity: t.capacity || 0,
-  });
-  
 
   //Load from backend (private trips)
   useEffect(() => {
@@ -149,38 +133,8 @@ function MyTripsPage() {
       maxCapacity: t.capacity
     }));
 
-    setTrips((prev) => {
-      const existingGroupTrips = prev.filter((x) => x.isGroupTrip === true);
-
-      const sharedGroupTrips = (joinedGroupTrips || []).map(mapGroupTripToMyTrip);
-
-      const allGroupTrips = [...existingGroupTrips, ...sharedGroupTrips].filter(
-        (trip, index, arr) => arr.findIndex((x) => x.id === trip.id) === index
-      );
-
-      const finalGroupTrips = allGroupTrips.filter(
-        (g) => !mapTrips.some((p) => p.id === g.id)
-      );
-
-      return [...mapTrips, ...finalGroupTrips];
-    });
+    setTrips(mapTrips);
   };
-
-  //Whenever joined trips changes-->keep them in My trips list
-  useEffect(() => {
-    if (!joinedGroupTrips) return;
-
-    setTrips((prev) => {
-      const privateTrips = prev.filter((t) => t.isGroupTrip !== true);
-      const newGroupTrips = joinedGroupTrips.map(mapGroupTripToMyTrip);
-
-      const merged = [...privateTrips, ...newGroupTrips].filter(
-        (trip, index, arr) => arr.findIndex((x) => x.id === trip.id) === index
-      );
-
-      return merged;
-    });
-  }, [joinedGroupTrips]);
 
   //For location search
   useEffect(() => {
@@ -278,7 +232,7 @@ function MyTripsPage() {
     setInvalidFields(missing);
 
     if (missing.length > 0) {
-      setErrorMsg("Please fill in all fields.");
+      setErrorMsg(t("mt_errmsg_fields"));
       return;
     }
 
@@ -313,7 +267,7 @@ function MyTripsPage() {
                 : trip
             )
           );
-          setSuccessMsg("Trip updated successfully!");
+          setSuccessMsg(t("mt_succmsg_tripupdate"));
 
           setNewTripName("");
           setNewDestination("");
@@ -324,7 +278,7 @@ function MyTripsPage() {
           setNewFullDest({});
           setTimeout(() => setShowAddTripModal(false), 300);
         } else {
-          setErrorMsg("Update Failed");
+          setErrorMsg(t("mt_errmsg_update"));
         }
       } else {
         const response = await Axios.post(
@@ -360,7 +314,7 @@ function MyTripsPage() {
           };
 
           setTrips((prev) => [...prev, newTrip]);
-          setSuccessMsg("Trip successfully created!");
+          setSuccessMsg(t("mt_succmsg_tripcreate"));
 
           setNewTripName("");
           setNewDestination("");
@@ -371,7 +325,7 @@ function MyTripsPage() {
           setFirstLoad(true);
           setTimeout(() => setShowAddTripModal(false), 300);
         } else {
-          setErrorMsg("Insert Failed");
+          setErrorMsg(t("mt_errmsg_insert"));
         }
       }
     } catch (err) {
@@ -408,7 +362,7 @@ function MyTripsPage() {
           setShowDeleteConfirm(false);
           setTripToDelete(null);
 
-          setSuccessMsg("Trip deleted successfully!");
+          setSuccessMsg(t("mt_succmsg_tripdelete"));
           setTimeout(() => setSuccessMsg(""), 1500);
           return;
         }
@@ -417,13 +371,13 @@ function MyTripsPage() {
           setShowDeleteConfirm(false);
           setTripToDelete(null);
 
-          setSuccessMsg("Public group trip exited successfully!");
+          setSuccessMsg(t("mt_succmsg_tripexit"));
           setTimeout(() => setSuccessMsg(""), 1500);
           return;
         }
       } catch (err) {
         console.error(err);
-        setErrorMsg("Delete failed (server error).");
+        setErrorMsg(t("mt_errmsg_delete"));
         setShowDeleteConfirm(false);
       }
     }
@@ -437,7 +391,7 @@ function MyTripsPage() {
           setShowDeleteConfirm(false);
           setTripToDelete(null);
 
-          setSuccessMsg("Trip deleted successfully!");
+          setSuccessMsg(t("mt_succmsg_delete"));
           setTimeout(() => setSuccessMsg(""), 1500);
           return;
         }
@@ -446,35 +400,17 @@ function MyTripsPage() {
           setShowDeleteConfirm(false);
           setTripToDelete(null);
 
-          setSuccessMsg("Private group trip exited successfully!");
+          setSuccessMsg(t("mt_succmsg_tripexitprivate"));
           setTimeout(() => setSuccessMsg(""), 1500);
           return;
         }
       } catch (err) {
         console.error(err);
-        setErrorMsg("Delete failed (server error).");
+        setErrorMsg(t("mt_errmsg_delete"));
         setShowDeleteConfirm(false);
       }
     }
   };
-
-  const updateTripCollaborators = (tripId, collaborators) => {
-    setTrips((prev) =>
-      prev.map((trip) =>
-        trip.id === tripId ? { ...trip, collaborators } : trip
-      )
-    );
-  };
-
-  useEffect(() => {
-    const handleUpdateCollaborators = (event) => {
-      const { tripId, collaborators } = event.detail;
-      updateTripCollaborators(tripId, collaborators);
-    };
-
-    window.addEventListener("updateCollaborators", handleUpdateCollaborators);
-    return () => window.removeEventListener("updateCollaborators", handleUpdateCollaborators);
-  }, []);
 
   const filteredTrips = trips.filter((t) => {
     const matchSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -500,12 +436,12 @@ function MyTripsPage() {
 
   return (
     <div className="mytrips-page">
-      <h1 className="title">My Trips</h1>
+      <h1 className="title">{t("mt_title")}</h1>
 
       <div className="top-controls">
         <input
           className="search-bar"
-          placeholder="Search Trip Name"
+          placeholder={t("mt_searchph")}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -515,13 +451,13 @@ function MyTripsPage() {
             className="filter-toggle"
             onClick={() => setShowFilters((prev) => !prev)}
           >
-            Filter ▾
+            {t("mt_filterdd")} ▾
           </button>
 
           {showFilters && (
             <div className="filter-panel">
               {usertype === "premium" && <div className="filter-section">
-                <label className="filter-title">Trip Type</label>
+                <label className="filter-title">{t("mt_filter_triptype")}</label>
 
                 <label className="filter-option">
                   <input
@@ -529,7 +465,7 @@ function MyTripsPage() {
                     checked={filterType === "All"}
                     onChange={() => setFilterType("All")}
                   />
-                  All Trips
+                  {t("mt_filter_ttall")}
                 </label>
 
                 <label className="filter-option">
@@ -538,7 +474,7 @@ function MyTripsPage() {
                     checked={filterType === "Private"}
                     onChange={() => setFilterType("Private")}
                   />
-                  Private Trips
+                  {t("mt_filter_ttprivate")}
                 </label>
 
                 <label className="filter-option">
@@ -547,12 +483,12 @@ function MyTripsPage() {
                     checked={filterType === "Group"}
                     onChange={() => setFilterType("Group")}
                   />
-                  Group Trips
+                  {t("mt_filter_ttgroup")}
                 </label>
               </div>}
 
               <div className="filter-section">
-                <label className="filter-title">Trip Status</label>
+                <label className="filter-title">{t("mt_filter_status")}</label>
 
                 <label className="filter-option">
                   <input
@@ -560,7 +496,7 @@ function MyTripsPage() {
                     checked={filterStatus === "All"}
                     onChange={() => setFilterStatus("All")}
                   />
-                  All
+                  {t("mt_filter_all")}
                 </label>
 
                 <label className="filter-option">
@@ -569,7 +505,7 @@ function MyTripsPage() {
                     checked={filterStatus === "Completed"}
                     onChange={() => setFilterStatus("Completed")}
                   />
-                  Completed
+                  {t("mt_filter_scompleted")}
                 </label>
 
                 <label className="filter-option">
@@ -578,12 +514,12 @@ function MyTripsPage() {
                     checked={filterStatus === "In Progress"}
                     onChange={() => setFilterStatus("In Progress")}
                   />
-                  In Progress
+                  {t("mt_filter_sinprogress")}
                 </label>
               </div>
 
               {usertype === "premium" && <div className="filter-section">
-                <label className="filter-title">Member Type</label>
+                <label className="filter-title">{t("mt_filter_membertype")}</label>
 
                 <label className="filter-option">
                   <input
@@ -591,7 +527,7 @@ function MyTripsPage() {
                     checked={filterMemberType === "All"}
                     onChange={() => setFilterMemberType("All")}
                   />
-                  All
+                  {t("mt_filter_all")}
                 </label>
 
                 <label className="filter-option">
@@ -600,7 +536,7 @@ function MyTripsPage() {
                     checked={filterMemberType === "Host"}
                     onChange={() => setFilterMemberType("Host")}
                   />
-                  Host
+                  {t("mt_host")}
                 </label>
 
                 <label className="filter-option">
@@ -609,7 +545,7 @@ function MyTripsPage() {
                     checked={filterMemberType === "Collaborator"}
                     onChange={() => setFilterMemberType("Collaborator")}
                   />
-                  Collaborator
+                  {t("mt_collab")}
                 </label>
               </div>}
             </div>
@@ -620,7 +556,7 @@ function MyTripsPage() {
           className="add-trip-btn"
           onClick={openAddModal}
         >
-          Add New Trip +
+          {t("mt_add_btn")} +
         </button>
       </div>
 
@@ -644,7 +580,7 @@ function MyTripsPage() {
                       backgroundColor: trip.isGroupTrip ? "#FF6B6B" : "#4ECDC4"
                     }}
                   >
-                    {trip.isGroupTrip ? "Group" : "Private"}
+                    {trip.isGroupTrip ? t("mt_tag_group") : t("mt_tag_private")}
                   </span>}
                   {usertype === "premium" && <span 
                     style={{
@@ -656,25 +592,25 @@ function MyTripsPage() {
                       backgroundColor: trip.userItineraryType === "host" ? "#FF6B6B" : "#4ECDC4"
                     }}
                   >
-                    {trip.userItineraryType === "host" ? "Host" : "Collaborator"}
+                    {trip.userItineraryType === "host" ? t("mt_host") : t("mt_collab")}
                   </span>}
                 </div>
 
                 {usertype === "premium" && trip.isGroupTrip && (
                   <p style={{ fontSize: "14px", color: "#666", marginTop: "5px" }}>
-                    Members: {trip.currentMembers}/{trip.maxCapacity}
+                    {t("mt_tag_members")}: {trip.currentMembers}/{trip.maxCapacity}
                   </p>
                 )}
 
                 {usertype === "premium" && !trip.isGroupTrip && trip.collaborators && (
                   <p style={{ fontSize: "14px", color: "#666", marginTop: "5px" }}>
-                    Collaborators: {trip.collaborators}/{trip.maxCapacity}
+                    {t("mt_tag_collabs")}: {trip.collaborators}/{trip.maxCapacity}
                   </p>
                 )}
 
                 <div className={`trip-status ${trip.status === true ? "completed" : "inprogress"}`}>
-                  {trip.status && "Completed"}
-                  {!trip.status && "In Progress"}
+                  {trip.status && t("mt_filter_scompleted")}
+                  {!trip.status && t("mt_filter_sinprogress")}
                 </div>
               </div>
 
@@ -687,7 +623,7 @@ function MyTripsPage() {
                       setActiveTripID(trip.id);
                     }}
                   >
-                    Chat
+                    {t("mt_btn_chat")}
                   </button>
                 )}
 
@@ -695,7 +631,7 @@ function MyTripsPage() {
                   className="view-btn"
                   onClick={() => navigate(`/mytrips/trip/${trip.id}`)}
                 >
-                  View
+                  {t("mt_btn_view")}
                 </button>
 
                 {!trip.isGroupTrip && (
@@ -703,16 +639,16 @@ function MyTripsPage() {
                     className="edit-btn"
                     onClick={() => openEditModal(trip)}
                   >
-                    Edit
+                    {t("mt_btn_edit")}
                   </button>
                 )}
 
                 {trip.userItineraryType === "host" && <button className="delete-btn" onClick={() => requestDeleteTrip(trip.id)}>
-                  Delete
+                  {t("mt_btn_delete")}
                 </button>}
 
                 {trip.userItineraryType === "visitor" && <button className="delete-btn" onClick={() => requestDeleteTrip(trip.id)}>
-                  Exit
+                  {t("mt_btn_exit")}
                 </button>}
               </div>
             </div>
@@ -722,13 +658,13 @@ function MyTripsPage() {
       {showAddTripModal && (
         <div className="modal-overlay">
           <div className="modal-box">
-            <h2 className="modal-title">{isEditingTrip ? "Edit Trip" : "Trip Details"}</h2>
+            <h2 className="modal-title">{isEditingTrip ? t("mt_modal_edittrip") : t("mt_modal_tripdetails")}</h2>
 
             {errorMsg && <div className="error-msg">{errorMsg}</div>}
 
             <div className="modal-row">
               <div className="modal-col">
-                <label>Trip Name</label>
+                <label>{t("mt_modal_tripname")}</label>
                 <input
                   className={`modal-input ${
                     invalidFields.includes("tripName") ? "invalid-input" : ""
@@ -739,7 +675,7 @@ function MyTripsPage() {
               </div>
 
               <div className="modal-col">
-                <label>Destination City</label>
+                <label>{t("mt_modal_destination")}</label>
                 <input
                   className={`modal-input ${
                     invalidFields.includes("destination") ? "invalid-input" : ""
@@ -750,21 +686,21 @@ function MyTripsPage() {
                     setShowLocSearch(false);
                   }}
                 />
+                { showLocSearch && (
+                  <div className="form-input-search">
+                    {searchResult.map(res => (
+                      <div key={res.placeid} className="form-input-search-res" onClick={() => updateFormBasedOnLoc(res)}>
+                        {res.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              { showLocSearch && (
-                <div className="form-input-search">
-                  {searchResult.map(res => (
-                    <div key={res.placeid} className="form-input-search-res" onClick={() => updateFormBasedOnLoc(res)}>
-                      {res.name}
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
 
             <div className="modal-row">
               <div className="modal-col">
-                <label>Start Date</label>
+                <label>{t("mt_modal_startdate")}</label>
                 <input
                   type="date"
                   className={`modal-input ${
@@ -776,7 +712,7 @@ function MyTripsPage() {
               </div>
 
               <div className="modal-col">
-                <label>End Date</label>
+                <label>{t("mt_modal_enddate")}</label>
                 <input
                   type="date"
                   className={`modal-input ${
@@ -793,11 +729,11 @@ function MyTripsPage() {
                 className="modal-cancel"
                 onClick={() => setShowAddTripModal(false)}
               >
-                Cancel
+                {t("mt_modal_cancelbtn")}
               </button>
 
               <button className="modal-save" onClick={handleSaveTrip}>
-                {isEditingTrip ? "Update" : "Save"}
+                {isEditingTrip ? t("mt_modal_updatebtn") : t("mt_modal_savebtn")}
               </button>
             </div>
           </div>
@@ -808,13 +744,13 @@ function MyTripsPage() {
         <div className="modal-overlay">
           <div className="modal-box small">
             <h2 className="modal-title">
-              {(tripToDelete?.isGroupTrip || tripToDelete?.userItineraryType === "visitor") ? "Exit Group Trip" : "Confirm Delete"}
+              {(tripToDelete?.isGroupTrip || tripToDelete?.userItineraryType === "visitor") ? t("mt_modal_exitgt_btn") : t("mt_modal_confirmdel_btn")}
             </h2>
 
             <p>
               {(tripToDelete?.isGroupTrip || tripToDelete?.userItineraryType === "visitor")
-                ? "Are you sure you want to exit this group trip?"
-                : "Are you sure you want to delete this trip?"}
+                ? t("mt_modal_exitgt")
+                : t("mt_modal_confirmdel")}
             </p>
 
             <div className="modal-actions">
@@ -822,11 +758,11 @@ function MyTripsPage() {
                 className="modal-cancel"
                 onClick={() => setShowDeleteConfirm(false)}
               >
-                Cancel
+                {t("mt_modal_cancelbtn")}
               </button>
 
               <button className="modal-delete" onClick={deleteTripConfirmed}>
-                {(tripToDelete?.isGroupTrip || tripToDelete?.userItineraryType === "visitor") ? "Exit" : "Delete"}
+                {(tripToDelete?.isGroupTrip || tripToDelete?.userItineraryType === "visitor") ? t("mt_btn_exit") : t("mt_btn_delete")}
               </button>
             </div>
           </div>

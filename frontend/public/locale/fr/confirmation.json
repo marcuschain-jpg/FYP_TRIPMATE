@@ -1,0 +1,48 @@
+{
+    "__CONFIRMATION FROM EMAIL PAGE": " ========== CONFIRMATION FROM EMAIL PAGE ==========",
+    "cp_confirm_title": "Vous avez été invité !",
+    "cp_confirm_text": "Vos amis vous ont invité à collaborer à l’organisation de leur voyage",
+    "cp_accept_btn": "Accepter l’invitation",
+    "cp_invalid_title": "Invitation invalide !",
+    "cp_login_btn": "Retour à la connexion",
+    "cp_accept_title": "Invitation acceptée !",
+    "cp_accept_text": "Parfait ! Tout est prêt. Connectez-vous pour commencer à planifier le voyage ensemble.",
+    "cp_accept_login_btn": "Aller à la connexion",
+
+    
+    "__RESET PASSWORD PAGE": " ========== RESET PASSWORD PAGE ==========",
+        "rp_err_email": "Veuillez saisir votre adresse e-mail",
+        "rp_err_sendemail": "Échec de l’envoi du lien de réinitialisation",
+        "rp_err_sendemail_gen": "Erreur lors de l’envoi du lien de réinitialisation",
+        "rp_err_pw_fields": "Veuillez remplir tous les champs",
+        "rp_err_pw_match": "Les mots de passe ne correspondent pas",
+        "rp_err_pw_length": "Le mot de passe doit contenir au moins 6 caractères",
+        "rp_err_send_pw": "Échec de la réinitialisation du mot de passe",
+        "rp_err_send_pw_gen": "Erreur lors de la réinitialisation du mot de passe",
+        "rp_succ_send_pw": "Mot de passe réinitialisé avec succès !",
+        "rp_succ_email": "Le lien de réinitialisation a été envoyé à votre e-mail",
+
+        "rp_validating": "Validation du lien de réinitialisation...",
+        "rp_forgetpassword_title": "Mot de passe oublié ?",
+        "rp_forgetpassword_text": "Saisissez votre e-mail et nous vous enverrons un lien pour réinitialiser votre mot de passe",
+        "rp_enteremail_tb": "Adresse e-mail",
+        "rp_enteremail_ph": "Saisissez votre e-mail",
+        "rp_send_btn": "Envoyer le lien de réinitialisation",
+        "rp_sending_btn": "Envoi en cours...",
+        "rp_sent_btn": "Envoyé",
+        "rp_rmbpw_title": "Vous vous souvenez de votre mot de passe ?",
+        "rp_login_btn": "Retour à la connexion",
+
+        "rp_resetpassword_title": "Réinitialiser votre mot de passe",
+        "rp_resetpassword_text": "Saisissez votre nouveau mot de passe ci-dessous",
+        "rp_password_tb": "Nouveau mot de passe",
+        "rp_password_ph": "Saisissez le nouveau mot de passe",
+        "rp_confirmpassword_tb": "Confirmer le mot de passe",
+        "rp_confirmpassword_ph": "Confirmez votre mot de passe",
+        "rp_save_btn": "Enregistrer le nouveau mot de passe",
+        "rp_saving_btn": "Enregistrement...",
+        "rp_reset_btn": "Mot de passe réinitialisé",
+
+        "rp_complete_title": "Réinitialisation du mot de passe terminée !",
+        "rp_complete_text": "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe."
+}

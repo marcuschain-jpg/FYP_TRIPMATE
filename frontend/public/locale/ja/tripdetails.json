@@ -1,0 +1,31 @@
+{
+    "__TRIP DETAILS PAGE": "========== TRIP DETAILS PAGE ==========",
+    "back_to_mytrips": "マイトリップへ戻る",
+    "trip_completed": "旅行が完了しました",
+    "itinerary": "旅程",
+    "itinerary_title": "ここで旅程を表示または編集",
+    "view_btn": "表示",
+    "timeline": "タイムライン",
+    "timeline_title": "ここでタイムラインを生成または表示",
+    "media": "メディア",
+    "media_title": "ここでメディアを編集または表示",
+    "chat_btn": "チャット",
+    "loading": "読み込み中…",
+
+    "modal_title": "共同編集者を追加",
+    "modal_member": "メンバー",
+    "modal_emailph": "共同編集者のメールアドレスを入力",
+    "modal_add_btn": "追加",
+    "modal_members_title": "メンバー",
+    "modal_nocolab": "共同編集者が見つかりません！",
+    "modal_share": "共有",
+    "modal_cancel_btn": "キャンセル",
+    "modal_save_btn": "保存",
+    "modal_confirmdel_pt1": "",
+    "modal_confirmdel_pt2": "を共同編集者から削除してもよろしいですか？",
+
+    "err_enteremail": "メールアドレスを入力してください",
+    "err_maxcollab": "共同編集者の上限に達しました！",
+    "err_alrcollab": "すでに共同編集者です",
+    "succ_email": "招待メールを送信しました！"
+}

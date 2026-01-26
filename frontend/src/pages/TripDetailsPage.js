@@ -1,12 +1,13 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import Axios from '../hooks/Axios.js';
 import "../styles/Itinerary.css";
 import "../styles/Collab.css";
 import link from "../Assets/link.png"
 import whatsapp from "../Assets/Whatsapp.png"
 import telegram from "../Assets/Telegram.png"
 import ItineraryChat from "../components/ItineraryChat";
+import { useTranslation } from "react-i18next";
 
 //Date formatter function--> so that correct data appears across all pages and can be updatd through edit button
 const formatDateForDisplay = (dateValue) => {
@@ -32,11 +33,13 @@ const formatDateForDisplay = (dateValue) => {
 function TripDetailsPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
+  const { t,i18n } = useTranslation("tripdetails");
 
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState("");
   const [isPremium, setIsPremium] = useState(false);
+  const [lang, setLang] = useState(i18n.language||"en");
 
   //State to control collaborator modal
   const [showCollaborators, setShowCollaborators] = useState(false);
@@ -52,7 +55,7 @@ function TripDetailsPage() {
 
   //Load trips and set current trip
   useEffect(() => {
-    axios.get("http://localhost:8080/Itinerary/GetItinerary", {
+    Axios.get("Itinerary/GetItinerary", {
         params: { i_id: tripId },
         withCredentials: true
       })
@@ -69,7 +72,7 @@ function TripDetailsPage() {
           }      
       });
       
-    axios.post("http://localhost:8080/GetRoleForUser", {}, {withCredentials:true})
+    Axios.post("GetRoleForUser", {}, {withCredentials:true})
     .then(res => {
       setUserRole(res.data.role);
     })
@@ -78,6 +81,17 @@ function TripDetailsPage() {
   useEffect(() => {
     if(userRole === "premium") setIsPremium(true);
   }, [userRole])
+
+  useEffect(() => {
+      // Run when ititialized(default) & lang changed
+      i18n.on("languageChanged", function(lng) {
+        setLang(lng);
+      });
+  
+      return() => {
+        i18n.off("languageChanged", function(lng) {});
+      };
+    }, [i18n])
 
   const renderLoadTrip = (res) => {
     //Format dates using the formatter function
@@ -94,7 +108,8 @@ function TripDetailsPage() {
       end: formattedEDate,
       status: res[0].completed,
       type: res[0].type,
-      numPpl: res[0].num_ppl
+      numPpl: res[0].num_ppl,
+      isHost: res[0].isHost
     };
 
     if(res[0].email){
@@ -110,8 +125,8 @@ function TripDetailsPage() {
 
   const updateTripStatus = (status) => {
     //main method to update completed
-    axios
-      .patch("http://localhost:8080/Itinerary/UpdateItineraryComplete", {
+    Axios
+      .patch("Itinerary/UpdateItineraryComplete", {
         i_id: tripId,
         completed: status,
       }, {withCredentials:true})
@@ -124,38 +139,48 @@ function TripDetailsPage() {
 
   //Add collaborator (dummy only)
   const handleAddCollaborator = async() => {
-    if (newCollaborator.trim() === "") return;
+    if (newCollaborator.trim() === "") {
+      alert(t("err_enteremail"));
+      return;
+    }
     if (trip.numPpl >= 5){
       console.log(trip.numPpl)
-      alert("Max amount of collaborators reached!");
+      alert(t("err_maxcollab"));
       return;
     }
 
     //Prevent duplicates
-    if (collaborators.includes(newCollaborator)) return;
-    let collabAdded = false;
+    if (collaborators.includes(newCollaborator)){
+      alert(t("err_alrcollab"))
+      return;
+    }
 
     try{
-      const res = await axios.post("http://localhost:8080/Itinerary/AddCollaborator", {i_id:tripId, email:newCollaborator, i_name: trip.name}, {withCredentials:true})
+      const res = await Axios.post("Itinerary/AddCollaborator", {i_id:tripId, email:newCollaborator, i_name: trip.name}, {withCredentials:true})
       if(res.data){
       //setCollaborators(prev => [...prev, {name: `${res.data[0].first_name} ${res.data[0].last_name}`, email: res.data[0].email}]);
-      alert("Email invitation sent!")
+      alert(t("succ_email"));
       setNewCollaborator("");
     }
     }
     catch(err) {
-      if(err.response.status === 401 || err.response.status === 403)
-      {
-        const errData = err.response;
-        const errorMsg = errData.status + ": " + errData.data.message;
-        navigate(`/login/${errorMsg}`);
-      }      
-      if(err.response.status === 500)
-      {
-        const errData = err.response;
-        const errorMsg = errData.data.message;
-        setNewCollaborator("");
-        alert(errorMsg);
+      if(err.response){
+        if(err.response.status === 401 || err.response.status === 403)
+        {
+          const errData = err.response;
+          const errorMsg = errData.status + ": " + errData.data.message;
+          navigate(`/login/${errorMsg}`);
+        }      
+        if(err.response.status === 500)
+        {
+          const errData = err.response;
+          const errorMsg = errData.data.message;
+          setNewCollaborator("");
+          alert(errorMsg);
+        }
+      }
+      else{
+        console.log(err);
       }
     }
   };
@@ -163,13 +188,13 @@ function TripDetailsPage() {
   //Delete collaborator with confirmation
   const handleDeleteCollaborator = async(item) => {
     const confirmDelete = window.confirm(
-      `Are you sure you want to remove ${item.name} as a collaborator?`
+      `${t("modal_confirmdel_pt1")} ${item.name} ${t("modal_confirmdel_pt2")}`
     );
 
     if (confirmDelete) {
       let deleteConfirm = false; // Check if db returns true if already deleted
       try{
-        const res = await axios.delete("http://localhost:8080/Itinerary/DeleteCollaborator", {data:{i_id:tripId, email:item.email, type:trip.type}, withCredentials:true})
+        const res = await Axios.delete("Itinerary/DeleteCollaborator", {data:{i_id:tripId, email:item.email, type:trip.type}, withCredentials:true})
         deleteConfirm = res.data;
       }
       catch(err){
@@ -208,13 +233,56 @@ function TripDetailsPage() {
     setShowCollaborators(false);
   };
 
-  if (loading) return <p>Loading..</p>;
+  // Handle sharing itinerary externally
+  const handleShareExt = async(shareType) => {
+    // link, ws, tele
+    let link = '';
+
+    try{
+      if(shareType === "ws" || shareType === "tele"){
+        const res = await Axios.post("Itinerary/ShareExt", {i_id: tripId, shareType}, {withCredentials:true});
+        if(res.data){
+          window.open(res.data, '_blank', 'noopener, noreferrer');
+          alert("Shared successfully!");
+        }
+      }
+      else{
+        const { ClipboardItem } = window;
+          await navigator.clipboard.write([new ClipboardItem({"text/plain": getURL(shareType)})])
+          .then(() => alert("Link copied!"));
+      }
+    }
+    catch(err){
+      if(err.response){
+        if(err.response.status === 401 || err.response.status === 403)
+        {
+          const errData = err.response;
+          const errorMsg = errData.status + ": " + errData.data.message;
+          navigate(`/login/${errorMsg}`);
+        }      
+        if(err.response.status === 500)
+        {
+          alert(err.response.data.message);
+        }
+      }
+      else{
+        console.log(err);
+      }
+    }
+  }
+
+  const getURL = async() => {
+    const{data: url} = await Axios.post("Itinerary/ShareExt", {i_id: tripId, shareType:"link"}, {withCredentials:true});
+    return url;
+  }
+
+  if (loading) return <p>{t("loading")}</p>;
 
   return (
     <div className="tripdetails-page">
       <div className="tripdetails-inner">
         <button className="back-btn" onClick={() => navigate(`/mytrips`)}>
-          ← Back to My Trips
+          ← {t("back_to_mytrips")}
         </button>
 
         <h1 className="tripdetails-title">{trip.name}</h1>
@@ -241,21 +309,21 @@ function TripDetailsPage() {
               updateTripStatus(e.target.checked ? true : false)
             }
           />
-          Trip Completed
+          {t("trip_completed")}
         </label>
 
         {/*Itinerary card*/}
         <div className="section-card">
           <div className="section-content">
-            <h2>Itinerary</h2>
-            <p>View or edit itinerary here</p>
+            <h2>{t("itinerary")}</h2>
+            <p>{t("itinerary_title")}</p>
             <button
               className="view-btn"
               onClick={() =>
                 navigate(`/mytrips/trip/itinerary/${trip.id}/default`)
               }
             >
-              View
+              {t("view_btn")}
             </button>
           </div>
         </div>
@@ -263,15 +331,15 @@ function TripDetailsPage() {
         {/*Timeline card*/}
         <div className="section-card">
           <div className="section-content">
-            <h2>Timeline</h2>
-            <p>Generate or view timeline here</p>
+            <h2>{t("timeline")}</h2>
+            <p>{t("timeline_title")}</p>
             <button
               className="view-btn"
               onClick={() =>
                 navigate(`/mytrips/trip/timeline/${trip.id}`)
               }
             >
-              View
+              {t("view_btn")}
             </button>
           </div>
         </div>
@@ -279,15 +347,15 @@ function TripDetailsPage() {
         {/*Media card*/}
         <div className="section-card">
           <div className="section-content">
-            <h2>Media</h2>
-            <p>Edit or view media here</p>
+            <h2>{t("media")}</h2>
+            <p>{t("media_title")}</p>
             <button
               className="view-btn"
               onClick={() =>
                 navigate(`/mytrips/trip/media/${trip.id}`)
               }
             >
-              View
+              {t("view_btn")}
             </button>
           </div>
         </div>
@@ -295,7 +363,7 @@ function TripDetailsPage() {
 
       {(trip.type === "Group") && 
       (<button className="floating-chat-btn" onClick={() => setShowChat(true)} title="Chat">
-        Chat
+        {t("chat_btn")}
       </button>)}
 
       {/*Collaborators modal*/}
@@ -304,19 +372,19 @@ function TripDetailsPage() {
           <div className="collab-card">
             {isPremium && (
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-                <h3 className="collab-title">Add Collaborators</h3>
+                <h3 className="collab-title">{t("modal_title")}</h3>
                 <div style={{ background: "#e3f2fd", color: "#0a3d62", padding: "4px 12px", borderRadius: "20px", fontSize: "13px", fontWeight: "600" }}>
-                  {collaborators.length} member{collaborators.length !== 1 ? "s" : ""}
+                  {collaborators.length} {t("modal_member")}{collaborators.length !== 1 ? "s" : ""}
                 </div>
               </div>
             )}
 
             {/*Input row*/}
-            {(isPremium && trip.type === "Private") && <div className="collab-input-row">
+            {(isPremium && trip.type === "Private" && trip.isHost) && <div className="collab-input-row">
               <input
                 type="text"
                 className="collab-input"
-                placeholder="Enter collaborator email"
+                placeholder= {t("modal_emailph")}
                 value={newCollaborator}
                 onChange={(e) =>
                   setNewCollaborator(e.target.value)
@@ -326,13 +394,13 @@ function TripDetailsPage() {
                 className="add-btn"
                 onClick={handleAddCollaborator}
               >
-                Add
+                {t("modal_add_btn")}
               </button>
             </div>}
 
             {/*Members*/}
             <div className="members-section">
-              {isPremium && <p className="members-title">Members</p>}
+              {isPremium && <p className="members-title">{t("modal_members_title")}</p>}
 
               {(isPremium && collaborators) && collaborators.map((item, index) => (
                 <div key={index} className="member-item">
@@ -342,28 +410,28 @@ function TripDetailsPage() {
 
                   <span className="member-name">{item.name}</span>
 
-                  <button
+                  {trip.isHost && <button
                     className="delete-btn"
                     onClick={() => handleDeleteCollaborator(item)}
                     title="Remove collaborator"
                   >
                     ✕
-                  </button>
+                  </button>}
 
                 </div>
               ))}
               {(isPremium && !collaborators) &&
                 <div className="member-item">
 
-                  <span className="member-name">No collaborators found!</span>
+                  <span className="member-name">{t("modal_nocolab")}</span>
 
                 </div>
               }
-              <p className="members-title">Share</p>
+              <p className="members-title">{t("modal_share")}</p>
               <div className="share-icons">
-                <img src={link} alt="link.img" className="collab-img" />
-                <img src={whatsapp} alt="whatsapp.img" className="collab-img2" />
-                <img src={telegram} alt="tele.img" className="collab-img2" />
+                <img src={link} alt="link.img" className="collab-img" onClick={() => handleShareExt("link")}/>
+                <img src={whatsapp} alt="whatsapp.img" className="collab-img2" onClick={() => handleShareExt("ws")}/>
+                <img src={telegram} alt="tele.img" className="collab-img2" onClick={() => handleShareExt("tele")}/>
               </div>
             </div>
 
@@ -373,13 +441,13 @@ function TripDetailsPage() {
                 className="cancel-btn"
                 onClick={() => setShowCollaborators(false)}
               >
-                Cancel
+                {t("modal_cancel_btn")}
               </button>
               {isPremium && <button
                 className="save-btn"
                 onClick={handleSaveCollaborators}
               >
-                Save
+                {t("modal_save_btn")}
               </button>}
             </div>
           </div>

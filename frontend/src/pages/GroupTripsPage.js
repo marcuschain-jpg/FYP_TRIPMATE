@@ -2,8 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom"; // âœ… ADDED
 import "../styles/GroupTrip.css";
 import axios from 'axios';
+import { useTranslation } from "react-i18next";
 
 function GroupTripsPage() {
+
+  const { t } = useTranslation("grouptrips");
 
   //Shared state from Routes.js
   const { myTrips, joinTrip, exitTrip } = useOutletContext();
@@ -176,7 +179,7 @@ function GroupTripsPage() {
   //Exit handler
   const handleExit = async(trip) => {
     const confirmExit = window.confirm(
-      "Are you sure you want to exit this trip?"
+      t("gt_message_exit")
     );
     if (!confirmExit) return;
     const tripId = trip.id;
@@ -217,7 +220,7 @@ function GroupTripsPage() {
   //Upload handler
   const handleUpload = async() => {
     if (!tripName || !location || !pax || !startDate || !endDate) {
-      alert("Please fill in all required fields");
+      alert(t("gt_errmsg_fields"));
       return;
     }
 
@@ -279,7 +282,7 @@ function GroupTripsPage() {
         <div className="group-trips-header">
           <input
             className="group-search"
-            placeholder="Search Trip Name"
+            placeholder={t("gt_search_trip_name")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -288,7 +291,7 @@ function GroupTripsPage() {
             className="create-trip-btn"
             onClick={() => setShowModal(true)}
           >
-            Create New Trip +
+            {t("gt_create_new_trip_btn")} +
           </button>
         </div>
 
@@ -322,7 +325,7 @@ function GroupTripsPage() {
                     className="exit-btn"
                     onClick={() => handleExit(trip)}
                   >
-                    Exit
+                    {t("gt_exit_btn")}
                   </button>
                 ) : (
                   <button
@@ -334,7 +337,7 @@ function GroupTripsPage() {
                       cursor: trip.currentMembers >= trip.capacity ? "not-allowed" : "pointer"
                     }}
                   >
-                    {trip.currentMembers >= trip.capacity ? "Full" : "Join"}
+                    {trip.currentMembers >= trip.capacity ? "Full" : t("gt_join_btn")}
                   </button>
                 )}
               </div>
@@ -349,7 +352,7 @@ function GroupTripsPage() {
 
             <div className="modal-row">
               <div className="modal-field">
-                <label>Trip Name</label>
+                <label>{t("gt_modal_trip_name")}</label>
                 <input
                   value={tripName}
                   onChange={(e) => setTripName(e.target.value)}
@@ -357,7 +360,7 @@ function GroupTripsPage() {
               </div>
 
               <div className="modal-field">
-                <label>No. of pax (Max 5)</label>
+                <label>{t("gt_modal_no_of_pax")}</label>
                 <input
                   type="number"
                   min="1"
@@ -374,7 +377,7 @@ function GroupTripsPage() {
 
             <div className="modal-row">
               <div className="modal-field">
-                <label>Start Date</label>
+                <label>{t("gt_modal_start_date")}</label>
                 <input
                   type="date"
                   value={startDate}
@@ -383,7 +386,7 @@ function GroupTripsPage() {
               </div>
 
               <div className="modal-field">
-                <label>End Date</label>
+                <label>{t("gt_modal_end_date")}</label>
                 <input
                   type="date"
                   value={endDate}
@@ -394,7 +397,7 @@ function GroupTripsPage() {
 
             <div className="modal-row">
               <div className="modal-field">
-                <label>Location</label>
+                <label>{t("gt_modal_location")}</label>
                 <input
                   value={location}
                   onChange={(e) => {
@@ -415,7 +418,7 @@ function GroupTripsPage() {
               )}
 
             <div className="modal-field full-width">
-              <label>Description</label>
+              <label>{t("gt_modal_description")}</label>
               <textarea
                 value={description}
                 onChange={(e) =>  setDescription(e.target.value)}
@@ -430,7 +433,7 @@ function GroupTripsPage() {
                 className="cancel-btn"
                 onClick={() => setShowModal(false)}
               >
-                Cancel
+                {t("gt_modal_cancel_btn")}
               </button>
             </div>
 

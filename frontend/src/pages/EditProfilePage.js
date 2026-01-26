@@ -2,10 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/EditProfile.css";
 import Axios from '../hooks/Axios.js';
+import { useTranslation } from "react-i18next";
 
 //Initial user profile information before editing
 const initialProfile = {
-  username: "Loading..",
+  email: "Loading..",
+  firstName: "",
+  lastName: "",
   bio: "",
   accountType: "registered",
   interests: {
@@ -21,14 +24,18 @@ const initialProfile = {
 function EditProfilePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  //const incomingProfile = location.state?.profile ?? initialProfile;
   const incomingProfile = initialProfile;
+  const { t } = useTranslation("profile");
 
   const [loading, setLoading] = useState(true);
 
   //User info starting states
-  const [username, setUsername] = useState(incomingProfile.username);
+  const [email, setEmail] = useState(incomingProfile.email);
+  const [firstName, setFirstName] = useState(incomingProfile.firstName);
+  const [lastName, setLastName] = useState(incomingProfile.lastName);
   const [bio, setBio] = useState(incomingProfile.bio);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [accountType, setAccountType] = useState(incomingProfile.accountType);
   const [interests, setInterests] = useState(incomingProfile.interests);
   const [profilePic, setProfilePic] = useState(incomingProfile.profilePic);
@@ -48,13 +55,16 @@ function EditProfilePage() {
     cvv: "",
   });
 
-  // Load profile details
+  //Load profile details
   useEffect(() => {
     const getProfileDetails = async() => {
       try{
         const res = await Axios.get("Users/GetProfileDetails", {withCredentials: true});
         setLoading(false);
-        setUsername(res.data[0].email);
+        console.log(res.data)
+        setEmail(res.data[0].email);
+        setFirstName(res.data[0].first_name !== null ? res.data[0].first_name : "");
+        setLastName(res.data[0].last_name !== null ? res.data[0].last_name : "");
         setBio(res.data[0].bio !== null ? res.data[0].bio : "");
         setAccountType(res.data[0].type);
         setProfilePic(res.data[0].photo_url !== null ? res.data[0].photo_url : "");
@@ -91,14 +101,6 @@ function EditProfilePage() {
 
   const formatCVV = (value) => value.replace(/\D/g, "").substring(0, 3);
 
-  //User interests checkboxes
-  const handleInterestChange = (interest) => {
-    setInterests((prev) => ({
-      ...prev,
-      [interest]: !prev[interest],
-    }));
-  };
-
   //Handle account type click
   const handleAccountTypeClick = (type) => {
     if (accountType === "premium" && type === "Free") setShowUnsubscribeModal(true);
@@ -106,8 +108,25 @@ function EditProfilePage() {
   };
 
   //Confirm unsubscribe modal/confirmation message
-  const confirmUnsubscribe = () => {
-    setAccountType("registered");
+  const confirmUnsubscribe = async() => {
+    const newAccType = "registered";
+    try{
+      const res = Axios.patch("Users/UserChangeType", {newType: newAccType}, {withCredentials:true})
+      if(res.data.send) alert (t("ep_succ_unsubscribe"))
+    }
+    catch(err){
+      if(err.response){
+        if (err.response.status === 401 || err.response.status === 403) {
+          const errorMsg = err.response.status + ": " + err.response.data.message;
+          navigate(`/login/${errorMsg}`);
+        } else if (err.response.status === 500) {
+          const errorMsg = err.response.status + ": " + err.response.data.message;
+          console.log(errorMsg);
+        }
+      }
+      else console.log(err);
+    }
+    setAccountType(newAccType);
     setShowUnsubscribeModal(false);
   };
 
@@ -124,16 +143,33 @@ function EditProfilePage() {
   const handlePaymentSubmit = (e) => {
     e.preventDefault();
     const cleanCardNumber = paymentDetails.cardNumber.replace(/\s+/g, "");
-    if (cleanCardNumber.length !== 16) return alert("Card number must be 16 digits");
-    if (paymentDetails.cvv.length !== 3) return alert("CVV must be 3 digits");
+    if (cleanCardNumber.length !== 16) return alert(t("ep_err_card_number"));
+    if (paymentDetails.cvv.length !== 3) return alert(t("ep_err_card_cvv"));
     const expParts = paymentDetails.expDate.split("/");
     if (expParts.length !== 2 || expParts[0].length !== 2 || expParts[1].length !== 2) {
-      return alert("Please enter expiry date in MM/YY format");
+      return alert(t("ep_err_card_date"));
     }
-    setShowPaymentModal(false);
-    setAccountType("premium");
-    setShowSuccessModal(true);
-    setTimeout(() => setShowSuccessModal(false), 3000);
+
+    const newAccType = "premium";
+    try{
+      const res = Axios.patch("Users/UserChangeType", {newType: newAccType}, {withCredentials:true})
+      setShowPaymentModal(false);
+      setAccountType("premium");
+      setShowSuccessModal(true);
+      setTimeout(() => setShowSuccessModal(false), 3000);
+    }
+    catch(err){
+      if(err.response){
+        if (err.response.status === 401 || err.response.status === 403) {
+          const errorMsg = err.response.status + ": " + err.response.data.message;
+          navigate(`/login/${errorMsg}`);
+        } else if (err.response.status === 500) {
+          const errorMsg = err.response.status + ": " + err.response.data.message;
+          console.log(errorMsg);
+        }
+      }
+      else console.log(err);
+    }
   };
 
   const cancelPayment = () => {
@@ -146,10 +182,8 @@ function EditProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Save into state, for saving changes later
     setMediaToUpload(e.target.files?.[0]);
     
-    // Set profile pic visually
     const reader = new FileReader();
     reader.onloadend = () => setProfilePic(reader.result);
     reader.readAsDataURL(file);
@@ -159,22 +193,39 @@ function EditProfilePage() {
   const handleSaveChanges = async(e) => {
     e.preventDefault();
 
+    if (password || confirmPassword) {
+      if (password !== confirmPassword) {
+        return alert(t("ep_err_password_match"));
+      }
+      if (password.length < 6) {
+        return alert(t("ep_err_password_"));
+      }
+    }
+
     const formData = new FormData();
     if(mediaToUpload) formData.append("media", mediaToUpload);
-    formData.append("email", username);
+    formData.append("email", email);
+    formData.append("firstname", firstName);
+    formData.append("lastname", lastName);
     formData.append("bio", bio);
+    if (password) formData.append("password", password);
 
     try{
       const res = await Axios.patch("Users/UpdateUserProfile", formData, {headers:{ "Content-Type": "multipart/form-data" }, withCredentials:true})
-      const updatedProfile = {
-        ...incomingProfile,
-        username,
-        bio,
-        accountType,
-        interests,
-        profilePic,
-      };
-      navigate("/profile", { state: { updatedProfile } });
+      if(res.data.validateErr) alert(res.data.message)
+      else if(res.data){
+        const updatedProfile = {
+          ...incomingProfile,
+          email,
+          firstName,
+          lastName,
+          bio,
+          accountType,
+          interests,
+          profilePic,
+        };
+        navigate("/profile", { state: { updatedProfile } });
+      }
     }
     catch(err){
       if(err.response){
@@ -197,7 +248,7 @@ function EditProfilePage() {
     <div className="edit-profile-page">
       <div className="edit-profile-main">
         <div className="edit-profile-container">
-          <h1 className="edit-profile-title">Edit Profile</h1>
+          <h1 className="edit-profile-title">{t("ep_title")}</h1>
           <form onSubmit={handleSaveChanges}>
             <div className="profile-pic-section">
               <div className="profile-pic-wrapper">
@@ -221,7 +272,7 @@ function EditProfilePage() {
                 )}
               </div>
               <label htmlFor="profile-pic-input" className="change-pic-btn">
-                Change Photo
+                {t("ep_changephoto")}
               </label>
               <input
                 type="file"
@@ -233,75 +284,98 @@ function EditProfilePage() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="username">Username</label>
+              <label htmlFor="email">{t("ep_email")}</label>
               <input
-                type="text"
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter username"
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={t("ep_email_ph")}
               />
             </div>
 
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="firstName">{t("ep_fname")}</label>
+                <input
+                  type="text"
+                  id="firstName"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder={t("ep_fname_ph")}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="lastName">{t("ep_lname")}</label>
+                <input
+                  type="text"
+                  id="lastName"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder={t("ep_lname_ph")}
+                />
+              </div>
+            </div>
+
             <div className="form-group">
-              <label htmlFor="bio">Bio</label>
+              <label htmlFor="bio">{t("ep_bio")}</label>
               <input
                 type="text"
                 id="bio"
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                placeholder="Tell us about yourself"
+                placeholder={t("ep_bio_ph")}
               />
             </div>
 
             <div className="form-group">
-              <label>My Interests</label>
-              <div className="interests-grid">
-                {[
-                  ["food", "Food"],
-                  ["adventure", "Adventure"],
-                  ["artMusic", "Art & Music"],
-                  ["history", "History"],
-                  ["sightseeing", "Sightseeing"],
-                ].map(([key, label]) => (
-                  <label className="interest-checkbox" key={key}>
-                    <input
-                      type="checkbox"
-                      checked={!!interests[key]}
-                      onChange={() => handleInterestChange(key)}
-                    />
-                    <span>{label}</span>
-                  </label>
-                ))}
-              </div>
+              <label htmlFor="password">{t("ep_password")}</label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={t("ep_password_ph")}
+              />
             </div>
 
             <div className="form-group">
-              <label>Account Type</label>
+              <label htmlFor="confirmPassword">{t("ep_confirmpassword")}</label>
+              <input
+                type="password"
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder={t("ep_confirmpassword_ph")}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>{t("ep_acctype_title")}</label>
               <div className="account-type-buttons">
                 <button
                   type="button"
                   className={`account-type-btn ${accountType === "premium" ? "active" : ""}`}
                   onClick={() => handleAccountTypeClick("Premium")}
                 >
-                  Premium
+                  {t("ep_acctype_premium")}
                 </button>
                 <button
                   type="button"
                   className={`account-type-btn ${accountType === "registered" ? "active" : ""}`}
                   onClick={() => handleAccountTypeClick("Free")}
                 >
-                  Free
+                  {t("ep_acctype_free")}
                 </button>
               </div>
             </div>
 
             <div className="form-actions">
               <button type="submit" className="save-btn">
-                Save Changes
+                {t("ep_save_btn")}
               </button>
               <button type="button" className="cancel-btn" onClick={handleCancel}>
-                Cancel
+                {t("ep_cancel_btn")}
               </button>
             </div>
           </form>
@@ -312,18 +386,18 @@ function EditProfilePage() {
       {showUnsubscribeModal && (
         <div className="modal-overlay" onClick={cancelUnsubscribe}>
           <div className="unsubscribe-modal" onClick={(e) => e.stopPropagation()}>
-            <h2>Unsubscribe from TripMate Premium?</h2>
-            <p>The community won't be the same without you :(</p>
+            <h2>{t("ep_unsubmodal_title")}</h2>
+            <p>{t("ep_unsubmodal_text")}</p>
             <p className="modal-warning">
-              Unsubscribing to premium would mean losing perks like joining group trips and collaboration.
-              Are you sure you want to unsubscribe?
+              {t("ep_unsubmodal_warning1")}
+              {t("ep_unsubmodal_warning2")}
             </p>
             <div className="modal-actions">
               <button className="unsubscribe-confirm-btn" onClick={confirmUnsubscribe}>
-                Unsubscribe
+                {t("ep_unsub_btn")}
               </button>
               <button className="unsubscribe-cancel-btn" onClick={cancelUnsubscribe}>
-                Cancel
+                {t("ep_cancel_btn")}
               </button>
             </div>
           </div>
@@ -334,16 +408,16 @@ function EditProfilePage() {
       {showUpgradeModal && (
         <div className="modal-overlay" onClick={cancelUpgrade}>
           <div className="upgrade-modal" onClick={(e) => e.stopPropagation()}>
-            <h2>Level up your journey!</h2>
+            <h2>{t("ep_submodal_title")}</h2>
             <p className="upgrade-description">
-              Upgrade to TripMate premium to unlock exclusive perks and smarter trip planning.
+              {t("ep_submodal_text")}
             </p>
             <div className="modal-actions">
               <button className="subscribe-btn" onClick={handleUpgradeClick}>
-                Subscribe
+                {t("ep_sub_btn")}
               </button>
               <button className="modal-cancel-btn" onClick={cancelUpgrade}>
-                Cancel
+                {t("ep_cancel_btn")}
               </button>
             </div>
           </div>
@@ -354,60 +428,60 @@ function EditProfilePage() {
       {showPaymentModal && (
         <div className="modal-overlay" onClick={cancelPayment}>
           <div className="payment-modal" onClick={(e) => e.stopPropagation()}>
-            <h2>Payment Details</h2>
+            <h2>{t("ep_cardmodal_title")}</h2>
             <form onSubmit={handlePaymentSubmit}>
               <div className="payment-form-group">
-                <label>Name on card</label>
+                <label>{t("ep_cardmodal_name_tb")}</label>
                 <input
                   type="text"
                   value={paymentDetails.cardName}
                   onChange={(e) => setPaymentDetails({ ...paymentDetails, cardName: e.target.value })}
-                  placeholder="John Smith"
+                  placeholder={t("ep_cardmodal_name_ph")}
                   required
                 />
               </div>
               <div className="payment-form-group">
-                <label>Card no.</label>
+                <label>{t("ep_cardmodal_num_tb")}</label>
                 <input
                   type="text"
                   value={paymentDetails.cardNumber}
                   onChange={(e) =>
                     setPaymentDetails({ ...paymentDetails, cardNumber: formatCardNumber(e.target.value) })
                   }
-                  placeholder="1234 5678 9012 3456"
+                  placeholder={t("ep_cardmodal_num_ph")}
                   required
                 />
               </div>
               <div className="payment-row">
                 <div className="payment-form-group">
-                  <label>Exp date</label>
+                  <label>{t("ep_cardmodal_expdate_tb")}</label>
                   <input
                     type="text"
                     value={paymentDetails.expDate}
                     onChange={(e) =>
                       setPaymentDetails({ ...paymentDetails, expDate: formatExpDate(e.target.value) })
                     }
-                    placeholder="MM/YY"
+                    placeholder={t("ep_cardmodal_expdate_ph")}
                     required
                   />
                 </div>
                 <div className="payment-form-group">
-                  <label>CVV</label>
+                  <label>{t("ep_cardmodal_cvv_tb")}</label>
                   <input
                     type="text"
                     value={paymentDetails.cvv}
                     onChange={(e) => setPaymentDetails({ ...paymentDetails, cvv: formatCVV(e.target.value) })}
-                    placeholder="123"
+                    placeholder={t("ep_cardmodal_cvv_ph")}
                     required
                   />
                 </div>
               </div>
               <div className="payment-modal-actions">
                 <button type="button" className="payment-cancel-btn" onClick={cancelPayment}>
-                  Cancel
+                  {t("ep_cancel_btn")}
                 </button>
                 <button type="submit" className="payment-submit-btn">
-                  Make Payment
+                  {t("ep_pay_btn")}
                 </button>
               </div>
             </form>
@@ -420,8 +494,8 @@ function EditProfilePage() {
         <div className="modal-overlay">
           <div className="success-modal">
             <div className="success-icon">✓</div>
-            <h2>Welcome to Premium!</h2>
-            <p>Your account has been upgraded successfully.</p>
+            <h2>{t("ep_succmodal_title")}</h2>
+            <p>{t("ep_succmodal_text")}</p>
           </div>
         </div>
       )}

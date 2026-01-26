@@ -19,6 +19,7 @@ const groupTripsRouter = require("./routes/GroupTrip.js");
 const chatbotRouter = require("./routes/ChatbotPage.js")
 const usersAdminRoute = require("./adminroutes/Users.js");
 const contentsAdminRoute = require("./adminroutes/Content.js");
+const navbarRouter = require("./routes/navbar.js");
 
 const app = express();
 const server = http.createServer(app);
@@ -29,7 +30,10 @@ app.use( cors({ origin: "http://localhost:3000", credentials: true}));
 app.use(express.json());
 app.use(cookieParser());
 
-// Use route
+// Nav bar route
+app.use("/Navbar", navbarRouter); // All navbars
+
+// User route
 app.use("/Landing", landingRouter); // Marketing page/Landing
 app.use("/Itinerary", itineraryRouter); // Itinerary related pages
 app.use("/AuthService", authServiceRouter); // Login & create account
