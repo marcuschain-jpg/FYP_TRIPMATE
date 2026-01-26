@@ -5,7 +5,7 @@ const pool = require("../helper/db");
 //User Content
 
 //GET Function
-router.get("/content", async (req, res) => {
+router.get("/", async (req, res) => {
   const { status, sort } = req.query;
 
   try {
@@ -18,7 +18,7 @@ router.get("/content", async (req, res) => {
         c.created_at,
         u.email
       FROM user_content c
-      JOIN users u ON u.userid = c.user_id
+      JOIN users u ON u.userid = c.userid
     `;
     const values = [];
 
@@ -30,6 +30,7 @@ router.get("/content", async (req, res) => {
     if (sort === "old") query += ` ORDER BY c.created_at ASC`;
     else if (sort === "reports") query += ` ORDER BY c.reports DESC`;
     else query += ` ORDER BY c.created_at DESC`; // default = new
+    query += ` LIMIT 50`; 
 
     const result = await pool.query(query, values);
 
@@ -53,7 +54,7 @@ router.get("/content", async (req, res) => {
 });
 
 //Delete Function
-router.delete("/content/:id", async (req, res) => {
+router.delete("/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -75,7 +76,7 @@ router.delete("/content/:id", async (req, res) => {
 
 
 //Flag Function
-router.patch("/content/:id/flag", async (req, res) => {
+router.patch("/:id/flag", async (req, res) => {
   const { id } = req.params;
 
   try {

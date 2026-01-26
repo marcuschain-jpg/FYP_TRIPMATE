@@ -45,8 +45,9 @@ app.use("/Chatbot", chatbotRouter); //Anything relating to chatbot API
 
 // Admin routes
 app.use("/api/users", usersAdminRoute); //Realtime Update for User in Admin Page
-app.use("/content", contentsAdminRoute); //Content Related in Admin Page
-
+app.use("/api/content", contentsAdminRoute); //Content Related in Admin Page
+app.use("/api/content/reviews", contentsAdminRoute); //User Reviews Related in Admin Page
+app.use("/api/content/marketing", contentsAdminRoute); //Marketing Content Related in Admin Page
 
 // Basic Auth function for pages that dont need get any information
 app.post("/GetRoleForUser", RequireAuths(["registered", "premium"]), (req, res) => {
