@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import "../styles/Content.css";
+import axios from "axios";
+import { useEffect } from "react";
 
 import {
   mockContent as initialContent,
@@ -26,9 +28,14 @@ export default function Content() {
   const [activeTab, setActiveTab] = useState("user-content"); // user-content | user-reviews | marketing
 
   // make data stateful (so edits/adds reflect immediately)
-  const [contentItems, setContentItems] = useState(initialContent);
-  const [reviewItems, setReviewItems] = useState(initialReviews);
-  const [marketingItems, setMarketingItems] = useState(initialMarketing);
+  // const [contentItems, setContentItems] = useState(initialContent);
+  // const [reviewItems, setReviewItems] = useState(initialReviews);
+  // const [marketingItems, setMarketingItems] = useState(initialMarketing);
+
+  //Fetching Data From Database
+  const [contentItems, setContentItems] = useState([]);
+  const [reviewItems, setReviewItems] = useState([]);
+  const [marketingItems, setMarketingItems] = useState([]);
 
   const [contentFilter, setContentFilter] = useState("all"); // all | published | flagged
   const [reviewFilter, setReviewFilter] = useState("all"); // all | published | flagged
@@ -43,6 +50,30 @@ export default function Content() {
 
   const searchPlaceholder =
     activeTab === "marketing" ? "Search by title/section" : "Search by title/user";
+
+  // Load Data From Database
+  useEffect(() => {
+    if (activeTab === "user-content") {
+      axios
+        .get("http://localhost:8080/api/content")
+        .then((res) => setContentItems(res.data))
+        .catch((err) => console.error("Load content failed", err));
+    }
+
+    if (activeTab === "user-reviews") {
+      axios
+        .get("http://localhost:8080/api/content/reviews")
+        .then((res) => setReviewItems(res.data))
+        .catch((err) => console.error("Load reviews failed", err));
+    }
+
+    if (activeTab === "marketing") {
+      axios
+        .get("http://localhost:8080/api/content/marketing")
+        .then((res) => setMarketingItems(res.data))
+        .catch((err) => console.error("Load marketing failed", err));
+    }
+  }, [activeTab]);
 
   // FILTERED (per tab)
   const filteredContent = useMemo(() => {
@@ -134,14 +165,29 @@ export default function Content() {
 
   // actions
   const handleView = (id) => alert(`Viewing item ${id}`);
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this item?")) return;
 
-    if (activeTab === "user-content") setContentItems((prev) => prev.filter((x) => x.id !== id));
-    if (activeTab === "user-reviews") setReviewItems((prev) => prev.filter((x) => x.id !== id));
-    if (activeTab === "marketing") setMarketingItems((prev) => prev.filter((x) => x.id !== id));
-  };
+    try {
+      if (activeTab === "user-content") {
+        await axios.delete(`http://localhost:8080/api/content/${id}`);
+        setContentItems((prev) => prev.filter((x) => x.id !== id));
+      }
 
+      if (activeTab === "user-reviews") {
+        await axios.delete(`http://localhost:8080/api/content/reviews/${id}`);
+        setReviewItems((prev) => prev.filter((x) => x.id !== id));
+      }
+
+      if (activeTab === "marketing") {
+        await axios.delete(`http://localhost:8080/api/content/marketing/${id}`);
+        setMarketingItems((prev) => prev.filter((x) => x.id !== id));
+      }
+    } catch (err) {
+      console.error("Delete failed", err);
+    }
+  };
+  
   const handleFeature = (id) => alert(`Featured review ${id}`);
 
   // marketing add/edit handlers
