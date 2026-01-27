@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Itinerary.css";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from 'axios';
 import Axios from '../hooks/Axios.js';
 import ItineraryChat from "../components/ItineraryChat";
 import { useTranslation } from 'react-i18next';

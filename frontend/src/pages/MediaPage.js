@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "../styles/Media.css";
-import axios from "axios";
+import Axios from '../hooks/Axios';
 import { useTranslation } from "react-i18next";
 
 function MediaPage() {
@@ -56,7 +56,7 @@ function MediaPage() {
       setError(null);
       
       //Fetch all activities for this trip created by user in itinerary)
-      const activitiesRes = await axios.get("http://localhost:8080/Itinerary/GetAllActivities",{ params: { i_id: tripId }, withCredentials: true });
+      const activitiesRes = await Axios.get("Itinerary/GetAllActivities",{ params: { i_id: tripId }, withCredentials: true });
 
       if (activitiesRes.data && Array.isArray(activitiesRes.data)) {
         //Set trip info from first activity
@@ -117,7 +117,7 @@ function MediaPage() {
     let mediaRes = [];
 
     try{
-      const res = await axios.get("http://localhost:8080/Media/GetActivityMedia", { params: { i_id: tripId }, withCredentials: true });
+      const res = await Axios.get("Media/GetActivityMedia", { params: { i_id: tripId }, withCredentials: true });
       mediaRes = res.data;
       }
     catch(err){
@@ -182,7 +182,7 @@ function MediaPage() {
     let mediaRes = [];
 
     try{
-      const res = await axios.post("http://localhost:8080/Media/InsertMedia", formData, {withCredentials:true})
+      const res = await Axios.post("Media/InsertMedia", formData, {withCredentials:true})
       mediaRes = res.data;
     }
     catch(err){
@@ -227,7 +227,7 @@ function MediaPage() {
     let updateComplete = false;
 
     try{
-      const res = await axios.patch("http://localhost:8080/Media/EditPhoto", {p_id:editItem.photo_id, title:editTitle}, {withCredentials:true});
+      const res = await Axios.patch("Media/EditPhoto", {p_id:editItem.photo_id, title:editTitle}, {withCredentials:true});
       updateComplete = res.data;
     }
     catch(err){
@@ -269,7 +269,7 @@ function MediaPage() {
     console.log("media: ", media.photo_url);
 
     try{
-      const res = await axios.delete("http://localhost:8080/Media/DeleteActivityPhoto", {data:{photo_id:media.photo_id, rawUrl:media.photo_url}, withCredentials:true})
+      const res = await Axios.delete("Media/DeleteActivityPhoto", {data:{photo_id:media.photo_id, rawUrl:media.photo_url}, withCredentials:true})
       deleteConfirm = res.data;
     }
     catch(err){

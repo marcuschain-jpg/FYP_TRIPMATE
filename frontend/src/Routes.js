@@ -24,7 +24,6 @@ import PricingPage from "./pages/PricingPage";
 import HomePage from "./pages/HomePage";
 import ChatbotPage from "./pages/ChatbotPage";
 import GroupTripsPage from "./pages/GroupTripsPage";
-import GroupChatPage from "./pages/GroupChatPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ViewItineraryOnlyPage from "./pages/ViewItineraryOnlyPage";
 
@@ -302,8 +301,6 @@ function AppRoutes() {
 
           {/*Help Centre page*/}
           <Route path="/help" element={<HelpPage />} />
-         
-          <Route path="/group-chat/:tripId" element={<GroupChatPage />} />
         </Route>
         
         {/* ================= ADMIN ROUTES ================= */}

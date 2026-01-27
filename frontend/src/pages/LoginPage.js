@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../styles/Login.css";
-import axios from "axios";
+import Axios from '../hooks/Axios';
 //Import background picture
 import LoginBG from "../Assets/Login.jpg";
 import { useTranslation } from "react-i18next"; 
@@ -34,7 +34,7 @@ export default function LoginPage({ setCurrentUserProfile, markAsFirstTimeUser }
     }
 
     try {
-      const res = await axios.post("http://localhost:8080/AuthService/Login", {email, password, role}, {withCredentials:true});
+      const res = await Axios.post("AuthService/Login", {email, password, role}, {withCredentials:true});
 
       if(res.data.check === false) {
         showToast(res.data.message, "error");

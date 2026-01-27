@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import InitMaps from "../components/InitMaps";
 import useMapData from "../hooks/FetchMapData";
 import "../styles/Itinerary.css";
-import axios from 'axios';
+import Axios from '../hooks/Axios';
 import { useTranslation } from "react-i18next";
 
 function ActivityFormPage() {
@@ -53,7 +53,7 @@ function ActivityFormPage() {
     if (editing) 
     {
       const loadEditActivity = async() => {
-        await axios.get("http://localhost:8080/Itinerary/GetActivityToEdit", {params:{a_id: index}, withCredentials:true})
+        await Axios.get("Itinerary/GetActivityToEdit", {params:{a_id: index}, withCredentials:true})
         .then(response => {
           renderLoadActivity(response.data);
           setLoading(false);
@@ -77,7 +77,7 @@ function ActivityFormPage() {
       loadEditActivity();
     }
     else{ //create page--> still need validate
-      axios.get("http://localhost:8080/Itinerary/GetActivityToCreate", {params:{i_id:tripId}, withCredentials:true})
+      Axios.get("Itinerary/GetActivityToCreate", {params:{i_id:tripId}, withCredentials:true})
       .then(res => {
         setItineraryLng(res.data[0].longitude);
         setItineraryLat(res.data[0].latitude);
@@ -189,7 +189,7 @@ function ActivityFormPage() {
 
       const locTimer = setTimeout(async() => {
       console.log("Send to backend", locationName, itineraryLat, itineraryLng);
-      await axios.post("http://localhost:8080/Itinerary/LocSearch", {input:locationName, lng:itineraryLng, lat:itineraryLat}, {withCredentials:true})
+      await Axios.post("Itinerary/LocSearch", {input:locationName, lng:itineraryLng, lat:itineraryLat}, {withCredentials:true})
       .then(res=>{
         renderLoadSearchResult(res.data);
       })
@@ -230,7 +230,7 @@ function ActivityFormPage() {
   }
 
   const handlePhotoDelete = async(m) => {
-    await axios.delete("http://localhost:8080/Itinerary/DeleteActivityPhoto", {data:{photo_id:m.id}, withCredentials:true})
+    await Axios.delete("Itinerary/DeleteActivityPhoto", {data:{photo_id:m.id}, withCredentials:true})
     .then(response => {
       if(response.data === true) 
       {
@@ -265,7 +265,7 @@ function ActivityFormPage() {
       formData.append("lng", longitude);
       formData.append("lat", latitude);
 
-      await axios.patch("http://localhost:8080/Itinerary/EditActivity",
+      await Axios.patch("Itinerary/EditActivity",
         formData,
         {headers:{ "Content-Type": "multipart/form-data" }, withCredentials:true}) 
       .then(response => {
@@ -284,7 +284,7 @@ function ActivityFormPage() {
       formData.append("lng", longitude);
       formData.append("lat", latitude);
 
-      await axios.post("http://localhost:8080/Itinerary/CreateActivity",
+      await Axios.post("Itinerary/CreateActivity",
         formData,
         {withCredentials:true})
       .then(res=>{

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../styles/Timeline.css";
-import axios from 'axios';
+import Axios from '../hooks/Axios';
 import { useTranslation } from "react-i18next";
 
 function SavedTimelinesPage() {
@@ -14,7 +14,7 @@ function SavedTimelinesPage() {
   const [timeline, setTimeline] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:8080/Timeline/GetSavedTimelines", {params:{i_id: tripId}, withCredentials:true})
+    Axios.get("Timeline/GetSavedTimelines", {params:{i_id: tripId}, withCredentials:true})
     .then(response => {
       renderLoadTimelines(response.data);
       setLoading(false);
@@ -75,7 +75,7 @@ function SavedTimelinesPage() {
 
     if (!ok) return; 
     
-    await axios.delete("http://localhost:8080/Timeline/DeleteSavedTimeline", {data:{t_id:id}, withCredentials:true})
+    await Axios.delete("Timeline/DeleteSavedTimeline", {data:{t_id:id}, withCredentials:true})
     .then(res => {
       if(res.data === true){
         const updatedTimelines = timeline.filter(i => i.id !== id)

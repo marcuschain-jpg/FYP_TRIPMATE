@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "../styles/Timeline.css";
-import axios from "axios";
+import Axios from '../hooks/Axios';
 import { useTranslation } from "react-i18next";
 
 function TimelinePage() {
@@ -16,7 +16,7 @@ function TimelinePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get("http://localhost:8080/Timeline/GetPhotoTimeline", {params:{i_id: tripId}, withCredentials:true})
+    Axios.get("Timeline/GetPhotoTimeline", {params:{i_id: tripId}, withCredentials:true})
       .then(response => {
       renderLoadGallery(response.data);
       setLoading(false);
@@ -82,7 +82,7 @@ function TimelinePage() {
     const name = prompt(`${t("tl_err_name")}:`);
     if (!name) return;
 
-    await axios.post("http://localhost:8080/Timeline/SaveTimeline", {i_id:tripId, name:name, timeline_photos:timeline}, {withCredentials:true})
+    await Axios.post("Timeline/SaveTimeline", {i_id:tripId, name:name, timeline_photos:timeline}, {withCredentials:true})
     .then(res => {
       if(res.data)
       {

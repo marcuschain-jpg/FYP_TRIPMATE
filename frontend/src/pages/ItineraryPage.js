@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import "../styles/Itinerary.css";
-import axios from "axios";
+import Axios from '../hooks/Axios';
 import { socket } from "../hooks/Socket";
 import ItineraryChat from "../components/ItineraryChat";
 import { useTranslation } from "react-i18next";
@@ -57,8 +57,8 @@ function ItineraryPage() {
 
   //Get google maps key from backend with proper auth
   useEffect(() => {
-    axios
-      .get("http://localhost:8080/Itinerary/maps", {
+    Axios
+      .get("Itinerary/maps", {
         withCredentials: true,
       })
       .then((res) => {
@@ -178,8 +178,8 @@ function ItineraryPage() {
 
   //Load trips and activities
   useEffect(() => {
-    axios
-      .get("http://localhost:8080/Itinerary/GetAllActivities", {
+    Axios
+      .get("Itinerary/GetAllActivities", {
         params: { i_id: tripId },
         withCredentials: true,
       })
@@ -448,8 +448,8 @@ function ItineraryPage() {
   const handleDeleteActivity = async (index) => {
     if (!window.confirm(t("msg_confirmdel"))) return;
 
-    await axios
-      .delete("http://localhost:8080/Itinerary/DeleteActivity", {
+    await Axios
+      .delete("Itinerary/DeleteActivity", {
         data: { activityid: index, i_id: tripId },
         withCredentials: true,
       })
@@ -464,7 +464,7 @@ function ItineraryPage() {
   };
 
   const arrangeItinerary = async () => {
-    await axios.get("http://localhost:8080/Itinerary/ArrangeItinerary", {
+    await Axios.get("Itinerary/ArrangeItinerary", {
       params: { i_id: tripId },
       withCredentials: true,
     });

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom"; // âœ… ADDED
 import "../styles/GroupTrip.css";
-import axios from 'axios';
+import Axios from '../hooks/Axios';
 import { useTranslation } from "react-i18next";
 
 function GroupTripsPage() {
@@ -45,7 +45,7 @@ function GroupTripsPage() {
   useEffect(() => {
     const getAllGroupTrips = async() => {
       try{
-        const res = await axios.get("http://localhost:8080/GroupTrips/GetGroupTrips", {withCredentials:true})
+        const res = await Axios.get("GroupTrips/GetGroupTrips", {withCredentials:true})
         await renderGroupTrips(res.data);
       }
       catch(err){
@@ -76,7 +76,7 @@ function GroupTripsPage() {
 
       const locTimer = setTimeout(async() => {
       console.log("Send to backend", location);
-      await axios.post("http://localhost:8080/Itinerary/CitySearch", {input:location}, {withCredentials:true})
+      await Axios.post("Itinerary/CitySearch", {input:location}, {withCredentials:true})
       .then(res=>{
         renderLoadSearchResult(res.data);
       })
@@ -150,7 +150,7 @@ function GroupTripsPage() {
 
     try{
       let newCurrMembers = 0;
-      const res = await axios.patch("http://localhost:8080/GroupTrips/JoinGroupTrip", {i_id:trip.id}, {withCredentials:true})
+      const res = await Axios.patch("GroupTrips/JoinGroupTrip", {i_id:trip.id}, {withCredentials:true})
       newCurrMembers = res.data // updated number of ppl from db
       setGroupTrips((prev) => prev.map((t) =>
         t.id === trip.id ? { ...t, joinedByYou: true, currentMembers: newCurrMembers, isHost: false}: t
@@ -185,7 +185,7 @@ function GroupTripsPage() {
     const tripId = trip.id;
 
     try{
-      const res = await axios.delete("http://localhost:8080/GroupTrips/ExitGroupTrip", {data:{i_id:tripId, isHost:trip.isHost}, withCredentials:true})
+      const res = await Axios.delete("GroupTrips/ExitGroupTrip", {data:{i_id:tripId, isHost:trip.isHost}, withCredentials:true})
       if(res.data.deleteItinerary){
         setGroupTrips(prev => prev.filter(item => item.id !== tripId))
       }
@@ -228,7 +228,7 @@ function GroupTripsPage() {
     const maxCapacity = Math.min(parseInt(pax) || 5, 5);
 
     try{
-      const res = await axios.post("http://localhost:8080/GroupTrips/CreateGroupTrip",
+      const res = await Axios.post("GroupTrips/CreateGroupTrip",
       {iName:tripName, iDest: newFullDest, start: startDate, end: endDate, num_ppl:maxCapacity, description:description},{withCredentials:true});
         if(res.data){
           const newTrip = {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";   
 import "../styles/Home.css";
-import axios from 'axios';
+import Axios from '../hooks/Axios';
 import HomeMainPhoto from "../Assets/HomeMainPhoto.jpg";
 import HomeSmall1 from "../Assets/HomeSmall1.jpg";
 import HomeSmall2 from "../Assets/HomeSmall2.jpg";
@@ -14,11 +14,7 @@ export default function HomePage() {
   const [name, setName] = useState("");
 
   useEffect(() => {
-    /*await axios.post("http://localhost:8080/AuthCheck", {}, {withCredentials: true})
-        .then(res => {
-          setRole(res.data.role);
-        });*/
-    axios.get("http://localhost:8080/Landing/GetHome", {withCredentials: true})
+    Axios.get("Landing/GetHome", {withCredentials: true})
       .then(res => {
         setName(res.data[0].first_name);
       })

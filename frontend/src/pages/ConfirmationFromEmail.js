@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../styles/ConfirmationFromEmail.css";
 import logo from "../Assets/Logo.jpg";
-import axios from 'axios';
+import Axios from '../hooks/Axios';
 import { useTranslation } from "react-i18next";
 
 function ConfirmationFromEmail() {
@@ -16,7 +16,7 @@ function ConfirmationFromEmail() {
 
   const acceptCollab = async () => {
     try {
-      const res = await axios.post("http://localhost:8080/Itinerary/AcceptCollabInv", {
+      const res = await Axios.post("Itinerary/AcceptCollabInv", {
         inv_id: invID
       });
       console.log(res);

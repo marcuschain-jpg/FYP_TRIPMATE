@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/CreateAccount.css";
-import axios from 'axios';
+import Axios from '../hooks/Axios';
 import { useTranslation } from "react-i18next";
 
 export default function CreateAccountPage() {
@@ -26,13 +26,7 @@ export default function CreateAccountPage() {
       return;
     }
 
-    /*//Get existing accounts
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-
-    //Check for duplicate email--> show error message if account already exists
-    const exists = users.some((u) => u.email === email);*/
-
-    await axios.post("http://localhost:8080/AuthService/CreateAccount", {email:email, password:password, firstname:firstName, lastname:lastName})
+    await Axios.post("AuthService/CreateAccount", {email:email, password:password, firstname:firstName, lastname:lastName})
     .then(res=>{
       if(res.data === true)
       {
@@ -44,23 +38,6 @@ export default function CreateAccountPage() {
         return;
       }
     });
-
-    /*if (exists) {
-      
-    }*/
-
-    //Save new user and create account
-    // 🔥 ADD UNIQUE USER ID HERE
-    /*const newUser = { 
-      id: Date.now(),  // ← UNIQUE ID FOR THIS USER
-      email, 
-      password, 
-      firstName, 
-      lastName 
-    };
-
-    users.push(newUser);
-    localStorage.setItem("users", JSON.stringify(users));*/
   };
 
   return (
