@@ -17,6 +17,8 @@
 
     "__ACTIVITY FORM PAGE": "========= ACTIVITY FORM PAGE ==========",
     "succ_createact": "Activité créée avec succès !",
+    "succ_editedact": "Activité modifiée avec succès !",
+    "af_err_fields": "Veuillez remplir tous les champs.",
     "af_edit": "Modifier l’activité",
     "af_add": "Ajouter une activité",
     "af_title": "Nom de l’événement",

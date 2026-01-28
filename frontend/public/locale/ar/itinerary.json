@@ -17,6 +17,8 @@
 
     "__ACTIVITY FORM PAGE": "========= ACTIVITY FORM PAGE ==========",
     "succ_createact": "تم إنشاء النشاط بنجاح!",
+    "succ_editedact": "تم تعديل النشاط بنجاح!",
+    "af_err_fields": "يرجى إدخال جميع الحقول.",
     "af_edit": "تعديل النشاط",
     "af_add": "إضافة نشاط",
     "af_title": "اسم الحدث",

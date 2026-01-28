@@ -17,6 +17,8 @@
 
     "__ACTIVITY FORM PAGE": "========= ACTIVITY FORM PAGE ==========",
     "succ_createact": "活動建立成功！",
+    "succ_editedact": "成功編輯活動！",
+    "af_err_fields": "請輸入所有欄位。",
     "af_edit": "編輯活動",
     "af_add": "新增活動",
     "af_title": "活動名稱",

@@ -17,6 +17,8 @@
 
     "__ACTIVITY FORM PAGE": "========= ACTIVITY FORM PAGE ==========",
     "succ_createact": "アクティビティが正常に作成されました！",
+    "succ_editedact": "アクティビティが正常に編集されました！",
+    "af_err_fields": "すべてのフィールドを入力してください。",
     "af_edit": "アクティビティを編集",
     "af_add": "アクティビティを追加",
     "af_title": "イベント名",
