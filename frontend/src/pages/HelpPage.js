@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Help.css";
 import Axios from '../hooks/Axios.js';
@@ -50,40 +50,46 @@ const ReviewStarRating = () => {
 };
 
 function HelpPage() {
-  const { t } = useTranslation("helpcentre");
+  const { t, i18n } = useTranslation("helpcentre");
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("faq");
   const [successMessage, setSuccessMessage] = useState("");
   const [reviewKey, setReviewKey] = useState(0);
+  const [faqs, setFaqs] = useState([]);
+  const [lang, setLang] = useState(i18n.language || "en");
+  const [loading, setLoading] = useState(true);
 
-  //FAQ questions and answers 
-  const faqs = [
-    {
-      id: 1,
-      question: t("hp_faq_q1"),
-      answer: t("hp_faq_a1")
-    },
-    {
-      id: 2,
-      question: t("hp_faq_q2"),
-      answer: t("hp_faq_a2")
-    },
-    {
-      id: 3,
-      question: t("hp_faq_q3"),
-      answer: t("hp_faq_a3")
-    },
-    {
-      id: 4,
-      question: t("hp_faq_q4"),
-      answer: t("hp_faq_a4")
-    },
-    {
-      id: 5,
-      question: t("hp_faq_q5"),
-      answer: t("hp_faq_a5")
-    },
-  ];
+  useEffect(() => {
+    const loadFAQ = async() =>{
+      try{
+        const res = await Axios.get("Users/GetFAQ", {params:{lang}, withCredentials:true})
+        setFaqs(res.data);
+      }
+      catch(err){
+        if(err.response){
+          if(err.response.status === 401 || err.response.status === 403){
+            const errorMsg = err.response.status + ": " + err.response.data.message;
+            navigate(`/login/${errorMsg}`);
+          }
+          else if(err.response.status === 500) console.log(err.response.data.message);
+        }
+        else console.log(err)
+      }
+    }
+    loadFAQ()
+    setLoading(true);
+  }, [lang])
+
+  useEffect(() => {
+    // Run when ititialized(default) & lang changed
+    i18n.on("languageChanged", function(lng) {
+      setLang(lng);
+    });
+
+    return() => {
+      i18n.off("languageChanged", function(lng) {});
+    };
+  }, [i18n])
 
   //Handle ticket submission
   const handleTicketSubmit = async(e) => {
@@ -150,6 +156,8 @@ function HelpPage() {
     //Reset the review form after submission
     setReviewKey(prev => prev + 1);
   };
+
+  {loading && <p>Loading..</p>}
 
   return (
     <div className="help-page">
