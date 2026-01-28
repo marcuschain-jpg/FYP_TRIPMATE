@@ -244,7 +244,7 @@ function ActivityFormPage() {
   const handleSave = async() => {
     //Convert newly uploaded files from device to media objects using object URLs
     if(!name||!locationName||!address||!date||!placeid){
-      alert("Please enter all fields.");
+      alert(t("af_err_fields"));
       return;
     }
     const formData = new FormData();
@@ -273,7 +273,7 @@ function ActivityFormPage() {
         formData,
         {headers:{ "Content-Type": "multipart/form-data" }, withCredentials:true}) 
       .then(response => {
-        if(response.data === true) alert("Succesfully edit activity!")
+        if(response.data === true) alert(t("succ_editact"))
       }); 
     }
     else //create
