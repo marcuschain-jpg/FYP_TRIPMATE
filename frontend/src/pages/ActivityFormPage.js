@@ -243,6 +243,10 @@ function ActivityFormPage() {
   //Save activity
   const handleSave = async() => {
     //Convert newly uploaded files from device to media objects using object URLs
+    if(!name||!locationName||!address||!date||!placeid){
+      alert("Please enter all fields.");
+      return;
+    }
     const formData = new FormData();
 
     if(media){
@@ -288,7 +292,7 @@ function ActivityFormPage() {
         formData,
         {withCredentials:true})
       .then(res=>{
-        if(res.data === true) alert(t("suvv_createact"));
+        if(res.data === true) alert(t("succ_createact"));
       })
     }
 
@@ -376,6 +380,7 @@ function ActivityFormPage() {
 
           <label className="form-label">{t("af_address_tb")}</label>
           <input
+            readOnly={true}
             className="form-input"
             value={address}
             onChange={(e) => setAddress(e.target.value)}

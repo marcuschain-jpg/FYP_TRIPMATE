@@ -3,7 +3,7 @@ const router = express.Router();
 const pool = require("../helper/db.js");
 const RequireAuth = require("../middlewares/RequireAuths.js"); 
 
-router.get("/LoadUsernav", RequireAuth(["registered", "premium"]), async(req,res) => {
+router.get("/LoadUsernav", RequireAuth([]), async(req,res) => {
     const userid = req.userid;
 
     try{
@@ -15,7 +15,7 @@ router.get("/LoadUsernav", RequireAuth(["registered", "premium"]), async(req,res
     catch(err) {console.log(err); return res.status(500).send({ message:"Failed to get user preferred locale" });}
 });
 
-router.patch("/ChangeLang", RequireAuth(["registered", "premium"]), async(req,res) => {
+router.patch("/ChangeLang", RequireAuth([]), async(req,res) => {
     const { lng } = req.body;
     const userid = req.userid;
 

@@ -4,6 +4,7 @@ const pool = require("../helper/db.js");
 const RequireAuths = require('../middlewares/RequireAuths.js');
 const { ExtractPhotoS3, ImportPhotoS3, DeletePhotoS3 } = require("../helper/S3FileSys.js");
 const InsertPhoto = require("../middlewares/PhotoImp.js");
+const TranslateFunc = require("../helper/Translate.js");
 
 router.get("/GetProfileDetails", RequireAuths(["registered", "premium"]), async(req,res) => {
   const userid = req.userid;
@@ -263,6 +264,23 @@ router.post("/SubmitTicket", RequireAuths(["registered", "premium"]), async(req,
     if(data.rowCount > 0) return res.send(true);
   }
   catch(err) {console.log(err); res.status(500).send({message: "Failed to submit ticket"});}
+});
+
+router.get("/GetFAQ", RequireAuths(["registered", "premium"]), async(req,res) => {
+  const langChanged = req.query['lang'];
+
+  try{
+    const data = await pool.query(
+      `SELECT faq_id AS id, faq_question AS question, faq_answer AS answer
+       FROM faq`
+    )
+    if(langChanged!=="en"){
+      translatedData = await TranslateFunc("faq_id", data.rows, langChanged);
+      return res.send(translatedData);
+    }
+    else return res.send(data.rows)
+  }
+  catch(err) {console.log(err); return res.status(500).send("Error retrieving FAQ")}
 });
 
 module.exports = router;

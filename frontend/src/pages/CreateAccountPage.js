@@ -25,6 +25,10 @@ export default function CreateAccountPage() {
       showToast("Please fill in all fields.", "error");
       return;
     }
+    if(password.length < 8){
+      showToast("Password must be at least 8 characters long.", "error");
+      return;
+    }
 
     await Axios.post("AuthService/CreateAccount", {email:email, password:password, firstname:firstName, lastname:lastName})
     .then(res=>{
