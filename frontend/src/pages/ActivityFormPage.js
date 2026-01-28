@@ -355,24 +355,26 @@ function ActivityFormPage() {
           />
 
           <label className="form-label">{t("af_location_tb")}</label>
-          <input
-            className="form-input"
-            value={locationName}
-            onChange={(e) => 
-              {
-                setLocationName(e.target.value)
-                setShowLocSearch(false)
-              }}
-          />
-          { showLocSearch && (
-            <div className="form-input-search">
-              {searchResult.map(res => (
-                <div key={res.placeid} className="form-input-search-res" onClick={() => updateFormBasedOnLoc(res)}>
-                  {res.name} - {res.address}
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="location-input-wrapper">
+            <input
+              className="form-input"
+              value={locationName}
+              onChange={(e) => 
+                {
+                  setLocationName(e.target.value)
+                  setShowLocSearch(false)
+                }}
+            />
+            { showLocSearch && (
+              <div className="form-input-search">
+                {searchResult.map(res => (
+                  <div key={res.placeid} className="form-input-search-res" onClick={() => updateFormBasedOnLoc(res)}>
+                    {res.name} - {res.address}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           <label className="form-label">{t("af_address_tb")}</label>
           <input
