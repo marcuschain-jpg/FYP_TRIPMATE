@@ -93,6 +93,7 @@ function ReviewsPage() {
         <div className="reviews-container">
           <div className="reviews-grid">
             {loading && <p>Loading...</p>}
+            {reviews.length === 0 && !loading && <p>No reviews available..</p>}
             {!loading && reviews.map((review) => (
               <div key={review.id} className="review-card">
                 {/*Review header with user profile picture and user info*/}
