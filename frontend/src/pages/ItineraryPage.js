@@ -494,72 +494,73 @@ function ItineraryPage() {
         <div className="left-side">
           <h2>{t("title")}</h2>
 
-          {!Loading && activities.length > 0 && (
-            <div className="date-row">
-              <select
-                className="date-filter-dropdown"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(normDate(e.target.value))}
-              >
-                {Array.from(new Set(activities.map((a) => normDate(a.date))))
-                  .sort()
-                  .map((d) => (
-                    <option key={d} value={d}>
-                      {new Date(d).toLocaleDateString(lang, {
-                        weekday: "short",
-                        day: "numeric",
-                        month: "long",
-                      })}
-                    </option>
-                  ))}
-              </select>
+          {useMemo(() => {
+            const validActivities = filteredActivities.filter((act) => act.id && act.name);
+            return validActivities.length > 0 ? (
+              <>
+                <div className="date-row">
+                  <select
+                    className="date-filter-dropdown"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(normDate(e.target.value))}
+                  >
+                    {Array.from(new Set(activities.map((a) => normDate(a.date))))
+                      .sort()
+                      .map((d) => (
+                        <option key={d} value={d}>
+                          {new Date(d).toLocaleDateString(lang, {
+                            weekday: "short",
+                            day: "numeric",
+                            month: "long",
+                          })}
+                        </option>
+                      ))}
+                  </select>
 
-              <button
-                className="arrange-btn"
-                onClick={() => arrangeItinerary()}
-                disabled={isArranging}
-              >
-                {isArranging ? t("arranging") : t("arrange")}
-              </button>
-            </div>
-          )}
-
-          <div className="activities-section">
-            {Loading && <p>Loading..</p>}
-            {!Loading && filteredActivities.length === 0 && <p>{t("no_act")}</p>}
-
-            {!Loading &&
-              filteredActivities.map((act) => (
-                <div key={act.id} className="activity-card">
-                  <h3>{act.name}</h3>
-                  <p>
-                    <strong>{act.date}</strong>
-                  </p>
-                  <p>{act.location}</p>
-                  {act.address && <p>{act.address}</p>}
-
-                  <div className="activity-actions">
-                    <button
-                      className="activity-edit-btn"
-                      disabled={isArranging}
-                      onClick={() =>
-                        navigate(`/mytrips/trip/activity/edit/${tripId}/${act.id}`)
-                      }
-                    >
-                      {t("edit_btn")}
-                    </button>
-
-                    <button
-                      className="activity-delete-btn"
-                      disabled={isArranging}
-                      onClick={() => handleDeleteActivity(act.id)}
-                    >
-                      {t("delete_btn")}
-                    </button>
-                  </div>
+                  <button
+                    className="arrange-btn"
+                    onClick={() => arrangeItinerary()}
+                    disabled={isArranging}
+                  >
+                    {isArranging ? t("arranging") : t("arrange")}
+                  </button>
                 </div>
-              ))}
-          </div>
+
+                <div className="activities-section">
+                  {validActivities.map((act) => (
+                    <div key={act.id} className="activity-card">
+                      <h3>{act.name}</h3>
+                      <p>
+                        <strong>{act.date}</strong>
+                      </p>
+                      <p>{act.location}</p>
+                      {act.address && <p>{act.address}</p>}
+
+                      <div className="activity-actions">
+                        <button
+                          className="activity-edit-btn"
+                          disabled={isArranging}
+                          onClick={() =>
+                            navigate(`/mytrips/trip/activity/edit/${tripId}/${act.id}`)
+                          }
+                        >
+                          {t("edit_btn")}
+                        </button>
+
+                        <button
+                          className="activity-delete-btn"
+                          disabled={isArranging}
+                          onClick={() => handleDeleteActivity(act.id)}
+                        >
+                          {t("delete_btn")}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : null;
+          }, [filteredActivities, activities, selectedDate, isArranging, t, tripId, navigate])}
 
           <button
             className="add-activity-big"
