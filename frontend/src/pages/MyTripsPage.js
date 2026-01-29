@@ -203,6 +203,8 @@ function MyTripsPage() {
     setInvalidFields([]);
     setErrorMsg("");
     setShowAddTripModal(true);
+    setShowLocSearch(false);
+    setNewFullDest({});
   };
 
   //Open edit trip modal
@@ -217,6 +219,8 @@ function MyTripsPage() {
     setErrorMsg("");
     setFirstLoad(true);
     setShowAddTripModal(true);
+    setShowLocSearch(false);
+    setNewFullDest({});
   };
 
   //Create or update trip
@@ -226,7 +230,7 @@ function MyTripsPage() {
     if (!newDestination) missing.push("destination");
     if (!newStart) missing.push("start");
     if (!newEnd) missing.push("end");
-    if (!newFullDest) missing.push("destination");
+    if (Object.keys(newFullDest).length === 0) missing.push("full_destination");
 
     setInvalidFields(missing);
 
@@ -274,6 +278,7 @@ function MyTripsPage() {
           setNewEnd("");
           setErrorMsg("");
           setFirstLoad(true);
+          setShowLocSearch(false);
           setNewFullDest({});
           setTimeout(() => setShowAddTripModal(false), 300);
         } else {
@@ -390,7 +395,7 @@ function MyTripsPage() {
           setShowDeleteConfirm(false);
           setTripToDelete(null);
 
-          setSuccessMsg(t("mt_succmsg_delete"));
+          setSuccessMsg(t("mt_succmsg_tripdelete"));
           setTimeout(() => setSuccessMsg(""), 1500);
           return;
         }

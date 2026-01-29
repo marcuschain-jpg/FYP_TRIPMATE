@@ -37,10 +37,12 @@ router.get("/LoadLanding", async(req,res) => {
                 ...rest,
                 photo_url: c_img_url
             }));
+            data.push({vid_url: "/Landing/tm_marketingvid.mp4"});
+            console.log("test!", data);
             if(data.length > 0) {
-            const updatedData = await ExtractPhotoS3(data)
-            translatedData = await TranslateFunc("content_id", updatedData, langChanged);
-            return res.send(translatedData);
+                const updatedData = await ExtractPhotoS3(data)
+                translatedData = await TranslateFunc("content_id", updatedData, langChanged);
+                return res.send(translatedData);
             }
             else {return res.send([]);}
         }
@@ -58,6 +60,7 @@ router.get("/LoadLanding", async(req,res) => {
                 ...rest,
                 photo_url: c_img_url
             }));
+            data.push({vid_url: "landing/tm_marketingvid.mp4"});
             if(data.length > 0) {
             const updatedData = await ExtractPhotoS3(data)
             return res.send(updatedData);

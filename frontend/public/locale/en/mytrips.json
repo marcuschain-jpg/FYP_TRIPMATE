@@ -37,7 +37,7 @@
         "mt_modal_confirmdel_btn": "Confirm Delete",
         "mt_modal_exitgt": "Are you sure you want to exit this group trip?",
         "mt_modal_confirmdel": "Are you sure you want to delete this trip?",
-        "mt_errmsg_fields": "Please fill in all fields.",
+        "mt_errmsg_fields": "Please fill in all fields & select a valid location from the dropdown.",
         "mt_errmsg_update": "Update Failed",
         "mt_errmsg_insert": "Insert failed",
         "mt_errmsg_delete": "Delete failed (server error)",
