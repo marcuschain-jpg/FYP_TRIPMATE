@@ -166,7 +166,7 @@ function TimelinePage() {
       {/*Render generated timeline*/}
       {timeline.length > 0 && (
         <>
-          <h2 className="section-heading">{t("tl_generatetimeline")}</h2>
+          <h2 className="section-heading">{t("tl_generatedtimeline")}</h2>
 
           <button className="generate-btn" onClick={saveTimeline}>
             {t("tl_savetimeline_btn")}
