@@ -1,7 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../helper/db");
+// --- Authenticate ---
+const RequireAuth = require("../middlewares/RequireAuths.js"); // Authenticate and authorize user
 
+router.use(RequireAuth(["admin"]))
 //GET Function
 router.get("/", async (req, res) => {
   try {

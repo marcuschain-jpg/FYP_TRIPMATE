@@ -87,8 +87,9 @@ router.post("/message", async (req, res) => {
 
       const tripId = await createTripFromItinerary(
         itineraryJson,
-        req.user.userid   // or your auth user id
+        req.user.userid
       );
+
 
       return res.json({
         isItinerary: true,
@@ -102,9 +103,12 @@ router.post("/message", async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "Chatbot failed" });
-  }
+      console.error(err);
+        return res.json({
+      isItinerary: false,
+      reply: "AI service unavailable. Please try again."
+    });
+    }
 });
 
 module.exports = router;

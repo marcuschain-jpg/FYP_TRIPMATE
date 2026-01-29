@@ -55,21 +55,21 @@ export default function Content() {
   useEffect(() => {
     if (activeTab === "user-content") {
       axios
-        .get("http://localhost:8080/api/content")
+        .get("http://localhost:8080/api/content", {withCredentials: true,})
         .then((res) => setContentItems(res.data))
         .catch((err) => console.error("Load content failed", err));
     }
 
     if (activeTab === "user-reviews") {
       axios
-        .get("http://localhost:8080/api/content/reviews")
+        .get("http://localhost:8080/api/content/reviews", {withCredentials: true,})
         .then((res) => setReviewItems(res.data))
         .catch((err) => console.error("Load reviews failed", err));
     }
 
     if (activeTab === "marketing") {
       axios
-        .get("http://localhost:8080/api/content/marketing")
+        .get("http://localhost:8080/api/content/marketing", {withCredentials: true,})
         .then((res) => setMarketingItems(res.data))
         .catch((err) => console.error("Load marketing failed", err));
     }
