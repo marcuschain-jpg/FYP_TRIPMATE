@@ -17,7 +17,13 @@ async function ExtractPhotoS3(data){
         if(d.photo_url === null){
             return{...d, photo_url: null};
         }
-        const myKey = d.photo_url;
+        else if(d.vid_url === null){
+            return{...d, photo_url: null};
+        }
+        let myKey = d.photo_url;
+        if(d.vid_url){
+            myKey = d.vid_url;
+        }
         const signedURLExpire = 30 * 60 * 1 // 30 mins
         
         const signedURL = s3.getSignedUrl('getObject', {
@@ -25,7 +31,8 @@ async function ExtractPhotoS3(data){
             Key: myKey,
             Expires: signedURLExpire
         });
-        return{...d, photo_url: signedURL};
+        if(d.vid_url) return {...d, vid_url: signedURL}
+        else return{...d, photo_url: signedURL};
     })  
     return newData;
 };

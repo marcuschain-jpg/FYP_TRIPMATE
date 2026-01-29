@@ -555,6 +555,11 @@ router.get("/ArrangeItinerary", RequireAuth(["registered", "premium"]), (req, re
            WHERE activity_date = $1
            ORDER BY activity_order ASC`, [date]
         );
+        if(data.rowCount <= 1){
+          // Skip this date
+          console.log(`Date: ${date} only has ${data.rowCount} activities. Skip`);
+          return;
+        }
         const aID = data.rows.map(row => row.activity_id);
         const aPlaceID = data.rows.map(row => row.gmaps_placeid);
         //extract route matrix & run algo

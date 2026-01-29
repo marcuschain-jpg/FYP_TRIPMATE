@@ -24,13 +24,14 @@ function Landing() {
   const [features, setFeatures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lang, setLang] = useState(i18n.language||"en");
+  const [video, setVideo] = useState("");
 
   useEffect(() => {
     if(!lang || !loading) return;
     const LoadLanding = async() => {
       try{
         const res = await Axios.get("Landing/LoadLanding", {params:{lang}})
-        console.log(res.data);
+        console.log(res.data[3].vid_url);
         setLoading(false);
         setFeatures(res.data.map(d => ({
           id: d.content_id,
@@ -38,6 +39,7 @@ function Landing() {
           title: d.c_title,
           description: d.c_content
         })));
+        setVideo(res.data[3].vid_url);
       }
       catch(err){
         if(err.response) console.log(err.response.data.message);
@@ -96,12 +98,13 @@ function Landing() {
           
           {/*Temporary placeholder for marketing vid*/}
           <div className="video-placeholder">
-            <div className="play-button">
+            <video src={video} autoPlay loop muted playsinline controls style={{ width: '100%', height: '100%' }}></video>
+            {/*<div className="play-button">
               <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
                 <circle cx="30" cy="30" r="28" stroke="currentColor" strokeWidth="2"/>
                 <path d="M24 20L40 30L24 40V20Z" fill="currentColor"/>
               </svg>
-            </div>
+            </div>*/}
           </div>
         </div>
       </section>
