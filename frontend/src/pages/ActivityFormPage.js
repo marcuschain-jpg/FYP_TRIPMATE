@@ -273,7 +273,7 @@ function ActivityFormPage() {
         formData,
         {headers:{ "Content-Type": "multipart/form-data" }, withCredentials:true}) 
       .then(response => {
-        if(response.data === true) alert(t("succ_editact"))
+        if(response.data === true) alert(t("succ_editedact"))
       }); 
     }
     else //create
