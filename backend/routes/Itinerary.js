@@ -40,18 +40,18 @@ router.get("/GetAllItineraries", RequireAuth(["registered", "premium"]), async(r
   try{
     const data = await pool.query(
       `SELECT i.itinerary_id, i.itinerary_name, i.itinerary_dest, i.start_date, i.end_date, i.completed, i.type, 'host' as userIType,
-       i.num_ppl, i.capacity
+       i.num_ppl, i.capacity, i.placeid, i.longitude, i.latitude
        FROM itinerary i
        WHERE i.user_host_id = $1
        UNION
        SELECT i.itinerary_id, i.itinerary_name, i.itinerary_dest, i.start_date, i.end_date, i.completed, i.type, 'visitor' as userIType,
-       i.num_ppl, i.capacity
+       i.num_ppl, i.capacity, i.placeid, i.longitude, i.latitude
        FROM itinerary i
        JOIN shared_itinerary si ON i.itinerary_id = si.itinerary_id  
        WHERE si.user_id = $1
        UNION
        SELECT i.itinerary_id, i.itinerary_name, i.itinerary_dest, i.start_date, i.end_date, i.completed, i.type, 'visitor' as userIType,
-       i.num_ppl, i.capacity
+       i.num_ppl, i.capacity, i.placeid, i.longitude, i.latitude
        FROM itinerary i
        JOIN group_trip gt ON i.itinerary_id = gt.itinerary_id
        WHERE gt.user_id = $1

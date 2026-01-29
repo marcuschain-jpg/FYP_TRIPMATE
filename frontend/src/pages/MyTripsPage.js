@@ -129,7 +129,13 @@ function MyTripsPage() {
       userItineraryType: t.useritype,
       collaborators: t.num_ppl,
       currentMembers: t.num_ppl,
-      maxCapacity: t.capacity
+      maxCapacity: t.capacity,
+      fullDest:{
+        placeid: t.placeid,
+        name: t.itinerary_dest,
+        lat: t.latitude,
+        lng: t.longitude
+      }
     }));
 
     setTrips(mapTrips);
@@ -220,7 +226,7 @@ function MyTripsPage() {
     setFirstLoad(true);
     setShowAddTripModal(true);
     setShowLocSearch(false);
-    setNewFullDest({});
+    setNewFullDest(trip.fullDest);
   };
 
   //Create or update trip

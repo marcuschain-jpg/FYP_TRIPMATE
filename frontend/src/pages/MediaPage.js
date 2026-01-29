@@ -139,7 +139,7 @@ function MediaPage() {
         //Store media array for this activity (could be empty)*/
         mediaMap[activity.id] = mediaRes ? mediaRes.filter(item => item.activity_id === activity.id) : [];
         if(mediaMap[activity.id].length === 0) {
-        console.log(`No media found for activity ${activity.id}`);
+        //console.log(`No media found for activity ${activity.id}`);
         //default no info
         mediaMap[activity.id] = [];
       }
@@ -251,12 +251,12 @@ function MediaPage() {
         ...prev,
         [editActivityId]: prev[editActivityId].map((m) =>
           (m.photo_id === editItem.photo_id)
-            ? { ...m, media_name: editTitle }
+            ? { ...m, photo_title: editTitle }
             : m
         ),
       }));
 
-      alert(("md_succ_update"));
+      alert(t("md_succ_update"));
       setShowEditModal(false); 
     }
   };
@@ -381,12 +381,12 @@ function MediaPage() {
               <div className="media-grid">
                 {activityMedia[activity.id] && activityMedia[activity.id].length > 0 ? (
                   activityMedia[activity.id].map((media) => (
-                    <div key={media.media_id || media.photo_id} className="media-item">
+                    <div key={media.photo_id} className="media-item">
                       <div className="media-image-container">
-                        {media.media_url || media.photo_url ? (
+                        {media.photo_url ? (
                           <img
-                            src={media.media_url || media.photo_url}
-                            alt={media.media_name || media.photo_title}
+                            src={media.photo_url}
+                            alt={media.photo_title}
                             className="media-image"
                           />
                         ) : (
@@ -395,7 +395,7 @@ function MediaPage() {
                       </div>
                       
                       <div className="media-info">
-                        <p className="media-title">{media.media_name || media.photo_title}</p>
+                        <p className="media-title">{media.photo_title}</p>
                         <div className="media-actions">
                           <button
                             className="edit-btn"
