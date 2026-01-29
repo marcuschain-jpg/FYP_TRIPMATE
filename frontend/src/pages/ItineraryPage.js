@@ -140,7 +140,7 @@ function ItineraryPage() {
 
         if (mapDivRef.current && !mapRef.current) {
           console.log("Creating map instance");
-          const center = mapConfig.center || { lat: 1.3521, lng: 103.8198 };
+          const center = mapConfig.center;
 
           mapRef.current = new window.google.maps.Map(mapDivRef.current, {
             center,
@@ -381,10 +381,10 @@ function ItineraryPage() {
       console.log(`Marker ${index + 1} created at:`, point);
     });
 
-    // IMPROVED CENTERING LOGIC
+    //center to chosen country
     if (points.length === 0) {
-      // No activities: center to default location
-      const defaultCenter = mapConfig?.center || { lat: 1.3521, lng: 103.8198 };
+      //No activities = center to default location
+      const defaultCenter = mapConfig.center;
       mapRef.current.setCenter(defaultCenter);
       mapRef.current.setZoom(12);
       console.log("No activities - centered to default location");

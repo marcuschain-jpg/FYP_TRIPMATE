@@ -456,7 +456,7 @@ function ActivityFormPage() {
         </div>
 
         <div className="activity-right-map">
-          {mapData ? (<InitMaps DefaultMapData={mapData} centerChange={mapCenterChange} activityCoords={activityCoords}/>) : (<p className="map-loading-text">Loading map...</p>)}
+          {mapData && itineraryLng && itineraryLat ? (<InitMaps DefaultMapData={{...mapData, center: {lat: itineraryLat, lng: itineraryLng}}} centerChange={mapCenterChange} activityCoords={activityCoords}/>) : (<p className="map-loading-text">Loading map...</p>)}
         </div>
       </div>
     </div>
