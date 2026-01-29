@@ -37,6 +37,7 @@ function ItineraryPage() {
   const { tripId, firstdate } = useParams();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation("itinerary");
+  
 
   const [trip, setTrip] = useState(null);
   const [activities, setActivities] = useState([]);
@@ -186,6 +187,7 @@ function ItineraryPage() {
       .then((res) => {
         const data = res.data;
         console.log("Activity data:", data);
+        
 
         //Format trip dates using formatDateForDisplay function
         const mapTrips = {
