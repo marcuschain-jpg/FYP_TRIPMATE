@@ -79,7 +79,14 @@ function TimelinePage() {
   const saveTimeline = async() => {
     if (timeline.length === 0) return;
 
-    const name = prompt(`${t("tl_err_name")}:`);
+    let name = prompt(`${t("tl_err_name")}:`);
+    
+    //Keep prompting until user enters a valid title or cancels
+    while (name !== null && name.trim() === "") {
+      alert("Please enter a title");
+      name = prompt(`${t("tl_err_name")}:`);
+    }
+    
     if (!name) return;
 
     await Axios.post("Timeline/SaveTimeline", {i_id:tripId, name:name, timeline_photos:timeline}, {withCredentials:true})
@@ -125,7 +132,7 @@ function TimelinePage() {
 
       <h1 className="timeline-title">{itineraryName} — {t("tl_timeline")}</h1>
 
-      {/*"View saved timelines" button*/}
+      {/*View saved timelines button*/}
       <button
         className="generate-btn"
         onClick={() => navigate(`/mytrips/trip/saved-timelines/${tripId}`)}
