@@ -62,20 +62,28 @@
     font-size: 13px;
     font-weight: 500;
     min-width: 110px;
-
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-
 .chat-btn,
 .view-btn {
     background: #0f5b86;
     color: white;
 }
-
 .delete-btn {
     background: #d9534f;
     color: white;
 }
-
+.edit-btn {
+    background: #1a3a52;
+    color: white;
+}
+.exit-btn {
+    background: #d9534f;
+    color: white;
+}
 
 /*Trip status labels*/
 .trip-status {
