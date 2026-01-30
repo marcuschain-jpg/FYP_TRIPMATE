@@ -166,7 +166,7 @@ function GroupTripsPage() {
             navigate(`/login/${errorMsg}`);
           }
           else if(err.response.status === 500){ // DB/Backend error
-            console.log(err.response.data.message);
+            alert(err.response.data.message);
           }
         }
           else console.log(err); // General error
@@ -219,7 +219,7 @@ function GroupTripsPage() {
 
   //Upload handler
   const handleUpload = async() => {
-    if (!tripName || !location || !pax || !startDate || !endDate) {
+    if (!tripName || !location || !pax || !startDate || !endDate || Object.keys(newFullDest).length === 0 || !description) {
       alert(t("gt_errmsg_fields"));
       return;
     }
@@ -270,6 +270,7 @@ function GroupTripsPage() {
     setStartDate("");
     setEndDate("");
     setDescription("");
+    setNewFullDest({});
     setShowModal(false);
   };
 
@@ -289,7 +290,10 @@ function GroupTripsPage() {
 
           <button
             className="create-trip-btn"
-            onClick={() => setShowModal(true)}
+            onClick={() => {
+              setShowModal(true);
+              setNewFullDest({});
+            }}
           >
             {t("gt_create_new_trip_btn")} +
           </button>
