@@ -34,6 +34,10 @@ function ActivityFormPage() {
   const [activityCoords, setActivityCoords] = useState([]); // store coords for maps
   const [itineraryLat, setItineraryLat] = useState(0);
   const [itineraryLng, setItineraryLng] = useState(0);
+  
+  //Trip date range for restriction
+  const [tripStartDate, setTripStartDate] = useState("");
+  const [tripEndDate, setTripEndDate] = useState("");
 
   //Search bar modal pop out
   const [showLocSearch, setShowLocSearch] = useState(false);
@@ -79,9 +83,24 @@ function ActivityFormPage() {
     else{ //create page--> still need validate
       Axios.get("Itinerary/GetActivityToCreate", {params:{i_id:tripId}, withCredentials:true})
       .then(res => {
+        console.log("📍 Trip date range received:", {
+          start_date: res.data[0].start_date,
+          end_date: res.data[0].end_date
+        });
+        
         setItineraryLng(res.data[0].longitude);
         setItineraryLat(res.data[0].latitude);
         setMapCenterChange({lng:parseFloat(res.data[0].longitude), lat:parseFloat(res.data[0].latitude)});
+        
+        // Set trip date range - format as YYYY-MM-DD for input[type="date"]
+        const startDate = String(res.data[0].start_date).slice(0, 10);
+        const endDate = String(res.data[0].end_date).slice(0, 10);
+        
+        console.log("📍 Formatted date range:", { startDate, endDate });
+        
+        setTripStartDate(startDate);
+        setTripEndDate(endDate);
+        
         setLoading(false);
       })
       .catch(err => {
@@ -118,6 +137,15 @@ function ActivityFormPage() {
     setLatitude(parseFloat(a[0].latitude));
     setItineraryLng(a[0].i_lng);
     setItineraryLat(a[0].i_lat);
+    
+    //Set trip date range when editing
+    const startDate = String(a[0].trip_start_date).slice(0, 10);
+    const endDate = String(a[0].trip_end_date).slice(0, 10);
+    
+    console.log("📍 Edit mode - Trip date range:", { startDate, endDate });
+    
+    setTripStartDate(startDate);
+    setTripEndDate(endDate);
 
     //Render coords for maps
     setMapCenterChange({lng:parseFloat(a[0].longitude), lat:parseFloat(a[0].latitude)});
@@ -242,6 +270,12 @@ function ActivityFormPage() {
 
   //Save activity
   const handleSave = async() => {
+    //Validate date is within trip range
+    if(date < tripStartDate || date > tripEndDate) {
+      alert(`Activity date must be between ${tripStartDate} and ${tripEndDate}`);
+      return;
+    }
+
     //Convert newly uploaded files from device to media objects using object URLs
     if(!name||!locationName||!address||!date||!placeid){
       alert(t("af_err_fields"));
@@ -393,8 +427,17 @@ function ActivityFormPage() {
             type="date"
             className="form-input"
             value={date}
+            min={tripStartDate}
+            max={tripEndDate}
             onChange={(e) => setDate(e.target.value)}
+            disabled={!tripStartDate || !tripEndDate}
+            title={tripStartDate && tripEndDate ? `Activity date must be between ${tripStartDate} and ${tripEndDate}` : "Loading trip dates..."}
           />
+          {tripStartDate && tripEndDate && (
+            <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+              ✓ Activity date must be between {tripStartDate} and {tripEndDate}
+            </p>
+          )}
 
           {/*Preview of any existing media in activity form*/}
           {existingMedia.length > 0 && (
