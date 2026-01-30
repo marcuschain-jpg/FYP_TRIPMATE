@@ -37,6 +37,7 @@ function ItineraryPage() {
   const { tripId, firstdate } = useParams();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation("itinerary");
+  
 
   const [trip, setTrip] = useState(null);
   const [activities, setActivities] = useState([]);
@@ -140,7 +141,9 @@ function ItineraryPage() {
 
         if (mapDivRef.current && !mapRef.current) {
           console.log("Creating map instance");
-          const center = mapConfig.center;
+          const center = (trip?.t_lat && trip?.t_lng) 
+            ? { lat: trip.t_lat, lng: trip.t_lng }
+            : mapConfig.center;
 
           mapRef.current = new window.google.maps.Map(mapDivRef.current, {
             center,
@@ -186,6 +189,7 @@ function ItineraryPage() {
       .then((res) => {
         const data = res.data;
         console.log("Activity data:", data);
+        
 
         //Format trip dates using formatDateForDisplay function
         const mapTrips = {
@@ -194,7 +198,9 @@ function ItineraryPage() {
           start: formatDateForDisplay(data?.[0]?.start_date),
           end: formatDateForDisplay(data?.[0]?.end_date),
           type: data?.[0]?.type,
-          numPpl: data?.[0]?.num_ppl
+          numPpl: data?.[0]?.num_ppl,
+          t_lat: parseFloat(data[0].i_latitude),
+          t_lng: parseFloat(data[0].i_longitude)
         };
         console.log("Trip object:", mapTrips);
         setTrip(mapTrips);
@@ -346,7 +352,6 @@ function ItineraryPage() {
   //Draw driving route and markers & center map 
   useEffect(() => {
     if (!mapRef.current || !(window.google && window.google.maps)) return;
-    if (!selectedDate) return;
     if (!directionsServiceRef.current || !directionsRendererRef.current) return;
 
     console.log("Route effect triggered. selectedDate:", selectedDate);
@@ -384,7 +389,9 @@ function ItineraryPage() {
     //center to chosen country
     if (points.length === 0) {
       //No activities = center to default location
-      const defaultCenter = mapConfig.center;
+      const defaultCenter = (trip?.t_lat && trip?.t_lng) 
+        ? { lat: trip.t_lat, lng: trip.t_lng }
+        : mapConfig.center;
       mapRef.current.setCenter(defaultCenter);
       mapRef.current.setZoom(12);
       console.log("No activities - centered to default location");
@@ -442,7 +449,7 @@ function ItineraryPage() {
         }
       }
     );
-  }, [activityCoords, selectedDate, mapConfig]);
+  }, [activityCoords, selectedDate, mapConfig, trip]);
 
   //Delete activity
   const handleDeleteActivity = async (index) => {
