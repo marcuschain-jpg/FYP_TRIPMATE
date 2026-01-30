@@ -817,6 +817,18 @@
   }
 
 /*Date filter drop down box--> view itinerary by date*/
+/*No activities message*/
+.no-activities-message {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 8px;
+    background-color: #f5f5f5;
+    border: 2px dashed #ddd;
+    margin: 20px 0;
+  }
 .date-filter-container {
     display: flex;
     justify-content: flex-end;

@@ -226,10 +226,16 @@ function ItineraryPage() {
         setActivities(mapAct);
         setActivityCoords(coordAct);
 
-        //Set default date
+        //Set default date - initialize to first trip date if not already set
         if (firstdate === "default") {
           const uniqueDates = Array.from(new Set(mapAct.map((x) => x.date))).sort();
-          if (uniqueDates.length > 0) setSelectedDate(uniqueDates[0]);
+          if (uniqueDates.length > 0) {
+            setSelectedDate(uniqueDates[0]);
+          } else {
+            //No activities with dates, set to trip start date
+            const tripStartNorm = normDate(data?.[0]?.start_date);
+            if (tripStartNorm) setSelectedDate(tripStartNorm);
+          }
         } else {
           setSelectedDate(normDate(firstdate));
         }
@@ -501,72 +507,80 @@ function ItineraryPage() {
         <div className="left-side">
           <h2>{t("title")}</h2>
 
+          <div className="date-row">
+            <select
+              className="date-filter-dropdown"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(normDate(e.target.value))}
+            >
+              {trip && (() => {
+                const startDate = new Date(normDate(trip.start || ""));
+                const endDate = new Date(normDate(trip.end || ""));
+                const dateArray = [];
+                if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+                  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                    dateArray.push(normDate(d));
+                  }
+                }
+                return dateArray.map((d) => (
+                  <option key={d} value={d}>
+                    {new Date(d).toLocaleDateString(lang, {
+                      weekday: "short",
+                      day: "numeric",
+                      month: "long",
+                    })}
+                  </option>
+                ));
+              })()}
+            </select>
+
+            <button
+              className="arrange-btn"
+              onClick={() => arrangeItinerary()}
+              disabled={isArranging}
+            >
+              {isArranging ? t("arranging") : t("arrange")}
+            </button>
+          </div>
+
           {useMemo(() => {
             const validActivities = filteredActivities.filter((act) => act.id && act.name);
             return validActivities.length > 0 ? (
-              <>
-                <div className="date-row">
-                  <select
-                    className="date-filter-dropdown"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(normDate(e.target.value))}
-                  >
-                    {Array.from(new Set(activities.map((a) => normDate(a.date))))
-                      .sort()
-                      .map((d) => (
-                        <option key={d} value={d}>
-                          {new Date(d).toLocaleDateString(lang, {
-                            weekday: "short",
-                            day: "numeric",
-                            month: "long",
-                          })}
-                        </option>
-                      ))}
-                  </select>
+              <div className="activities-section">
+                {validActivities.map((act) => (
+                  <div key={act.id} className="activity-card">
+                    <h3>{act.name}</h3>
+                    <p>
+                      <strong>{act.date}</strong>
+                    </p>
+                    <p>{act.location}</p>
+                    {act.address && <p>{act.address}</p>}
 
-                  <button
-                    className="arrange-btn"
-                    onClick={() => arrangeItinerary()}
-                    disabled={isArranging}
-                  >
-                    {isArranging ? t("arranging") : t("arrange")}
-                  </button>
-                </div>
+                    <div className="activity-actions">
+                      <button
+                        className="activity-edit-btn"
+                        disabled={isArranging}
+                        onClick={() =>
+                          navigate(`/mytrips/trip/activity/edit/${tripId}/${act.id}`)
+                        }
+                      >
+                        {t("edit_btn")}
+                      </button>
 
-                <div className="activities-section">
-                  {validActivities.map((act) => (
-                    <div key={act.id} className="activity-card">
-                      <h3>{act.name}</h3>
-                      <p>
-                        <strong>{act.date}</strong>
-                      </p>
-                      <p>{act.location}</p>
-                      {act.address && <p>{act.address}</p>}
-
-                      <div className="activity-actions">
-                        <button
-                          className="activity-edit-btn"
-                          disabled={isArranging}
-                          onClick={() =>
-                            navigate(`/mytrips/trip/activity/edit/${tripId}/${act.id}`)
-                          }
-                        >
-                          {t("edit_btn")}
-                        </button>
-
-                        <button
-                          className="activity-delete-btn"
-                          disabled={isArranging}
-                          onClick={() => handleDeleteActivity(act.id)}
-                        >
-                          {t("delete_btn")}
-                        </button>
-                      </div>
+                      <button
+                        className="activity-delete-btn"
+                        disabled={isArranging}
+                        onClick={() => handleDeleteActivity(act.id)}
+                      >
+                        {t("delete_btn")}
+                      </button>
                     </div>
-                  ))}
-                </div>
-              </>
-            ) : null;
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="no-activities-message">{t("no_activities")}</p>
+            );
           }, [filteredActivities, activities, selectedDate, isArranging, t, tripId, navigate])}
 
           <button
