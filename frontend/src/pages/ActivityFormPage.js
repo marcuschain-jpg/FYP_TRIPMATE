@@ -22,6 +22,7 @@ function ActivityFormPage() {
   const [locationName, setLocationName] = useState("");
   const [address, setAddress] = useState("");
   const [date, setDate] = useState("");
+  const [cost, setCost] = useState("");
   const [placeid, setPlaceID] = useState("");
   const [longitude, setLongitude] = useState(0);
   const [latitude, setLatitude] = useState(0);
@@ -92,7 +93,7 @@ function ActivityFormPage() {
         setItineraryLat(res.data[0].latitude);
         setMapCenterChange({lng:parseFloat(res.data[0].longitude), lat:parseFloat(res.data[0].latitude)});
         
-        // Set trip date range - format as YYYY-MM-DD for input[type="date"]
+        //Set trip date range - format as YYYY-MM-DD for input[type="date"]
         const startDate = String(res.data[0].start_date).slice(0, 10);
         const endDate = String(res.data[0].end_date).slice(0, 10);
         
@@ -129,6 +130,7 @@ function ActivityFormPage() {
     setLocationName(a[0].activity_location);
     setAddress(a[0].activity_address);
     setDate(a[0].activity_date);
+    setCost(a[0].activity_cost || "");
     setPlaceID(a[0].gmaps_placeid)
     setIsStartPoint(Number(a[0].activity_order === 0));
     setDefaultStart(Number(a[0].activity_order === 0));
@@ -270,11 +272,11 @@ function ActivityFormPage() {
 
   //Save activity
   const handleSave = async() => {
-    //Validate date is within trip range
+    {/*//Validate date is within trip range
     if(date < tripStartDate || date > tripEndDate) {
       alert(`Activity date must be between ${tripStartDate} and ${tripEndDate}`);
       return;
-    }
+    }*/}
 
     //Convert newly uploaded files from device to media objects using object URLs
     if(!name||!locationName||!address||!date||!placeid){
@@ -302,6 +304,7 @@ function ActivityFormPage() {
       formData.append("aPlaceID", placeid);
       formData.append("lng", longitude);
       formData.append("lat", latitude);
+      formData.append("aCost", cost || "0");
 
       await Axios.patch("Itinerary/EditActivity",
         formData,
@@ -321,6 +324,7 @@ function ActivityFormPage() {
       formData.append("aPlaceID", placeid);
       formData.append("lng", longitude);
       formData.append("lat", latitude);
+      formData.append("aCost", cost || "0");
 
       await Axios.post("Itinerary/CreateActivity",
         formData,
@@ -438,6 +442,17 @@ function ActivityFormPage() {
               ✓ Activity date must be between {tripStartDate} and {tripEndDate}
             </p>
           )}
+
+          <label className="form-label">Activity Cost ($)</label>
+          <input
+            type="number"
+            className="form-input"
+            placeholder="0.00"
+            value={cost}
+            onChange={(e) => setCost(e.target.value)}
+            min="0"
+            step="0.01"
+          />
 
           {/*Preview of any existing media in activity form*/}
           {existingMedia.length > 0 && (

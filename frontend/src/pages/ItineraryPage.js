@@ -83,7 +83,6 @@ function ItineraryPage() {
   }, []);
 
   useEffect(() => {
-    // Run when ititialized(default) & lang changed
     i18n.on("languageChanged", function(lng) {
       setLang(lng);
     });
@@ -211,6 +210,7 @@ function ItineraryPage() {
           date: normDate(a.activity_date),
           address: a.activity_address,
           location: a.activity_location,
+          cost: parseFloat(a.activity_cost) || 0,
         }));
 
         const coordAct = data.map((a) => ({
@@ -265,6 +265,7 @@ function ItineraryPage() {
         date: normDate(a.activity_date),
         address: a.activity_address,
         location: a.activity_location,
+        cost: parseFloat(a.activity_cost) || 0,
       }));
 
       const coordAct = res.map((a) => ({
@@ -289,6 +290,7 @@ function ItineraryPage() {
               date: normDate(updated.activity_date),
               address: updated.activity_address,
               location: updated.activity_location,
+              cost: parseFloat(updated.activity_cost) || 0,
             };
           }
           return a;
@@ -354,6 +356,24 @@ function ItineraryPage() {
     () => activities.filter((a) => normDate(a.date) === normDate(selectedDate)),
     [activities, selectedDate]
   );
+
+  // Calculate costs
+  const selectedDateCost = useMemo(() => {
+    return filteredActivities.reduce((sum, activity) => sum + (activity.cost || 0), 0);
+  }, [filteredActivities]);
+
+  const totalTripCost = useMemo(() => {
+    return activities.reduce((sum, activity) => sum + (activity.cost || 0), 0);
+  }, [activities]);
+
+  const costsByDate = useMemo(() => {
+    const costs = {};
+    activities.forEach((activity) => {
+      const date = normDate(activity.date);
+      costs[date] = (costs[date] || 0) + (activity.cost || 0);
+    });
+    return costs;
+  }, [activities]);
 
   //Draw driving route and markers & center map 
   useEffect(() => {
@@ -543,6 +563,53 @@ function ItineraryPage() {
             </button>
           </div>
 
+          {/*Cost summary cards*/}
+          <div className="cost-summary-cards">
+            <div className="cost-card selected-date">
+              <div className="cost-label">Today's Cost</div>
+              <div className="cost-amount">${selectedDateCost.toFixed(2)}</div>
+            </div>
+            <div className="cost-card total-trip">
+              <div className="cost-label">Total Trip Cost</div>
+              <div className="cost-amount">${totalTripCost.toFixed(2)}</div>
+            </div>
+          </div>
+
+          {/*Daily cost breakdown table*/}
+          {activities.length > 0 && (
+            <div className="cost-breakdown-table">
+              <h3>Daily Breakdown</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Cost</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(costsByDate)
+                    .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+                    .map(([date, cost]) => (
+                      <tr key={date}>
+                        <td>
+                          {new Date(date).toLocaleDateString(lang, {
+                            weekday: "short",
+                            day: "numeric",
+                            month: "short",
+                          })}
+                        </td>
+                        <td className="cost-cell">${cost.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  <tr className="total-row">
+                    <td>Total</td>
+                    <td className="cost-cell">${totalTripCost.toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+
           {useMemo(() => {
             const validActivities = filteredActivities.filter((act) => act.id && act.name);
             return validActivities.length > 0 ? (
@@ -555,6 +622,11 @@ function ItineraryPage() {
                     </p>
                     <p>{act.location}</p>
                     {act.address && <p>{act.address}</p>}
+                    {act.cost > 0 && (
+                      <p className="activity-cost">
+                        <strong>Cost: ${act.cost.toFixed(2)}</strong>
+                      </p>
+                    )}
 
                     <div className="activity-actions">
                       <button
