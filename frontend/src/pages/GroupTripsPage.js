@@ -281,72 +281,78 @@ function GroupTripsPage() {
 
         {/*Search & create*/}
         <div className="group-trips-header">
-          <input
-            className="group-search"
-            placeholder={t("gt_search_trip_name")}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <div className="search-disclaimer">
+            💡 Tip: Search by location or trip name
+          </div>
+          <div className="header-search-create">
+            <input
+              className="group-search"
+              placeholder={t("gt_search_trip_name")}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
 
-          <button
-            className="create-trip-btn"
-            onClick={() => {
-              setShowModal(true);
-              setNewFullDest({});
-            }}
-          >
-            {t("gt_create_new_trip_btn")} +
-          </button>
+            <button
+              className="create-trip-btn"
+              onClick={() => {
+                setShowModal(true);
+                setNewFullDest({});
+              }}
+            >
+              {t("gt_create_new_trip_btn")} +
+            </button>
+          </div>
         </div>
 
-        {/*Trip cards*/}
-        {!loading && groupTrips
-          .filter((trip) =>
-            (trip.title ?? "").toLowerCase().includes(searchTerm.toLowerCase())
-          )
-          .map((trip) => (
-            <div key={trip.id} className="group-trip-card">
-              <div className="group-trip-left">
-                <div className="trip-owner-row">
-                  <div className="owner-avatar">
-                    {(trip.owner ?? "").charAt(0)}
+        {/*Trip cards grid*/}
+        {!loading && (
+          <div className="trips-grid">
+            {groupTrips
+              .filter((trip) =>
+                (trip.title ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (trip.location ?? "").toLowerCase().includes(searchTerm.toLowerCase())
+              )
+              .map((trip) => (
+                <div key={trip.id} className="group-trip-card">
+                  <div className="group-trip-left">
+                    <div className="trip-owner-row">
+                      <div className="owner-avatar">
+                        {(trip.owner ?? "").charAt(0)}
+                      </div>
+                      <p className="trip-owner">{trip.owner}</p>
+                    </div>
+
+                    <h3>{trip.title}</h3>
+                    <p><strong>Location:</strong> {trip.location}</p>
+                    <p><strong>Date:</strong> {trip.date}</p>
+                    {/*Member counter - showing current/max members*/}
+                    <p><strong>Members:</strong> {trip.currentMembers}/{trip.capacity}</p>
+                    <p className="trip-desc">{trip.description}</p>
                   </div>
-                  <p className="trip-owner">{trip.owner}</p>
+
+                  {/*Join or exit group trips*/}
+                  <div className="group-trip-right">
+                    {trip.joinedByYou ? (
+                      <button
+                        className="exit-btn"
+                        onClick={() => handleExit(trip)}
+                      >
+                        {t("gt_exit_btn")}
+                      </button>
+                    ) : (
+                      <button
+                        className="join-btn-text"
+                        onClick={() => handleJoin(trip)}
+                        disabled={trip.currentMembers >= trip.capacity}
+                      >
+                        {trip.currentMembers >= trip.capacity ? "Full" : t("gt_join_btn")}
+                      </button>
+                    )}
+                  </div>
                 </div>
-
-                <h3>{trip.title}</h3>
-                <p><strong>Location:</strong> {trip.location}</p>
-                <p><strong>Date:</strong> {trip.date}</p>
-                {/*Member counter - showing current/max members*/}
-                <p><strong>Members:</strong> {trip.currentMembers}/{trip.capacity}</p>
-                <p className="trip-desc">{trip.description}</p>
-              </div>
-
-              {/*Join or exit group trips*/}
-              <div className="group-trip-right">
-                {trip.joinedByYou ? (
-                  <button
-                    className="exit-btn"
-                    onClick={() => handleExit(trip)}
-                  >
-                    {t("gt_exit_btn")}
-                  </button>
-                ) : (
-                  <button
-                    className="join-btn-text"
-                    onClick={() => handleJoin(trip)}
-                    disabled={trip.currentMembers >= trip.capacity} //Disable if full
-                    style={{
-                      opacity: trip.currentMembers >= trip.capacity ? 0.5 : 1,
-                      cursor: trip.currentMembers >= trip.capacity ? "not-allowed" : "pointer"
-                    }}
-                  >
-                    {trip.currentMembers >= trip.capacity ? "Full" : t("gt_join_btn")}
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
+              ))}
+          </div>
+        )}
       </div>
 
       {showModal && (
