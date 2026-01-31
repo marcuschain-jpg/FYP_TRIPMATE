@@ -3,6 +3,7 @@ import { Search } from "lucide-react";
 import "../styles/Content.css";
 import axios from "axios";
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 import {
   mockContent as initialContent,
@@ -26,6 +27,7 @@ function parseDateTime(str) {
 
 export default function Content() {
   const [activeTab, setActiveTab] = useState("user-content"); // user-content | user-reviews | marketing
+  const navigate = useNavigate(); //Navigate to Login Page
 
   // make data stateful (so edits/adds reflect immediately)
   // const [contentItems, setContentItems] = useState(initialContent);
@@ -51,29 +53,46 @@ export default function Content() {
   const searchPlaceholder =
     activeTab === "marketing" ? "Search by title/section" : "Search by title/user";
 
-  // Load Data From Database
-  useEffect(() => {
-    if (activeTab === "user-content") {
-      axios
-        .get("http://localhost:8080/api/content", {withCredentials: true,})
-        .then((res) => setContentItems(res.data))
-        .catch((err) => console.error("Load content failed", err));
-    }
+// Load Data From DB & Security Check
+ useEffect(() => {
+  const loadData = async () => {
+    try {
+      if (activeTab === "user-content") {
+        const res = await axios.get(
+          "http://localhost:8080/api/content",
+          { withCredentials: true }
+        );
+        setContentItems(res.data);
+      }
 
-    if (activeTab === "user-reviews") {
-      axios
-        .get("http://localhost:8080/api/content/reviews", {withCredentials: true,})
-        .then((res) => setReviewItems(res.data))
-        .catch((err) => console.error("Load reviews failed", err));
-    }
+      if (activeTab === "user-reviews") {
+        const res = await axios.get(
+          "http://localhost:8080/api/content/reviews",
+          { withCredentials: true }
+        );
+        setReviewItems(res.data);
+      }
 
-    if (activeTab === "marketing") {
-      axios
-        .get("http://localhost:8080/api/content/marketing", {withCredentials: true,})
-        .then((res) => setMarketingItems(res.data))
-        .catch((err) => console.error("Load marketing failed", err));
+      if (activeTab === "marketing") {
+        const res = await axios.get(
+          "http://localhost:8080/api/content/marketing",
+          { withCredentials: true }
+        );
+        setMarketingItems(res.data);
+      }
+
+    } catch (err) {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        navigate(`/login/${err.response.status}: ${err.response.data?.message}`);
+        return;
+      }
+
+      console.error("Load content failed:", err);
     }
-  }, [activeTab]);
+  };
+
+  loadData();
+}, [activeTab, navigate]);
 
   // FILTERED (per tab)
   const filteredContent = useMemo(() => {
