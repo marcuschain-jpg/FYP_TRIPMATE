@@ -592,18 +592,6 @@ function MyTripsPage() {
                   >
                     {trip.isGroupTrip ? t("mt_tag_group") : t("mt_tag_private")}
                   </span>}
-                  {usertype === "premium" && <span 
-                    style={{
-                      padding: "4px 8px",
-                      borderRadius: "4px",
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      color: trip.isGroupTrip ? "#fff" : "#333",
-                      backgroundColor: trip.userItineraryType === "host" ? "#FF6B6B" : "#4ECDC4"
-                    }}
-                  >
-                    {trip.userItineraryType === "host" ? t("mt_host") : t("mt_collab")}
-                  </span>}
                 </div>
 
                 {usertype === "premium" && trip.isGroupTrip && (
@@ -658,7 +646,7 @@ function MyTripsPage() {
                 </button>}
 
                 {trip.userItineraryType === "visitor" && <button className="delete-btn" onClick={() => requestDeleteTrip(trip.id)}>
-                  {t("mt_btn_exit")}
+                  Leave Trip
                 </button>}
               </div>
             </div>
@@ -754,12 +742,12 @@ function MyTripsPage() {
         <div className="modal-overlay">
           <div className="modal-box small">
             <h2 className="modal-title">
-              {(tripToDelete?.isGroupTrip || tripToDelete?.userItineraryType === "visitor") ? t("mt_modal_exitgt_btn") : t("mt_modal_confirmdel_btn")}
+              {(tripToDelete?.isGroupTrip || tripToDelete?.userItineraryType === "visitor") ? "Leave Trip" : t("mt_modal_confirmdel_btn")}
             </h2>
 
             <p>
               {(tripToDelete?.isGroupTrip || tripToDelete?.userItineraryType === "visitor")
-                ? t("mt_modal_exitgt")
+                ? "Are you sure you want to leave this trip?"
                 : t("mt_modal_confirmdel")}
             </p>
 
@@ -772,7 +760,7 @@ function MyTripsPage() {
               </button>
 
               <button className="modal-delete" onClick={deleteTripConfirmed}>
-                {(tripToDelete?.isGroupTrip || tripToDelete?.userItineraryType === "visitor") ? t("mt_btn_exit") : t("mt_btn_delete")}
+                {(tripToDelete?.isGroupTrip || tripToDelete?.userItineraryType === "visitor") ? "Leave Trip" : t("mt_btn_delete")}
               </button>
             </div>
           </div>
