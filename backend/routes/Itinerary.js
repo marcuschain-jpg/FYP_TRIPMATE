@@ -457,7 +457,7 @@ router.get("/GetAllActivities", RequireAuth(["registered", "premium"]), async(re
   try{
     const data = await pool.query(
       `SELECT a.activity_id, a.activity_name, a.activity_address, i.itinerary_name, a.activity_location, a.longitude, a.latitude, i.type, i.num_ppl,
-       i.longitude as i_longitude, i.latitude as i_latitude,
+       i.longitude as i_longitude, i.latitude as i_latitude, a.activity_cost,
        TO_CHAR(i.start_date, 'DD/MM/YYYY') AS start_date,
        TO_CHAR(i.end_date, 'DD/MM/YYYY') AS end_date,
        TO_CHAR(a.activity_date, 'YYYY-MM-DD') AS activity_date
@@ -658,7 +658,7 @@ router.post("/ShareExt", RequireAuth(["registered", "premium"]), async(req,res) 
 
 //==================================================== ActivityFormPage ==========================
 router.post("/CreateActivity", RequireAuth(["registered", "premium"]), InsertPhoto(), async(req,res) => {
-  const {aName, aLoc, aAddress, aDate, i_id, aOrder, aPlaceID, lng, lat} = req.body;
+  const {aName, aLoc, aAddress, aDate, i_id, aOrder, aPlaceID, lng, lat, aCost} = req.body;
   let a_id = null;
   let createAct = false;
   let havePhoto = false;
@@ -672,10 +672,10 @@ router.post("/CreateActivity", RequireAuth(["registered", "premium"]), InsertPho
   try{
     // 1. Create activity in activity
     payload = await pool.query(
-      `INSERT INTO activity (activity_name, activity_location, activity_address, activity_date, gmaps_placeid, itinerary_id, activity_order, longitude, latitude)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       RETURNING activity_id, activity_name, activity_address, activity_location, longitude, latitude,
-       TO_CHAR(activity_date, 'YYYY-MM-DD') AS activity_date`, [aName, aLoc, aAddress, aDate, aPlaceID, i_id, realOrder, lng, lat]
+      `INSERT INTO activity (activity_name, activity_location, activity_address, activity_date, gmaps_placeid, itinerary_id, activity_order, longitude, latitude, activity_cost)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING activity_id, activity_name, activity_address, activity_location, longitude, latitude, activity_cost,
+       TO_CHAR(activity_date, 'YYYY-MM-DD') AS activity_date`, [aName, aLoc, aAddress, aDate, aPlaceID, i_id, realOrder, lng, lat, aCost]
     );
     if(payload.rowCount === 1) //successfully insert
     {
@@ -738,7 +738,7 @@ router.post("/CreateActivity", RequireAuth(["registered", "premium"]), InsertPho
 });
 
 router.patch("/EditActivity", RequireAuth(["registered", "premium"]), InsertPhoto(), async(req, res) => {
-  const {a_id, i_id , aName, aLoc, aAddress, aDate, aOrder, aPlaceID, lng, lat} = req.body;
+  const {a_id, i_id , aName, aLoc, aAddress, aDate, aOrder, aPlaceID, lng, lat, aCost} = req.body;
   let havePhoto = false;
   let updateAct = false;
   let order = false;
@@ -758,10 +758,10 @@ router.patch("/EditActivity", RequireAuth(["registered", "premium"]), InsertPhot
     payload = await pool.query(
       `UPDATE activity
        SET activity_name = $2, activity_location = $3, activity_address = $4, activity_date = $5, gmaps_placeid = $6, activity_order = $7
-       , longitude = $8, latitude = $9
+       , longitude = $8, latitude = $9, activity_cost = $10
        WHERE activity_id = $1
-       RETURNING activity_id, activity_name, activity_address, activity_location, longitude, latitude,
-       TO_CHAR(activity_date, 'YYYY-MM-DD') AS activity_date`, [a_id, aName, aLoc, aAddress, aDate, aPlaceID, realOrder, lng, lat]
+       RETURNING activity_id, activity_name, activity_address, activity_location, longitude, latitude, activity_cost,
+       TO_CHAR(activity_date, 'YYYY-MM-DD') AS activity_date`, [a_id, aName, aLoc, aAddress, aDate, aPlaceID, realOrder, lng, lat, aCost]
     );
     if(payload.rowCount === 1) //successfully update
     {
@@ -828,8 +828,10 @@ router.get("/GetActivityToEdit", RequireAuth(["registered", "premium"]), async(r
   try{
     const data = await pool.query(
       `SELECT a.activity_name, a.activity_location, a.activity_address, a.activity_order, a.gmaps_placeid, a.longitude, a.latitude,
-	     ap.photo_id, ap.photo_url, ap.photo_title, i.latitude AS i_lat, i.longitude AS i_lng,
-	     TO_CHAR(a.activity_date, 'YYYY-MM-DD') AS activity_date
+	     ap.photo_id, ap.photo_url, ap.photo_title, i.latitude AS i_lat, i.longitude AS i_lng, a.activity_cost,
+	     TO_CHAR(a.activity_date, 'YYYY-MM-DD') AS activity_date,
+       TO_CHAR(i.start_date, 'YYYY-MM-DD') AS iStart_date,
+       TO_CHAR(i.end_date, 'YYYY-MM-DD') AS iEnd_date
        FROM activity a
        JOIN itinerary i ON a.itinerary_id = i.itinerary_id
 	     LEFT JOIN activity_photo ap ON a.activity_id = ap.activity_id
@@ -845,12 +847,15 @@ router.get("/GetActivityToEdit", RequireAuth(["registered", "premium"]), async(r
 });
 
 router.get("/GetActivityToCreate", RequireAuth(["registered", "premium"]), async(req,res) => {
-  const a_id = req.query['i_id'];
+  const i_id = req.query['i_id'];
 
   try{
     const data = await pool.query(
-      `SELECT longitude, latitude FROM itinerary
-       WHERE itinerary_id = $1 `, [a_id]
+      `SELECT longitude, latitude,
+       TO_CHAR(start_date, 'YYYY-MM-DD') AS iStart_date,
+       TO_CHAR(end_date, 'YYYY-MM-DD') AS iEnd_date
+       FROM itinerary
+       WHERE itinerary_id = $1 `, [i_id]
     )
     return res.send(data.rows);
   }
