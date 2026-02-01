@@ -191,6 +191,10 @@ function ItineraryPage() {
         
 
         //Format trip dates using formatDateForDisplay function
+        console.log("Raw backend data[0]:", data?.[0]);
+        console.log("start_date from backend:", data?.[0]?.start_date);
+        console.log("end_date from backend:", data?.[0]?.end_date);
+        
         const mapTrips = {
           id: tripId,
           name: data?.[0]?.itinerary_name,
@@ -203,7 +207,9 @@ function ItineraryPage() {
           t_lat: parseFloat(data[0].i_latitude),
           t_lng: parseFloat(data[0].i_longitude)
         };
-        console.log("Trip object:", mapTrips);
+        console.log("Trip object after normDate:", mapTrips);
+        console.log("Trip start (normalized):", mapTrips.start);
+        console.log("Trip end (normalized):", mapTrips.end);
         setTrip(mapTrips);
 
         const mapAct = data.map((a) => ({
@@ -538,43 +544,62 @@ function ItineraryPage() {
                 setSelectedDate(normDate(e.target.value));
               }}
             >
-              {trip ? (() => {
-                //generate dates from trip start to trip end
-                const startDateStr = trip.start || "";
-                const endDateStr = trip.end || "";
+              {trip && trip.start && trip.end ? (() => {
+                console.log("=== DATE DROPDOWN RENDER ===");
+                console.log("Trip.start (display format):", trip.start);
+                console.log("Trip.end (display format):", trip.end);
                 
-                console.log("Generating dates from:", startDateStr, "to:", endDateStr);
+                const convertToYYYYMMDD = (dateStr) => {
+                  if (!dateStr) return null;
+                  if (dateStr.includes('/')) {
+                    const [day, month, year] = dateStr.split('/');
+                    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                  }
+                  return dateStr; 
+                };
                 
-                const startDate = new Date(startDateStr + "T00:00:00");
-                const endDate = new Date(endDateStr + "T00:00:00");
+                const startDateStr = convertToYYYYMMDD(trip.start);
+                const endDateStr = convertToYYYYMMDD(trip.end);
+                
+                console.log("Converted startDateStr:", startDateStr);
+                console.log("Converted endDateStr:", endDateStr);
+                
+                const startDate = new Date(startDateStr + "T00:00:00Z");
+                const endDate = new Date(endDateStr + "T00:00:00Z");
                 const dateArray = [];
                 
-                console.log("Start Date object:", startDate, "End Date object:", endDate);
+                console.log("Parsed start:", startDate, "Valid:", !isNaN(startDate.getTime()));
+                console.log("Parsed end:", endDate, "Valid:", !isNaN(endDate.getTime()));
                 
                 if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
                   let currentDate = new Date(startDate);
-                  while (currentDate <= endDate) {
-                    dateArray.push(normDate(currentDate));
+                  let count = 0;
+                  while (currentDate <= endDate && count < 100) {
+                    const dateStr = currentDate.toISOString().split('T')[0];
+                    dateArray.push(dateStr);
                     currentDate.setDate(currentDate.getDate() + 1);
+                    count++;
                   }
+                  console.log("Generated", count, "dates:", dateArray);
                 }
                 
-                console.log("All trip dates generated:", dateArray);
-                
                 if (dateArray.length === 0) {
+                  console.warn("NO DATES GENERATED");
                   return <option value="">No dates available</option>;
                 }
                 
                 return dateArray.map((d) => (
                   <option key={d} value={d}>
-                    {new Date(d + "T00:00:00").toLocaleDateString(lang, {
+                    {new Date(d + "T00:00:00Z").toLocaleDateString(lang, {
                       weekday: "short",
                       day: "numeric",
                       month: "long",
                     })}
                   </option>
                 ));
-              })() : <option value="">Loading dates...</option>}
+              })() : (
+                <option value="">Loading dates...</option>
+              )}
             </select>
 
             <button
