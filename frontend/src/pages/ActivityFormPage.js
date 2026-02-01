@@ -22,7 +22,7 @@ function ActivityFormPage() {
   const [locationName, setLocationName] = useState("");
   const [address, setAddress] = useState("");
   const [date, setDate] = useState("");
-  const [cost, setCost] = useState("");
+  const [cost, setCost] = useState(0);
   const [placeid, setPlaceID] = useState("");
   const [longitude, setLongitude] = useState(0);
   const [latitude, setLatitude] = useState(0);
@@ -84,20 +84,13 @@ function ActivityFormPage() {
     else{ //create page--> still need validate
       Axios.get("Itinerary/GetActivityToCreate", {params:{i_id:tripId}, withCredentials:true})
       .then(res => {
-        console.log("📍 Trip date range received:", {
-          start_date: res.data[0].start_date,
-          end_date: res.data[0].end_date
-        });
-        
         setItineraryLng(res.data[0].longitude);
         setItineraryLat(res.data[0].latitude);
         setMapCenterChange({lng:parseFloat(res.data[0].longitude), lat:parseFloat(res.data[0].latitude)});
         
         //Set trip date range - format as YYYY-MM-DD for input[type="date"]
-        const startDate = String(res.data[0].start_date).slice(0, 10);
-        const endDate = String(res.data[0].end_date).slice(0, 10);
-        
-        console.log("📍 Formatted date range:", { startDate, endDate });
+        const startDate = String(res.data[0].istart_date).slice(0, 10);
+        const endDate = String(res.data[0].iend_date).slice(0, 10);
         
         setTripStartDate(startDate);
         setTripEndDate(endDate);
@@ -130,7 +123,7 @@ function ActivityFormPage() {
     setLocationName(a[0].activity_location);
     setAddress(a[0].activity_address);
     setDate(a[0].activity_date);
-    setCost(a[0].activity_cost || "");
+    setCost(a[0].activity_cost || 0);
     setPlaceID(a[0].gmaps_placeid)
     setIsStartPoint(Number(a[0].activity_order === 0));
     setDefaultStart(Number(a[0].activity_order === 0));
@@ -141,8 +134,8 @@ function ActivityFormPage() {
     setItineraryLat(a[0].i_lat);
     
     //Set trip date range when editing
-    const startDate = String(a[0].trip_start_date).slice(0, 10);
-    const endDate = String(a[0].trip_end_date).slice(0, 10);
+    const startDate = String(a[0].istart_date).slice(0, 10);
+    const endDate = String(a[0].iend_date).slice(0, 10);
     
     console.log("📍 Edit mode - Trip date range:", { startDate, endDate });
     
@@ -304,7 +297,7 @@ function ActivityFormPage() {
       formData.append("aPlaceID", placeid);
       formData.append("lng", longitude);
       formData.append("lat", latitude);
-      formData.append("aCost", cost || "0");
+      formData.append("aCost", cost || 0);
 
       await Axios.patch("Itinerary/EditActivity",
         formData,
@@ -324,7 +317,7 @@ function ActivityFormPage() {
       formData.append("aPlaceID", placeid);
       formData.append("lng", longitude);
       formData.append("lat", latitude);
-      formData.append("aCost", cost || "0");
+      formData.append("aCost", cost || 0);
 
       await Axios.post("Itinerary/CreateActivity",
         formData,
@@ -438,7 +431,7 @@ function ActivityFormPage() {
             title={tripStartDate && tripEndDate ? `Activity date must be between ${tripStartDate} and ${tripEndDate}` : "Loading trip dates..."}
           />
           {tripStartDate && tripEndDate && (
-            <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+            <p style={{ fontSize: '12px', color: '#666', marginTop: '5px'}}>
               ✓ Activity date must be between {tripStartDate} and {tripEndDate}
             </p>
           )}
