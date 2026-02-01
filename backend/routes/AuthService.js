@@ -11,7 +11,7 @@ router.post('/Login', async (req, res) => {
     const {email, password, role} = req.body;
     let chkRole = false;
     
-    try{
+    try{    
         // Check if email exist or role is correct
         const userData = await pool.query(
         `SELECT 1, userid, email, password, type

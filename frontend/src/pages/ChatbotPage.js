@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Chatbot.css";
+import axios from "axios";
 
 export default function ChatbotPage() {
   const navigate = useNavigate();
@@ -12,16 +13,18 @@ export default function ChatbotPage() {
 
   // Fetch Neccesary Data/Communicate with Backend
   const sendToBackend = async (text) => {
-    const res = await fetch("http://localhost:8080/Chatbot/message", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      credentials: "include",
-      body: JSON.stringify({ message: text })
-    });
+    try {
+      const res = await axios.post(
+        "http://localhost:8080/Chatbot/message",
+        { message: text },
+        { withCredentials: true }
+      );
 
-    return res.json();
+      return res.data;
+    } catch (err) {
+      console.error("Chatbot request failed:", err);
+      return null;
+    }
   };
 
   // Create new chat (DO NOT activate yet)
@@ -79,6 +82,10 @@ export default function ChatbotPage() {
     try {
       const data = await sendToBackend(userMessage);
 
+      if (!data) {
+        throw new Error("No response from server");
+      }
+
       setChats(prev => {
         const updated = [...prev];
 
@@ -95,7 +102,7 @@ export default function ChatbotPage() {
                 }
               : {
                   sender: "bot",
-                  text: data.reply,
+                  text: data.reply || "No response.",
                   type: "text"
                 }
           ]
