@@ -83,7 +83,6 @@ function ItineraryPage() {
   }, []);
 
   useEffect(() => {
-    // Run when ititialized(default) & lang changed
     i18n.on("languageChanged", function(lng) {
       setLang(lng);
     });
@@ -211,6 +210,7 @@ function ItineraryPage() {
           date: normDate(a.activity_date),
           address: a.activity_address,
           location: a.activity_location,
+          cost: parseFloat(a.activity_cost) || 0,
         }));
 
         const coordAct = data.map((a) => ({
@@ -226,10 +226,16 @@ function ItineraryPage() {
         setActivities(mapAct);
         setActivityCoords(coordAct);
 
-        //Set default date
+        //Set default date - initialize to first trip date if not already set
         if (firstdate === "default") {
           const uniqueDates = Array.from(new Set(mapAct.map((x) => x.date))).sort();
-          if (uniqueDates.length > 0) setSelectedDate(uniqueDates[0]);
+          if (uniqueDates.length > 0) {
+            setSelectedDate(uniqueDates[0]);
+          } else {
+            //No activities with dates, set to trip start date
+            const tripStartNorm = normDate(data?.[0]?.start_date);
+            if (tripStartNorm) setSelectedDate(tripStartNorm);
+          }
         } else {
           setSelectedDate(normDate(firstdate));
         }
@@ -259,6 +265,7 @@ function ItineraryPage() {
         date: normDate(a.activity_date),
         address: a.activity_address,
         location: a.activity_location,
+        cost: parseFloat(a.activity_cost) || 0,
       }));
 
       const coordAct = res.map((a) => ({
@@ -283,6 +290,7 @@ function ItineraryPage() {
               date: normDate(updated.activity_date),
               address: updated.activity_address,
               location: updated.activity_location,
+              cost: parseFloat(updated.activity_cost) || 0,
             };
           }
           return a;
@@ -348,6 +356,24 @@ function ItineraryPage() {
     () => activities.filter((a) => normDate(a.date) === normDate(selectedDate)),
     [activities, selectedDate]
   );
+
+  // Calculate costs
+  const selectedDateCost = useMemo(() => {
+    return filteredActivities.reduce((sum, activity) => sum + (activity.cost || 0), 0);
+  }, [filteredActivities]);
+
+  const totalTripCost = useMemo(() => {
+    return activities.reduce((sum, activity) => sum + (activity.cost || 0), 0);
+  }, [activities]);
+
+  const costsByDate = useMemo(() => {
+    const costs = {};
+    activities.forEach((activity) => {
+      const date = normDate(activity.date);
+      costs[date] = (costs[date] || 0) + (activity.cost || 0);
+    });
+    return costs;
+  }, [activities]);
 
   //Draw driving route and markers & center map 
   useEffect(() => {
@@ -501,72 +527,132 @@ function ItineraryPage() {
         <div className="left-side">
           <h2>{t("title")}</h2>
 
+          <div className="date-row">
+            <select
+              className="date-filter-dropdown"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(normDate(e.target.value))}
+            >
+              {trip && (() => {
+                const startDate = new Date(normDate(trip.start || ""));
+                const endDate = new Date(normDate(trip.end || ""));
+                const dateArray = [];
+                if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+                  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                    dateArray.push(normDate(d));
+                  }
+                }
+                return dateArray.map((d) => (
+                  <option key={d} value={d}>
+                    {new Date(d).toLocaleDateString(lang, {
+                      weekday: "short",
+                      day: "numeric",
+                      month: "long",
+                    })}
+                  </option>
+                ));
+              })()}
+            </select>
+
+            <button
+              className="arrange-btn"
+              onClick={() => arrangeItinerary()}
+              disabled={isArranging}
+            >
+              {isArranging ? t("arranging") : t("arrange")}
+            </button>
+          </div>
+
+          {/*Cost summary cards*/}
+          <div className="cost-summary-cards">
+            <div className="cost-card selected-date">
+              <div className="cost-label">Today's Cost</div>
+              <div className="cost-amount">${selectedDateCost.toFixed(2)}</div>
+            </div>
+            <div className="cost-card total-trip">
+              <div className="cost-label">Total Trip Cost</div>
+              <div className="cost-amount">${totalTripCost.toFixed(2)}</div>
+            </div>
+          </div>
+
+          {/*Daily cost breakdown table*/}
+          {activities.length > 0 && (
+            <div className="cost-breakdown-table">
+              <h3>Daily Breakdown</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Cost</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(costsByDate)
+                    .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+                    .map(([date, cost]) => (
+                      <tr key={date}>
+                        <td>
+                          {new Date(date).toLocaleDateString(lang, {
+                            weekday: "short",
+                            day: "numeric",
+                            month: "short",
+                          })}
+                        </td>
+                        <td className="cost-cell">${cost.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  <tr className="total-row">
+                    <td>Total</td>
+                    <td className="cost-cell">${totalTripCost.toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+
           {useMemo(() => {
             const validActivities = filteredActivities.filter((act) => act.id && act.name);
             return validActivities.length > 0 ? (
-              <>
-                <div className="date-row">
-                  <select
-                    className="date-filter-dropdown"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(normDate(e.target.value))}
-                  >
-                    {Array.from(new Set(activities.map((a) => normDate(a.date))))
-                      .sort()
-                      .map((d) => (
-                        <option key={d} value={d}>
-                          {new Date(d).toLocaleDateString(lang, {
-                            weekday: "short",
-                            day: "numeric",
-                            month: "long",
-                          })}
-                        </option>
-                      ))}
-                  </select>
-
-                  <button
-                    className="arrange-btn"
-                    onClick={() => arrangeItinerary()}
-                    disabled={isArranging}
-                  >
-                    {isArranging ? t("arranging") : t("arrange")}
-                  </button>
-                </div>
-
-                <div className="activities-section">
-                  {validActivities.map((act) => (
-                    <div key={act.id} className="activity-card">
-                      <h3>{act.name}</h3>
-                      <p>
-                        <strong>{act.date}</strong>
+              <div className="activities-section">
+                {validActivities.map((act) => (
+                  <div key={act.id} className="activity-card">
+                    <h3>{act.name}</h3>
+                    <p>
+                      <strong>{act.date}</strong>
+                    </p>
+                    <p>{act.location}</p>
+                    {act.address && <p>{act.address}</p>}
+                    {act.cost > 0 && (
+                      <p className="activity-cost">
+                        <strong>Cost: ${act.cost.toFixed(2)}</strong>
                       </p>
-                      <p>{act.location}</p>
-                      {act.address && <p>{act.address}</p>}
+                    )}
 
-                      <div className="activity-actions">
-                        <button
-                          className="activity-edit-btn"
-                          disabled={isArranging}
-                          onClick={() =>
-                            navigate(`/mytrips/trip/activity/edit/${tripId}/${act.id}`)
-                          }
-                        >
-                          {t("edit_btn")}
-                        </button>
+                    <div className="activity-actions">
+                      <button
+                        className="activity-edit-btn"
+                        disabled={isArranging}
+                        onClick={() =>
+                          navigate(`/mytrips/trip/activity/edit/${tripId}/${act.id}`)
+                        }
+                      >
+                        {t("edit_btn")}
+                      </button>
 
-                        <button
-                          className="activity-delete-btn"
-                          disabled={isArranging}
-                          onClick={() => handleDeleteActivity(act.id)}
-                        >
-                          {t("delete_btn")}
-                        </button>
-                      </div>
+                      <button
+                        className="activity-delete-btn"
+                        disabled={isArranging}
+                        onClick={() => handleDeleteActivity(act.id)}
+                      >
+                        {t("delete_btn")}
+                      </button>
                     </div>
-                  ))}
-                </div>
-              </>
-            ) : null;
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="no-activities-message">{t("no_activities")}</p>
+            );
           }, [filteredActivities, activities, selectedDate, isArranging, t, tripId, navigate])}
 
           <button

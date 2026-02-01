@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 
 //Import images
 import landingImage from "../Assets/Landing.jpg";
+import reviewsBg from "../Assets/Reviews.jpg";
 
 function Landing() {
   const navigate = useNavigate();
@@ -25,6 +26,10 @@ function Landing() {
   const [loading, setLoading] = useState(true);
   const [lang, setLang] = useState(i18n.language||"en");
   const [video, setVideo] = useState("");
+
+  //Reviews
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
 
   useEffect(() => {
     if(!lang || !loading) return;
@@ -49,8 +54,59 @@ function Landing() {
     LoadLanding();
   }, [lang])
 
+  //Load reviews - runs on initial load and when language changes
   useEffect(() => {
-    // Run when ititialized(default) & lang changed
+    if(!lang || !reviewsLoading) return;
+    
+    const LoadReviews = async() => {
+      try{
+        const res = await Axios.get("Landing/LoadReviews", {params:{lang}});
+        console.log("Reviews loaded:", res.data);
+        setReviewsLoading(false);
+        setReviews(res.data);
+      }
+      catch(err){
+        console.log("Error loading reviews:", err);
+        setReviewsLoading(false);
+        if(err.response){
+          console.log(err.response.data.message);
+        }
+        else console.log(err);
+      }
+    };
+    LoadReviews();
+  }, [lang]);
+
+  //Reload reviews with updated text based on language
+  useEffect(() => {
+    if(lang && !reviewsLoading && reviews.length > 0){
+      const LoadReviews = async() => {
+        try{
+          const idNums = reviews.map(i => ({
+            id: i.id
+          }));
+          const cidNums = JSON.stringify(idNums);
+          const res = await Axios.get("Landing/ReloadReviews", {params:{lang, idNums:cidNums}});
+          console.log("Reviews reloaded:", res.data);
+          res.data.map(item => {
+            setReviews(prev => prev.map(i => i.id === item.review_id ? {
+              ...i,
+              text: item.text,
+            }: i));
+          });
+        }
+        catch(err){
+          console.log("Error reloading reviews:", err);
+          if(err.response) console.log(err.response.data.message);
+          else console.log(err);
+        }
+      };
+      LoadReviews();
+    }
+  }, [lang]);
+
+  useEffect(() => {
+    //Run when ititialized(default) & lang changed
     i18n.on("languageChanged", function(lng) {
       setLang(lng);
     });
@@ -86,6 +142,19 @@ function Landing() {
     LoadLanding();
     }
   }, [lang])
+
+  //Render star rating based on number
+  const renderStars = (rating) => {
+    return (
+      <div className="stars">
+        {[...Array(5)].map((_, i) => (
+          <span key={i} className={i < rating ? "star-filled" : "star-empty"}>
+            ★
+          </span>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="landing-container">
@@ -128,6 +197,39 @@ function Landing() {
             </div>
           ))}
           {loading && <p>Loading..</p>}
+        </div>
+      </section>
+
+      {/*Reviews Section*/}
+      <section className="reviews-section-landing" style={{ backgroundImage: `url(${reviewsBg})` }}>
+        <div className="reviews-overlay-landing">
+          <div className="reviews-container-landing">
+          <h2 className="reviews-section-title-landing">Customer Reviews</h2>
+          <div className="reviews-grid-landing">
+            {reviewsLoading && <p className="reviews-loading-landing">Loading reviews...</p>}
+            {reviews.length === 0 && !reviewsLoading && <p className="reviews-empty-landing">No reviews available.</p>}
+            {!reviewsLoading && reviews.slice(0, 6).map((review) => (
+              <div key={review.id} className="review-card-landing">
+                {/*Review header with user profile picture and user info*/}
+                <div className="review-header-landing">
+                  <div className="review-avatar-landing">
+                    {review.name.charAt(0)}
+                  </div>
+                  <div className="review-info-landing">
+                    <div className="review-name-row-landing">
+                      <span className="review-name-landing">{review.name}</span>
+                      {review.isPremium && <span className="premium-badge-landing">Premium</span>}
+                    </div>
+                    {renderStars(review.rating)}
+                    <span className="review-time-landing">{review.timeAgo}</span>
+                  </div>
+                </div>
+                {/*Review text content*/}
+                <p className="review-text-landing">{review.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
         </div>
       </section>
     </div>

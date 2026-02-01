@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useOutletContext, useNavigate } from "react-router-dom"; // âœ… ADDED
+import { useOutletContext, useNavigate } from "react-router-dom"; 
 import "../styles/GroupTrip.css";
 import Axios from '../hooks/Axios';
 import { useTranslation } from "react-i18next";
@@ -51,16 +51,16 @@ function GroupTripsPage() {
       catch(err){
         if(err.response)
         {
-          if(err.response.status === 401 || err.response.status === 403){ // Auth error
+          if(err.response.status === 401 || err.response.status === 403){ 
             const errData = err.response;
             const errorMsg = errData.status + ": " + errData.data.message;
             navigate(`/login/${errorMsg}`);
           }
-          else if(err.response.status === 500){ // DB/Backend error
+          else if(err.response.status === 500){ 
             console.log(err.response.data.message);
           }
         }
-          else console.log(err); // General error
+          else console.log(err); 
         }
     };
     getAllGroupTrips();
@@ -128,8 +128,8 @@ function GroupTripsPage() {
       owner: item.owner,
       title: item.title,
       date: `${item.start_date} - ${item.end_date}`,
-      capacity: item.capacity, // Default 5 but will change on user input
-      currentMembers: item.num_ppl, // Current members in the trip
+      capacity: item.capacity, //Default 5 but will change on user input
+      currentMembers: item.num_ppl, //Current members in the trip
       description: item.description,
       joinedByYou: item.joinedByYou,
       location: item.location,
@@ -151,7 +151,7 @@ function GroupTripsPage() {
     try{
       let newCurrMembers = 0;
       const res = await Axios.patch("GroupTrips/JoinGroupTrip", {i_id:trip.id}, {withCredentials:true})
-      newCurrMembers = res.data // updated number of ppl from db
+      newCurrMembers = res.data // pdated number of ppl from db
       setGroupTrips((prev) => prev.map((t) =>
         t.id === trip.id ? { ...t, joinedByYou: true, currentMembers: newCurrMembers, isHost: false}: t
         )
@@ -166,7 +166,7 @@ function GroupTripsPage() {
             navigate(`/login/${errorMsg}`);
           }
           else if(err.response.status === 500){ // DB/Backend error
-            console.log(err.response.data.message);
+            alert(err.response.data.message);
           }
         }
           else console.log(err); // General error
@@ -203,23 +203,23 @@ function GroupTripsPage() {
     catch(err){
       if(err.response)
         {
-          if(err.response.status === 401 || err.response.status === 403){ // Auth error
+          if(err.response.status === 401 || err.response.status === 403){ 
             const errData = err.response;
             const errorMsg = errData.status + ": " + errData.data.message;
             navigate(`/login/${errorMsg}`);
           }
-          else if(err.response.status === 500){ // DB/Backend error
+          else if(err.response.status === 500){ 
             console.log(err.response.data.message);
           }
         }
-          else console.log(err); // General error
+          else console.log(err); 
     }
     //exitTrip(tripId);
   };
 
   //Upload handler
   const handleUpload = async() => {
-    if (!tripName || !location || !pax || !startDate || !endDate) {
+    if (!tripName || !location || !pax || !startDate || !endDate || Object.keys(newFullDest).length === 0 || !description) {
       alert(t("gt_errmsg_fields"));
       return;
     }
@@ -236,7 +236,7 @@ function GroupTripsPage() {
           owner: "You",
           location: location,
           title: tripName,
-          date: `${startDate} â€“ ${endDate}`,
+          date: `${startDate} – ${endDate}`,
           capacity: maxCapacity, //Capped at 5
           currentMembers: 1, //Creator is automatically a member
           description,
@@ -270,6 +270,7 @@ function GroupTripsPage() {
     setStartDate("");
     setEndDate("");
     setDescription("");
+    setNewFullDest({});
     setShowModal(false);
   };
 
@@ -280,69 +281,78 @@ function GroupTripsPage() {
 
         {/*Search & create*/}
         <div className="group-trips-header">
-          <input
-            className="group-search"
-            placeholder={t("gt_search_trip_name")}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <div className="search-disclaimer">
+            💡 Tip: Search by location or trip name
+          </div>
+          <div className="header-search-create">
+            <input
+              className="group-search"
+              placeholder={t("gt_search_trip_name")}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
 
-          <button
-            className="create-trip-btn"
-            onClick={() => setShowModal(true)}
-          >
-            {t("gt_create_new_trip_btn")} +
-          </button>
+            <button
+              className="create-trip-btn"
+              onClick={() => {
+                setShowModal(true);
+                setNewFullDest({});
+              }}
+            >
+              {t("gt_create_new_trip_btn")} +
+            </button>
+          </div>
         </div>
 
-        {/*Trip cards*/}
-        {!loading && groupTrips
-          .filter((trip) =>
-            (trip.title ?? "").toLowerCase().includes(searchTerm.toLowerCase())
-          )
-          .map((trip) => (
-            <div key={trip.id} className="group-trip-card">
-              <div className="group-trip-left">
-                <div className="trip-owner-row">
-                  <div className="owner-avatar">
-                    {(trip.owner ?? "").charAt(0)}
+        {/*Trip cards grid*/}
+        {!loading && (
+          <div className="trips-grid">
+            {groupTrips
+              .filter((trip) =>
+                (trip.title ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (trip.location ?? "").toLowerCase().includes(searchTerm.toLowerCase())
+              )
+              .map((trip) => (
+                <div key={trip.id} className="group-trip-card">
+                  <div className="group-trip-left">
+                    <div className="trip-owner-row">
+                      <div className="owner-avatar">
+                        {(trip.owner ?? "").charAt(0)}
+                      </div>
+                      <p className="trip-owner">{trip.owner}</p>
+                    </div>
+
+                    <h3>{trip.title}</h3>
+                    <p><strong>Location:</strong> {trip.location}</p>
+                    <p><strong>Date:</strong> {trip.date}</p>
+                    {/*Member counter - showing current/max members*/}
+                    <p><strong>Members:</strong> {trip.currentMembers}/{trip.capacity}</p>
+                    <p className="trip-desc">{trip.description}</p>
                   </div>
-                  <p className="trip-owner">{trip.owner}</p>
+
+                  {/*Join or exit group trips*/}
+                  <div className="group-trip-right">
+                    {trip.joinedByYou ? (
+                      <button
+                        className="exit-btn"
+                        onClick={() => handleExit(trip)}
+                      >
+                        {t("gt_exit_btn")}
+                      </button>
+                    ) : (
+                      <button
+                        className="join-btn-text"
+                        onClick={() => handleJoin(trip)}
+                        disabled={trip.currentMembers >= trip.capacity}
+                      >
+                        {trip.currentMembers >= trip.capacity ? "Full" : t("gt_join_btn")}
+                      </button>
+                    )}
+                  </div>
                 </div>
-
-                <h3>{trip.title}</h3>
-                <p><strong>Location:</strong> {trip.location}</p>
-                <p><strong>Date:</strong> {trip.date}</p>
-                {/*Member counter - showing current/max members*/}
-                <p><strong>Members:</strong> {trip.currentMembers}/{trip.capacity}</p>
-                <p className="trip-desc">{trip.description}</p>
-              </div>
-
-              {/*Join or exit group trips*/}
-              <div className="group-trip-right">
-                {trip.joinedByYou ? (
-                  <button
-                    className="exit-btn"
-                    onClick={() => handleExit(trip)}
-                  >
-                    {t("gt_exit_btn")}
-                  </button>
-                ) : (
-                  <button
-                    className="join-btn-text"
-                    onClick={() => handleJoin(trip)}
-                    disabled={trip.currentMembers >= trip.capacity} //Disable if full
-                    style={{
-                      opacity: trip.currentMembers >= trip.capacity ? 0.5 : 1,
-                      cursor: trip.currentMembers >= trip.capacity ? "not-allowed" : "pointer"
-                    }}
-                  >
-                    {trip.currentMembers >= trip.capacity ? "Full" : t("gt_join_btn")}
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
+              ))}
+          </div>
+        )}
       </div>
 
       {showModal && (
@@ -396,7 +406,7 @@ function GroupTripsPage() {
             </div>
 
             <div className="modal-row">
-              <div className="modal-field">
+              <div className="modal-field location-field-wrapper">
                 <label>{t("gt_modal_location")}</label>
                 <input
                   value={location}
@@ -405,17 +415,17 @@ function GroupTripsPage() {
                     setShowLocSearch(false);
                   }}
                 />
+                { showLocSearch && (
+                    <div className="form-input-search">
+                      {searchResult.map(res => (
+                        <div key={res.placeid} className="form-input-search-res" onClick={() => updateFormBasedOnLoc(res)}>
+                          {res.name}
+                        </div>
+                      ))}
+                    </div>
+                  )}
               </div>
             </div>
-            { showLocSearch && (
-                <div className="form-input-search">
-                  {searchResult.map(res => (
-                    <div key={res.placeid} className="form-input-search-res" onClick={() => updateFormBasedOnLoc(res)}>
-                      {res.name}
-                    </div>
-                  ))}
-                </div>
-              )}
 
             <div className="modal-field full-width">
               <label>{t("gt_modal_description")}</label>

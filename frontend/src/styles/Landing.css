@@ -132,6 +132,138 @@
   color: #555;
 }
 
+/*============ REVIEWS SECTION ============*/
+.reviews-section-landing {
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  padding: 80px 20px;
+  width: 100%;
+}
+
+.reviews-overlay-landing {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 40px 20px;
+  border-radius: 8px;
+}
+
+.reviews-container-landing {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.reviews-section-title-landing {
+  font-size: 36px;
+  font-weight: 700;
+  color: white;
+  text-align: center;
+  margin: 0 0 50px 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.reviews-grid-landing {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+}
+
+.review-card-landing {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.review-card-landing:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.review-header-landing {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.review-avatar-landing {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.review-info-landing {
+  flex: 1;
+}
+
+.review-name-row-landing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.review-name-landing {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+}
+
+.premium-badge-landing {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.stars {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.star-filled {
+  color: #ffc107;
+  font-size: 16px;
+}
+
+.star-empty {
+  color: #ddd;
+  font-size: 16px;
+}
+
+.review-time-landing {
+  font-size: 12px;
+  color: #999;
+}
+
+.review-text-landing {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #555;
+  margin: 0;
+}
+
+.reviews-loading-landing,
+.reviews-empty-landing {
+  text-align: center;
+  font-size: 16px;
+  color: #666;
+  grid-column: 1 / -1;
+  padding: 20px;
+}
+
 /*Responsive design --> supp to end up being dynamic from admin side*/
 @media (max-width: 1024px) {
   .features-container {
@@ -139,6 +271,11 @@
     gap: 30px;
   }
   
+  .reviews-grid-landing {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+  }
+
   .hero-title {
     font-size: 3rem;
   }
@@ -179,6 +316,24 @@
     max-width: 500px;
     margin: 0 auto;
   }
+
+  .reviews-section-landing {
+    padding: 60px 20px;
+  }
+
+  .reviews-grid-landing {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .review-card-landing {
+    padding: 20px;
+  }
+
+  .reviews-section-title-landing {
+    font-size: 28px;
+    margin-bottom: 30px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -204,5 +359,21 @@
 
   .feature-description {
     font-size: 0.95rem;
+  }
+
+  .reviews-section-title-landing {
+    font-size: 22px;
+  }
+
+  .review-card-landing {
+    padding: 15px;
+  }
+
+  .review-name-landing {
+    font-size: 14px;
+  }
+
+  .review-text-landing {
+    font-size: 13px;
   }
 }
