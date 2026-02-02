@@ -198,9 +198,10 @@ function EditProfilePage() {
         return alert(t("ep_err_password_match"));
       }
       if (password.length < 6) {
-        return alert(t("ep_err_password_"));
+        return alert(t("ep_err_password_digit"));
       }
     }
+    if(!email || !firstName || !lastName) return alert(t("ep_err_blank"));
 
     const formData = new FormData();
     if(mediaToUpload) formData.append("media", mediaToUpload);
@@ -212,7 +213,7 @@ function EditProfilePage() {
 
     try{
       const res = await Axios.patch("Users/UpdateUserProfile", formData, {headers:{ "Content-Type": "multipart/form-data" }, withCredentials:true})
-      if(res.data.validateErr) alert(res.data.message)
+      if(res.data.validateErr) alert(t("ep_err_validatePw"));
       else if(res.data){
         const updatedProfile = {
           ...incomingProfile,

@@ -89,6 +89,8 @@
         "ep_pay_btn": "Realizar pago",
 
         "ep_succmodal_title": "¡Bienvenido a Premium!",
-        "ep_succmodal_text": "Tu cuenta ha sido actualizada con éxito."
+        "ep_succmodal_text": "Tu cuenta ha sido actualizada con éxito.",
+        
+        "ep_err_validatePw": "La nueva contraseña no puede ser igual a tu contraseña anterior"
   }
   

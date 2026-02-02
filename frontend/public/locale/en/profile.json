@@ -88,6 +88,9 @@
         "ep_pay_btn": "Make Payment",
 
         "ep_succmodal_title": "Welcome to Premium!",
-        "ep_succmodal_text": "Your account has been upgraded successfully."
+        "ep_succmodal_text": "Your account has been upgraded successfully.",
+
+        "ep_err_validatePw": "New password cannot be the same as your old password",
+        "ep_err_blank": "Email, First name & last name are mandatory"
   }
   

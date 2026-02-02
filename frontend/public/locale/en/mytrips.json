@@ -44,6 +44,6 @@
         "mt_succmsg_tripupdate": "Trip updated successfully!",
         "mt_succmsg_tripcreate": "Trip created successfully!!",
         "mt_succmsg_tripdelete": "Trip deleted successfully!!",
-        "mt_succmsg_tripexit": "Public group trip exited successfully!",
-        "mt_succmsg_tripexitprivate": "Private group trip exited successfully!"
+        "mt_succmsg_tripexit": "Group trip exited successfully!",
+        "mt_succmsg_tripexitprivate": "Private trip exited successfully!"
 }

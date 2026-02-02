@@ -65,7 +65,7 @@ export default function ResetPasswordPage() {
   //Send password reset link to user after entering email
   const handleSendReset = async () => {
     if (!email) {
-      showToast(t("tp_err_email"), "error");
+      showToast(t("rp_err_email"), "error");
       return;
     }
 
@@ -83,7 +83,7 @@ export default function ResetPasswordPage() {
         showToast(t("rp_succ_email"), "success");
         setEmail("");
       } else {
-        showToast(res.data.message || t("rp_err_sendemail"), "error");
+        showToast(t("rp_err_sendemail"), "error");
         setFirstLoad(true);
       }
     } catch (err) {
@@ -131,7 +131,7 @@ export default function ResetPasswordPage() {
         setNewPassword("");
         setConfirmPassword("");
       } else {
-        showToast(res.data.message || t("rp_err_send_pw"), "error");
+        showToast(t("rp_err_send_pw"), "error");
         setFirstLoad(true);
       }
     } catch (err) {
@@ -275,7 +275,7 @@ export default function ResetPasswordPage() {
               className="reset-btn" 
               onClick={() => navigate("/login")}
             >
-              {t("rp_reset_btn")}
+              {t("rp_login_btn")}
             </button>
           </>
         )}

@@ -8,6 +8,8 @@
     "cp_accept_title": "招待を承諾しました！",
     "cp_accept_text": "準備完了です。ログインして一緒に旅行の計画を始めましょう。",
     "cp_accept_login_btn": "ログインへ",
+    "cp_err_invalid": "招待リンクの有効期限が切れているか無効です。ホストに招待を再送信するよう依頼してください",
+    "cp_err_maxcap": "旅程は最大定員の5名に達しました",
 
     "__RESET PASSWORD PAGE": " ========== RESET PASSWORD PAGE ==========",
         "rp_err_email": "メールアドレスを入力してください",

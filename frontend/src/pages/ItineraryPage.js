@@ -703,7 +703,7 @@ function ItineraryPage() {
                 ))}
               </div>
             ) : (
-              <p className="no-activities-message">{t("no_activities")}</p>
+              <p className="no-activities-message">{t("no_act")}</p>
             );
           }, [filteredActivities, activities, selectedDate, isArranging, t, tripId, navigate])}
 

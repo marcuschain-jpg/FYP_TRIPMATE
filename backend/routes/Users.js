@@ -191,7 +191,7 @@ router.patch("/UpdateUserProfile", RequireAuths(["registered", "premium"]), Inse
     const data = await pool.query(`
       SELECT password FROM users WHERE userid = $1
       `, [userid]);
-    if(data.rows[0].password === password) return res.send({validateErr: true, message: "New password cannot be the same as your previous password"});
+    if(data.rows[0].password === password) return res.send({validateErr: true});
     }
     catch(err) {return res.status(500).send({message:"Failed to retrieve password for validation"})}
   }

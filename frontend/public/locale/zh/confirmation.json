@@ -8,6 +8,8 @@
     "cp_accept_title": "邀請已接受！",
     "cp_accept_text": "太好了！一切準備就緒。登入後即可一起開始規劃行程。",
     "cp_accept_login_btn": "前往登入",
+    "cp_err_invalid": "邀請連結已過期或無效。請要求主辦人重新發送邀請",
+    "cp_err_maxcap": "行程已達到5人的最大容量",
 
 
     "__RESET PASSWORD PAGE": " ========== RESET PASSWORD PAGE ==========",

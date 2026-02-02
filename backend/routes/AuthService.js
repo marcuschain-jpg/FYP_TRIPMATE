@@ -106,7 +106,7 @@ router.post("/SendResetEmail", async(req,res) => {
     const data = await pool.query(
       `SELECT userid, first_name, last_name FROM users WHERE email = $1`, [email]
     )
-    if(data.rowCount === 0) return res.status(500).send({message: "No user found with this email"});
+    if(data.rowCount === 0) return res.send(false);
     data.rows.forEach(element => {
       fullname = `${element.first_name} ${element.last_name}`;
       userid = element.userid;
@@ -144,8 +144,7 @@ router.post("/SendResetEmail", async(req,res) => {
       <p>Hi ${fullname}! Below is a link to reset your password for your account with TripMate!</p>
       <p><a href=http://localhost:3000/reset-password/${inv_id}>Click me!</a></p>`
     };
-    sentEmail = await SendEmail(content);
-    if(!sentEmail) return res.status(500).send({message: "Failed to send email"});
+    SendEmail(content).catch(err => console.log("Send email error", err));
     return res.send(true);
   }
 });
@@ -182,7 +181,7 @@ router.patch("/ResetPassword", async(req,res) => {
     }
     catch(err) {console.log(err); return res.status(500).send({message: "Failed get user credentials"});}
 
-    if(newPassword === password) return res.send({check: false, message: "Password cannot be the same as your old password"});
+    if(newPassword === password) return res.send({check: false});
 
     try{
         const data = await pool.query(`WITH deleteinv AS(
