@@ -27,13 +27,13 @@ function ConfirmationFromEmail() {
       } else if (res.data.check === false) {
         setLoading(false);
         setInvalid(true);
-        setInvalidMsg(res.data.message);
+        if(res.data.maxCap) setInvalidMsg(t("cp_err_maxcap"));
       }
     } catch (err) {
       setLoading(false);
       setInvalid(true);
       if (err.response?.status === 500) {
-        setInvalidMsg(err.response.data.message);
+        if(err.response.data.invalid) setInvalidMsg(t("cp_err_invalid"));
       } else {
         setInvalidMsg("Something went wrong. Please try again.");
       }

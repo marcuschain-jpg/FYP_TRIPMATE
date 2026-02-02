@@ -8,6 +8,8 @@
     "cp_accept_title": "Invitation acceptée !",
     "cp_accept_text": "Parfait ! Tout est prêt. Connectez-vous pour commencer à planifier le voyage ensemble.",
     "cp_accept_login_btn": "Aller à la connexion",
+    "cp_err_invalid": "Le lien d'invitation a expiré ou n'est pas valide. Veuillez demander à l'hôte de renvoyer l'invitation",
+    "cp_err_maxcap": "L'itinéraire a atteint la capacité maximale de 5 personnes",
 
     
     "__RESET PASSWORD PAGE": " ========== RESET PASSWORD PAGE ==========",

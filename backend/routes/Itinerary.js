@@ -346,8 +346,7 @@ router.post("/AddCollaborator", RequireAuth(["premium"]), async(req,res) => {
       <p>Collaborate with ${host_name} on "${i_name}" with TripMate! Accept your invitation to start planning together!</p>
       <p><a href=http://localhost:3000/confirm/${inv_id}>Click me!</a></p>`
     };
-    sentEmail = await SendEmail(content);
-    if(!sentEmail) return res.status(500).send({message: "Failed to send email"});
+    SendEmail(content).catch(err => console.log("Error sending email", err));
     return res.send(true);
   }
 });
@@ -413,9 +412,9 @@ router.post("/AcceptCollabInv", async(req,res) => {
     const rawData = await pool.query(
       `SELECT num_ppl FROM itinerary WHERE itinerary_id = (SELECT itinerary_id FROM email_validation WHERE inv_id =$1)`, [inv_id]
     );
-    if(rawData.rows[0].num_ppl >= 5) return res.send({check: false, message: "Itinerary has already reached max capacity!"})
+    if(rawData.rows[0].num_ppl >= 5) return res.send({check: false, maxCap: true})
   }
-  catch(err) {console.log(err); return res.status(500).send({message: "error"});}
+  catch(err) {console.log(err); return res.status(500).send({invalid: true});}
 
   // Insert record in shared itinerary
   await pool.query("BEGIN");
@@ -441,12 +440,12 @@ router.post("/AcceptCollabInv", async(req,res) => {
     await pool.query("COMMIT")
 
     if(data.rowCount > 0) return res.send(true);
-    else return res.send({check:false, message: "Invitation link expired or invalid. Please get the host to resend the invitation"});
+    else return res.send({check:false, invalid: true});
   }
   catch(err) { 
     await pool.query("ROLLBACK");
     console.log(err);
-    res.status(500).send({message: "Invitation Expired"});
+    res.status(500).send({invalid: true});
   }
 });
 

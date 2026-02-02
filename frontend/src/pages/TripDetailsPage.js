@@ -113,10 +113,18 @@ function TripDetailsPage() {
     };
 
     if(res[0].email){
-      mapCollab = res.map(item => ({
+      mapCollab = [
+        {name: "Me", email:""},
+        ...res.map(item => ({
         name: item.first_name + " " + item.last_name,
         email: item.email
-      }));
+        }))
+      ];
+    }
+    else{
+      mapCollab = [
+        {name: "Me", email: ""}
+      ]
     }
     
     setCollaborators(mapCollab);
@@ -410,7 +418,7 @@ function TripDetailsPage() {
 
                   <span className="member-name">{item.name}</span>
 
-                  {trip.isHost && <button
+                  {trip.isHost && item.name !== "Me" && <button
                     className="delete-btn"
                     onClick={() => handleDeleteCollaborator(item)}
                     title="Remove collaborator"
