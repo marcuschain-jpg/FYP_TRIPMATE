@@ -181,7 +181,7 @@ function Landing() {
       {/*Tripmate features*/}
       <section className="features-section">
         <div className="features-container">
-          {!loading && features.map((feature, index) => (
+          {!loading && features.slice(0, 3).map((feature, index) => (
             <div className="feature-card" key={index}>
               <div className="feature-image-wrapper">
                 <img 
