@@ -106,6 +106,10 @@ export default function Users() {
       });
   }, [navigate]);
 
+  //Capitalize Words in Status
+  const capitalize = (str) =>
+    str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
+
   // Filters / UI state
   const [statusFilter, setStatusFilter] = useState("All"); // All | Active | Suspended
   const [search, setSearch] = useState("");
@@ -360,7 +364,7 @@ export default function Users() {
                   <td>#{u.id}</td>
                   <td>{u.name}</td>
                   <td>{u.email}</td>
-                  <td>{u.status}</td>
+                  <td>{capitalize(u.status)}</td>
                   <td>{u.dateJoined}</td>
                   <td>{u.lastLogin}</td>
                   <td>{u.posts}</td>
