@@ -89,6 +89,8 @@
         "ep_pay_btn": "Effectuer le paiement",
 
         "ep_succmodal_title": "Bienvenue en Premium !",
-        "ep_succmodal_text": "Votre compte a été mis à niveau avec succès."
+        "ep_succmodal_text": "Votre compte a été mis à niveau avec succès.",
+
+        "ep_err_validatePw": "Le nouveau mot de passe ne peut pas être identique à votre ancien mot de passe"
   }
   

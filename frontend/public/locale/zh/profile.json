@@ -88,5 +88,7 @@
         "ep_pay_btn": "付款",
 
         "ep_succmodal_title": "歡迎使用 Premium！",
-        "ep_succmodal_text": "您的帳號已成功升級。"
+        "ep_succmodal_text": "您的帳號已成功升級。",
+
+        "ep_err_validatePw": "新密碼不能與舊密碼相同"
 }

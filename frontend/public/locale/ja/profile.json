@@ -89,7 +89,9 @@
         "ep_pay_btn": "支払う",
 
         "ep_succmodal_title": "プレミアムへようこそ！",
-        "ep_succmodal_text": "アカウントが正常にアップグレードされました。"
+        "ep_succmodal_text": "アカウントが正常にアップグレードされました。",
+
+        "ep_err_validatePw": "新しいパスワードは古いパスワードと同じにできません"
 
   }
   

@@ -89,8 +89,8 @@
         "ep_pay_btn": "إجراء الدفع",
 
         "ep_succmodal_title": "مرحبًا بك في Premium!",
-        "ep_succmodal_text": "تم ترقية حسابك بنجاح."
+        "ep_succmodal_text": "تم ترقية حسابك بنجاح.",
 
-
+        "ep_err_validatePw": "لا يمكن أن تكون كلمة المرور الجديدة مطابقة لكلمة المرور القديمة"
   }
   
