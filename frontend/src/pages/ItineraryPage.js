@@ -191,17 +191,25 @@ function ItineraryPage() {
         
 
         //Format trip dates using formatDateForDisplay function
+        console.log("Raw backend data[0]:", data?.[0]);
+        console.log("start_date from backend:", data?.[0]?.start_date);
+        console.log("end_date from backend:", data?.[0]?.end_date);
+        
         const mapTrips = {
           id: tripId,
           name: data?.[0]?.itinerary_name,
-          start: formatDateForDisplay(data?.[0]?.start_date),
-          end: formatDateForDisplay(data?.[0]?.end_date),
+          start: normDate(data?.[0]?.start_date),
+          end: normDate(data?.[0]?.end_date),
+          start_display: formatDateForDisplay(data?.[0]?.start_date),
+          end_display: formatDateForDisplay(data?.[0]?.end_date),
           type: data?.[0]?.type,
           numPpl: data?.[0]?.num_ppl,
           t_lat: parseFloat(data[0].i_latitude),
           t_lng: parseFloat(data[0].i_longitude)
         };
-        console.log("Trip object:", mapTrips);
+        console.log("Trip object after normDate:", mapTrips);
+        console.log("Trip start (normalized):", mapTrips.start);
+        console.log("Trip end (normalized):", mapTrips.end);
         setTrip(mapTrips);
 
         const mapAct = data.map((a) => ({
@@ -505,8 +513,8 @@ function ItineraryPage() {
 
   //Render
   const tripName = trip?.name || "Trip";
-  const tripStart = trip?.start || "";
-  const tripEnd = trip?.end || "";
+  const tripStart = trip?.start_display || "";
+  const tripEnd = trip?.end_display || "";
 
   return (
     <div className="itinerary-view">
@@ -531,27 +539,67 @@ function ItineraryPage() {
             <select
               className="date-filter-dropdown"
               value={selectedDate}
-              onChange={(e) => setSelectedDate(normDate(e.target.value))}
+              onChange={(e) => {
+                console.log("Selected date:", e.target.value);
+                setSelectedDate(normDate(e.target.value));
+              }}
             >
-              {trip && (() => {
-                const startDate = new Date(normDate(trip.start || ""));
-                const endDate = new Date(normDate(trip.end || ""));
-                const dateArray = [];
-                if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-                  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-                    dateArray.push(normDate(d));
+              {trip && trip.start && trip.end ? (() => {
+                console.log("=== DATE DROPDOWN RENDER ===");
+                console.log("Trip.start (display format):", trip.start);
+                console.log("Trip.end (display format):", trip.end);
+                
+                const convertToYYYYMMDD = (dateStr) => {
+                  if (!dateStr) return null;
+                  if (dateStr.includes('/')) {
+                    const [day, month, year] = dateStr.split('/');
+                    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                   }
+                  return dateStr; 
+                };
+                
+                const startDateStr = convertToYYYYMMDD(trip.start);
+                const endDateStr = convertToYYYYMMDD(trip.end);
+                
+                console.log("Converted startDateStr:", startDateStr);
+                console.log("Converted endDateStr:", endDateStr);
+                
+                const startDate = new Date(startDateStr + "T00:00:00Z");
+                const endDate = new Date(endDateStr + "T00:00:00Z");
+                const dateArray = [];
+                
+                console.log("Parsed start:", startDate, "Valid:", !isNaN(startDate.getTime()));
+                console.log("Parsed end:", endDate, "Valid:", !isNaN(endDate.getTime()));
+                
+                if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+                  let currentDate = new Date(startDate);
+                  let count = 0;
+                  while (currentDate <= endDate && count < 100) {
+                    const dateStr = currentDate.toISOString().split('T')[0];
+                    dateArray.push(dateStr);
+                    currentDate.setDate(currentDate.getDate() + 1);
+                    count++;
+                  }
+                  console.log("Generated", count, "dates:", dateArray);
                 }
+                
+                if (dateArray.length === 0) {
+                  console.warn("NO DATES GENERATED");
+                  return <option value="">No dates available</option>;
+                }
+                
                 return dateArray.map((d) => (
                   <option key={d} value={d}>
-                    {new Date(d).toLocaleDateString(lang, {
+                    {new Date(d + "T00:00:00Z").toLocaleDateString(lang, {
                       weekday: "short",
                       day: "numeric",
                       month: "long",
                     })}
                   </option>
                 ));
-              })()}
+              })() : (
+                <option value="">Loading dates...</option>
+              )}
             </select>
 
             <button
@@ -563,7 +611,7 @@ function ItineraryPage() {
             </button>
           </div>
 
-          {/*Cost summary cards*/}
+          {/* Cost Summary Cards */}
           <div className="cost-summary-cards">
             <div className="cost-card selected-date">
               <div className="cost-label">Today's Cost</div>
@@ -577,38 +625,42 @@ function ItineraryPage() {
 
           {/*Daily cost breakdown table*/}
           {activities.length > 0 && (
-            <div className="cost-breakdown-table">
-              <h3>Daily Breakdown</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Cost</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(costsByDate)
-                    .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
-                    .map(([date, cost]) => (
-                      <tr key={date}>
-                        <td>
-                          {new Date(date).toLocaleDateString(lang, {
-                            weekday: "short",
-                            day: "numeric",
-                            month: "short",
-                          })}
-                        </td>
-                        <td className="cost-cell">${cost.toFixed(2)}</td>
-                      </tr>
-                    ))}
-                  <tr className="total-row">
-                    <td>Total</td>
-                    <td className="cost-cell">${totalTripCost.toFixed(2)}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <>
+              <h2 style={{ marginTop: '28px', marginBottom: '14px', fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>Daily Breakdown</h2>
+              <div className="cost-breakdown-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Cost</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(costsByDate)
+                      .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+                      .map(([date, cost]) => (
+                        <tr key={date}>
+                          <td>
+                            {new Date(date).toLocaleDateString(lang, {
+                              weekday: "short",
+                              day: "numeric",
+                              month: "short",
+                            })}
+                          </td>
+                          <td className="cost-cell">${cost.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    <tr className="total-row">
+                      <td>Total</td>
+                      <td className="cost-cell">${totalTripCost.toFixed(2)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
+
+          <h2 style={{ marginTop: '28px', marginBottom: '14px', fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>Activities</h2>
 
           {useMemo(() => {
             const validActivities = filteredActivities.filter((act) => act.id && act.name);
@@ -651,7 +703,7 @@ function ItineraryPage() {
                 ))}
               </div>
             ) : (
-              <p className="no-activities-message">{t("no_act")}</p>
+              <p className="no-activities-message">{t("no_activities")}</p>
             );
           }, [filteredActivities, activities, selectedDate, isArranging, t, tripId, navigate])}
 
