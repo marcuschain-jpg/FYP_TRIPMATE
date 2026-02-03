@@ -257,19 +257,22 @@ router.get("/GetItinerary", RequireAuth(["registered", "premium"]), async(req, r
   try{
     const rawdata = await pool.query(
       `SELECT i.itinerary_id, i.itinerary_name, i.itinerary_dest, i.start_date, i.end_date, i.completed, i.type, i.num_ppl,
-       u.first_name, u.last_name, u.email, i.user_host_id
+       u.first_name, u.last_name, u.email, i.user_host_id, u.userid AS userid_db
        FROM itinerary i
        LEFT JOIN shared_itinerary si ON i.itinerary_id = si.itinerary_id
        LEFT JOIN group_trip gt ON i.itinerary_id = gt.itinerary_id
-       LEFT JOIN users u ON si.user_id = u.userid OR gt.user_id = u.userid
+       LEFT JOIN users u ON si.user_id = u.userid OR gt.user_id = u.userid OR i.user_host_id = u.userid
        WHERE i.itinerary_id = $1`, [i_id]
     );
-    let data = rawdata.rows.map(({user_host_id,...item}) => {
+    let data = rawdata.rows
+    .filter(item => item.userid_db !== userid)
+    .map(({user_host_id,userid_db,...item}) => {
       return{...item, isHost: user_host_id === userid}
     })
     return res.json(data);
   }
   catch(err){ //error running sql
+    console.log(err);
     return res.status(500).send('Load itinerary failed');
   }
 });
@@ -456,7 +459,7 @@ router.get("/GetAllActivities", RequireAuth(["registered", "premium"]), async(re
   try{
     const data = await pool.query(
       `SELECT a.activity_id, a.activity_name, a.activity_address, i.itinerary_name, a.activity_location, a.longitude, a.latitude, i.type, i.num_ppl,
-       i.longitude as i_longitude, i.latitude as i_latitude, a.activity_cost,
+       i.longitude as i_longitude, i.latitude as i_latitude, a.activity_cost, a.activity_order,
        TO_CHAR(i.start_date, 'DD/MM/YYYY') AS start_date,
        TO_CHAR(i.end_date, 'DD/MM/YYYY') AS end_date,
        TO_CHAR(a.activity_date, 'YYYY-MM-DD') AS activity_date
@@ -664,16 +667,21 @@ router.post("/CreateActivity", RequireAuth(["registered", "premium"]), InsertPho
   const io = req.app.get("io");
   let payload = null;
   const uploadSessionID = req.uploadSessionID;
+  let order;
 
+  console.log("check", aOrder);
   if(req.files.length > 0) havePhoto = true;
-  const realOrder = (aOrder === true) ? 0 : null
+  if(aOrder === 'true') order = true;
+  else order = false;
+  const realOrder = (order === true) ? 0 : null
+  console.log(realOrder)
 
   try{
     // 1. Create activity in activity
     payload = await pool.query(
       `INSERT INTO activity (activity_name, activity_location, activity_address, activity_date, gmaps_placeid, itinerary_id, activity_order, longitude, latitude, activity_cost)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       RETURNING activity_id, activity_name, activity_address, activity_location, longitude, latitude, activity_cost,
+       RETURNING activity_id, activity_name, activity_address, activity_location, longitude, latitude, activity_cost, activity_order,
        TO_CHAR(activity_date, 'YYYY-MM-DD') AS activity_date`, [aName, aLoc, aAddress, aDate, aPlaceID, i_id, realOrder, lng, lat, aCost]
     );
     if(payload.rowCount === 1) //successfully insert
@@ -759,7 +767,7 @@ router.patch("/EditActivity", RequireAuth(["registered", "premium"]), InsertPhot
        SET activity_name = $2, activity_location = $3, activity_address = $4, activity_date = $5, gmaps_placeid = $6, activity_order = $7
        , longitude = $8, latitude = $9, activity_cost = $10
        WHERE activity_id = $1
-       RETURNING activity_id, activity_name, activity_address, activity_location, longitude, latitude, activity_cost,
+       RETURNING activity_id, activity_name, activity_address, activity_location, longitude, latitude, activity_cost, activity_order,
        TO_CHAR(activity_date, 'YYYY-MM-DD') AS activity_date`, [a_id, aName, aLoc, aAddress, aDate, aPlaceID, realOrder, lng, lat, aCost]
     );
     if(payload.rowCount === 1) //successfully update
