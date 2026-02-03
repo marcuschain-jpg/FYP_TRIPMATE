@@ -219,6 +219,7 @@ function ItineraryPage() {
           address: a.activity_address,
           location: a.activity_location,
           cost: parseFloat(a.activity_cost) || 0,
+          order: parseInt(a.activity_order),
         }));
 
         const coordAct = data.map((a) => ({
@@ -274,6 +275,7 @@ function ItineraryPage() {
         address: a.activity_address,
         location: a.activity_location,
         cost: parseFloat(a.activity_cost) || 0,
+        order: parseInt(a.activity_order),
       }));
 
       const coordAct = res.map((a) => ({
@@ -284,10 +286,19 @@ function ItineraryPage() {
         },
         date: normDate(a.activity_date),
       }));
-
-      setActivityCoords((prev) => [...prev, ...coordAct]);
-      setActivities((prev) => [...prev, ...mapAct]);
+      if(res[0].activity_order === 0){
+        console.log("reorder!!!");
+        setActivityCoords((prev) => [...coordAct, ...prev]);
+        setActivities((prev) => [...mapAct, ...prev]);
+      }
+      else{
+        setActivityCoords((prev) => [...prev, ...coordAct]);
+        setActivities((prev) => [...prev, ...mapAct]);
+      }
     } else if (message === "activity edited!") {
+      const editedId = res[0].activity_id;
+      const hasReorder = res[0].activity_order === 0;
+
       setActivities((prev) =>
         prev.map((a) => {
           const updated = res.find((r) => r.activity_id === a.id);
@@ -299,6 +310,7 @@ function ItineraryPage() {
               address: updated.activity_address,
               location: updated.activity_location,
               cost: parseFloat(updated.activity_cost) || 0,
+              order: updated.activity_order,
             };
           }
           return a;
@@ -321,6 +333,21 @@ function ItineraryPage() {
           return coord;
         })
       );
+
+      if (hasReorder) {
+        setActivities((prev) => {
+          const editedItem = prev.find((a) => a.id === editedId);
+          const withoutEdited = prev.filter((a) => a.id !== editedId);
+          return [editedItem, ...withoutEdited];
+        });
+
+        setActivityCoords((prev) => {
+          const editedItem = prev.find((coord) => coord.id === editedId);
+          const withoutEdited = prev.filter((coord) => coord.id !== editedId);
+          return [editedItem, ...withoutEdited];
+        });
+      }
+
     } else if (message === "activity deleted!") {
       setActivities((prev) => prev.filter((a) => a.id !== res[0].activity_id));
       setActivityCoords((prev) => prev.filter((a) => a.id !== res[0].activity_id));

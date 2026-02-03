@@ -284,7 +284,6 @@ function ActivityFormPage() {
       formData.append("media", media[i])
     }
     }
-    
     if(editing) //edit
     {
       formData.append("a_id", index);
