@@ -119,7 +119,7 @@ router.get("/reviews", async (req, res) => {
       SELECT
         r.review_id,
         r.r_content,
-        r.r_rating,
+        r.r_ratings,
         r.status,
         r.createdat,
         u.email
@@ -134,7 +134,7 @@ router.get("/reviews", async (req, res) => {
     }
 
     if (sort === "old") query += ` ORDER BY r.createdat ASC`;
-    else if (sort === "rating") query += ` ORDER BY r.r_rating DESC`;
+    else if (sort === "rating") query += ` ORDER BY r.r_ratings DESC`;
     else query += ` ORDER BY r.createdat DESC`; // default = new
 
     const result = await pool.query(query, values);
@@ -142,7 +142,7 @@ router.get("/reviews", async (req, res) => {
     const reviews = result.rows.map((row) => ({
       id: row.review_id,
       review: row.r_content,
-      rating: row.r_rating,
+      rating: row.r_ratings,
       status: row.status,
       user: row.email,
       created: row.createdat
@@ -187,7 +187,7 @@ router.patch("/reviews/:id/flag", async (req, res) => {
       `
       UPDATE review
       SET status = CASE
-        WHEN status = 'published' THEN 'flagged'
+        WHEN status = 'published' THEN 'Flagged'
         ELSE 'published'
       END
       WHERE review_id = $1
@@ -217,14 +217,13 @@ router.get("/marketing", async (req, res) => {
   try {
     let query = `
       SELECT
-        marketing_id,
+        content_id,
         c_section,
         c_title,
         c_content,
         c_img_url,
-        c_link_url,
         status,
-        lastupdated
+        last_updated
       FROM marketing_content
     `;
     const values = [];
@@ -234,23 +233,22 @@ router.get("/marketing", async (req, res) => {
       values.push(status);
     }
 
-    if (sort === "old") query += ` ORDER BY lastupdated ASC`;
+    if (sort === "old") query += ` ORDER BY last_updated ASC`;
     else if (sort === "section") query += ` ORDER BY c_section ASC`;
-    else query += ` ORDER BY lastupdated DESC`; // default = new
+    else query += ` ORDER BY last_updated DESC`; // default = new
 
     const result = await pool.query(query, values);
 
     const marketing = result.rows.map((row) => ({
-      id: row.marketing_id,
+      id: row.content_id,
       section: row.c_section,
       title: row.c_title,
       body: row.c_content,
       imageUrl: row.c_img_url,
-      linkUrl: row.c_link_url,
       author: "Admin",
       status: row.status,
-      lastUpdated: row.lastupdated
-        ? row.lastupdated.toISOString().replace("T", " ").slice(0, 16)
+      lastUpdated: row.last_updated
+        ? row.last_updated.toISOString().replace("T", " ").slice(0, 16)
         : null,
     }));
 
@@ -267,7 +265,7 @@ router.delete("/marketing/:id", async (req, res) => {
 
   try {
     const result = await pool.query(
-      `DELETE FROM marketing_content WHERE marketing_id = $1`,
+      `DELETE FROM marketing_content WHERE content_id = $1`,
       [id]
     );
 
@@ -279,6 +277,104 @@ router.delete("/marketing/:id", async (req, res) => {
   } catch (err) {
     console.error("Delete marketing error:", err);
     res.status(500).json({ error: "Failed to delete marketing content" });
+  }
+});
+
+// Create Function
+router.post("/marketing", async (req, res) => {
+  const { section, title, body, imageUrl, status } = req.body;
+
+  try {
+    const result = await pool.query(
+      `
+      INSERT INTO marketing_content (
+        c_section,
+        c_title,
+        c_content,
+        c_img_url,
+        status,
+        last_updated
+      )
+      VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        NOW()
+      )
+      RETURNING *
+      `,
+      [section, title, body, imageUrl, status || "Published"]
+    );
+
+    const row = result.rows[0]; 
+    
+    res.status(201).json({
+      message: "Marketing content created",
+      id: row.content_id,
+      section: row.c_section,
+      title: row.c_title,
+      body: row.c_content,
+      imageUrl: row.c_img_url,
+      author: "Admin",
+      status: row.status,
+      lastUpdated: row.last_updated
+        .toISOString()
+        .replace("T", " ")
+        .slice(0, 16),
+    });
+
+  } catch (err) {
+    console.error("Create marketing failed:", err);
+    res.status(500).json({ message: "Failed to create marketing content" });
+  }
+});
+
+//Update Function
+router.put("/marketing/:id", async (req, res) => {
+  const { id } = req.params;
+  const { section, title, body, imageUrl, status } = req.body;
+
+  try {
+    const result = await pool.query(
+      `
+      UPDATE marketing_content
+      SET
+        c_section=$1,
+        c_title=$2,
+        c_content=$3,
+        c_img_url=$4,
+        status=$5,
+        last_updated=NOW()
+      WHERE content_id=$6
+      RETURNING *
+      `,
+      [section, title, body, imageUrl, status, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Marketing content not found" });
+    }
+
+    const row = result.rows[0];
+
+    res.json({
+      id: row.content_id,
+      section: row.c_section,
+      title: row.c_title,
+      body: row.c_content,
+      imageUrl: row.c_img_url,
+      author: "Admin",
+      status: row.status,
+      lastUpdated: row.last_updated
+        .toISOString()
+        .replace("T", " ")
+        .slice(0, 16),
+    });
+  } catch (err) {
+    console.error("Update marketing failed:", err);
+    res.status(500).json({ message: "Failed to update marketing content" });
   }
 });
 

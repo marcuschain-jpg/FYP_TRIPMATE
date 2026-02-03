@@ -25,6 +25,26 @@ function parseDateTime(str) {
   return dt.getTime();
 }
 
+//Confirm Delete Pop-Up Function
+function ConfirmModal({ title, message, onConfirm, onClose }) {
+  return (
+    <div className="um-modal-backdrop">
+      <div className="um-modal">
+        <h3>{title}</h3>
+        <p>{message}</p>
+        <div className="um-modal-actions">
+          <button className="btn btn-danger" onClick={onConfirm}>
+            Confirm
+          </button>
+          <button className="btn" onClick={onClose}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Content() {
   const [activeTab, setActiveTab] = useState("user-content"); // user-content | user-reviews | marketing
   const navigate = useNavigate(); //Navigate to Login Page
@@ -39,6 +59,7 @@ export default function Content() {
   const [reviewItems, setReviewItems] = useState([]);
   const [marketingItems, setMarketingItems] = useState([]);
 
+  //Filtering System
   const [contentFilter, setContentFilter] = useState("all"); // all | published | flagged
   const [reviewFilter, setReviewFilter] = useState("all"); // all | published | flagged
   const [marketingFilter, setMarketingFilter] = useState("all"); // all | published | draft
@@ -49,6 +70,9 @@ export default function Content() {
   // marketing sub-pages (like you did for FAQ)
   const [marketingMode, setMarketingMode] = useState("list"); // list | add | edit
   const [editingMarketingId, setEditingMarketingId] = useState(null);
+
+  //Confirm Delete Pop-Up
+  const [modal, setModal] = useState(null);
 
   const searchPlaceholder =
     activeTab === "marketing" ? "Search by title/section" : "Search by title/user";
@@ -93,6 +117,10 @@ export default function Content() {
 
   loadData();
 }, [activeTab, navigate]);
+
+  //Capitalize Words in Status
+  const capitalize = (str) =>
+    str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
 
   // FILTERED (per tab)
   const filteredContent = useMemo(() => {
@@ -183,29 +211,102 @@ export default function Content() {
   }, [activeTab]);
 
   // actions
-  const handleView = (id) => alert(`Viewing item ${id}`);
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this item?")) return;
+  // Delete Function
+  
+  //--User Content--
+  const confirmDeleteContent = (content) => {
+    setModal({
+      title: "Delete Content",
+      message: "Delete this content? This action cannot be undone.",
+      action: async () => {
+        try {
+          await axios.delete(
+            `http://localhost:8080/api/content/${content.id}`,
+            { withCredentials: true }
+          );
 
-    try {
-      if (activeTab === "user-content") {
-        await axios.delete(`http://localhost:8080/api/content/${id}`);
-        setContentItems((prev) => prev.filter((x) => x.id !== id));
-      }
-
-      if (activeTab === "user-reviews") {
-        await axios.delete(`http://localhost:8080/api/content/reviews/${id}`);
-        setReviewItems((prev) => prev.filter((x) => x.id !== id));
-      }
-
-      if (activeTab === "marketing") {
-        await axios.delete(`http://localhost:8080/api/content/marketing/${id}`);
-        setMarketingItems((prev) => prev.filter((x) => x.id !== id));
-      }
-    } catch (err) {
-      console.error("Delete failed", err);
-    }
+          setContentItems((prev) =>
+            prev.filter((c) => c.id !== content.id)
+          );
+        } catch (err) {
+          console.error("User Content Fail to Delete.", err);
+        } finally {
+          setModal(null);
+        }
+      },
+    });
   };
+  //--User Review--
+  const confirmDeleteReview = (review) => {
+    setModal({
+      title: "Delete Review",
+      message: "Delete this review? This action cannot be undone.",
+      action: async () => {
+        try {
+          await axios.delete(
+            `http://localhost:8080/api/content/reviews/${review.id}`,
+            { withCredentials: true }
+          );
+
+          setReviewItems((prev) =>
+            prev.filter((r) => r.id !== review.id)
+          );
+        } catch (err) {
+          console.error("User Review Fail to Delete.", err);
+        } finally {
+          setModal(null);
+        }
+      },
+    });
+  };
+
+  //--Marketing Content--
+  const confirmDeleteMarketing = (item) => {
+  setModal({
+    title: "Delete Marketing Content",
+    message: "Delete this content? This action cannot be undone.",
+    action: async () => {
+      try {
+        await axios.delete(
+          `http://localhost:8080/api/content/marketing/${item.id}`,
+          { withCredentials: true }
+        );
+
+        setMarketingItems((prev) =>
+          prev.filter((m) => m.id !== item.id)
+        );
+      } catch (err) {
+        console.error("Marketing Content Fail to Delete.", err);
+      } finally {
+        setModal(null);
+      }
+    },
+  });
+};
+
+  const handleView = (id) => alert(`Viewing item ${id}`);
+  // const handleDelete = async (id) => {
+  //   if (!window.confirm("Are you sure you want to delete this item?")) return;
+
+  //   try {
+  //     if (activeTab === "user-content") {
+  //       await axios.delete(`http://localhost:8080/api/content/${id}`);
+  //       setContentItems((prev) => prev.filter((x) => x.id !== id));
+  //     }
+
+  //     if (activeTab === "user-reviews") {
+  //       await axios.delete(`http://localhost:8080/api/content/reviews/${id}`);
+  //       setReviewItems((prev) => prev.filter((x) => x.id !== id));
+  //     }
+
+  //     if (activeTab === "marketing") {
+  //       await axios.delete(`http://localhost:8080/api/content/marketing/${id}`);
+  //       setMarketingItems((prev) => prev.filter((x) => x.id !== id));
+  //     }
+  //   } catch (err) {
+  //     console.error("Delete failed", err);
+  //   }
+  // };
   
   const handleFeature = (id) => alert(`Featured review ${id}`);
 
@@ -220,42 +321,42 @@ export default function Content() {
     setMarketingMode("edit");
   };
 
-  const saveDraftMarketing = (payload) => {
-    const stamp = new Date().toISOString().replace("T", " ").slice(0, 16);
+  const saveDraftMarketing = async (payload) => {
+    try {
+      const dataToSend = {
+        section: payload.section,
+        title: payload.title,
+        body: payload.body,
+        imageUrl: payload.imageUrl || "",
+        status: payload.status || "Draft",
+      };
 
-    if (payload.id) {
-      setMarketingItems((prev) =>
-        prev.map((m) =>
-          m.id === payload.id
-            ? {
-                ...m,
-                section: payload.section,
-                title: payload.title,
-                body: payload.body,
-                imageUrl: payload.imageUrl,
-                linkUrl: payload.linkUrl,
-                status: payload.status || m.status,
-                lastUpdated: stamp,
-              }
-            : m
-        )
-      );
-    } else {
-      const newId = `m${Date.now()}`;
-      setMarketingItems((prev) => [
-        {
-          id: newId,
-          section: payload.section,
-          title: payload.title,
-          body: payload.body,
-          imageUrl: payload.imageUrl,
-          linkUrl: payload.linkUrl,
-          author: "Admin01",
-          status: payload.status || "Draft",
-          lastUpdated: stamp,
-        },
-        ...prev,
-      ]);
+      // Update Existing Content
+      if (payload.id) {
+        const res = await axios.put(
+          `http://localhost:8080/api/content/marketing/${payload.id}`,
+          dataToSend,
+          { withCredentials: true }
+        );
+
+        setMarketingItems((prev) =>
+          prev.map((m) => (m.id === payload.id ? res.data : m))
+        );
+      } 
+
+      // Create New Content
+      else {
+        const res = await axios.post(
+          "http://localhost:8080/api/content/marketing",
+          dataToSend,
+          { withCredentials: true }
+        );
+
+        setMarketingItems((prev) => [res.data, ...prev]);
+      }
+    } catch (err) {
+      console.error("Save marketing failed:", err);
+      alert("Failed to save marketing content");
     }
   };
 
@@ -471,11 +572,11 @@ export default function Content() {
                       <td className="cm-ellipsis">{item.title}</td>
                       <td>{item.user}</td>
                       <td>{item.reports}</td>
-                      <td>{item.status}</td>
+                      <td>{capitalize(item.status)}</td>
                       <td>{item.created}</td>
                       <td className="cm-actions">
                         <button onClick={() => handleView(item.id)}>View</button>
-                        <button onClick={() => handleDelete(item.id)}>Delete</button>
+                        <button onClick={() => confirmDeleteContent(item)}>Delete</button>
                       </td>
                     </tr>
                   ))}
@@ -516,12 +617,12 @@ export default function Content() {
                       <td className="cm-ellipsis cm-review">{item.review}</td>
                       <td>{item.user}</td>
                       <td>{item.rating}</td>
-                      <td>{item.status}</td>
+                      <td>{capitalize(item.status)}</td>
                       <td>{item.created}</td>
                       <td className="cm-actions">
                         <button onClick={() => handleView(item.id)}>View</button>
                         <button onClick={() => handleFeature(item.id)}>Feature</button>
-                        <button onClick={() => handleDelete(item.id)}>Delete</button>
+                        <button onClick={() => confirmDeleteReview(item)}>Delete</button>
                       </td>
                     </tr>
                   ))}
@@ -556,11 +657,11 @@ export default function Content() {
                       <td>{item.section}</td>
                       <td className="cm-ellipsis">{item.title}</td>
                       <td>{item.author}</td>
-                      <td>{item.status}</td>
+                      <td>{capitalize(item.status)}</td>
                       <td>{item.lastUpdated}</td>
                       <td className="cm-actions">
                         <button onClick={() => openEditMarketing(item.id)}>View</button>
-                        <button onClick={() => handleDelete(item.id)}>Delete</button>
+                        <button onClick={() => confirmDeleteMarketing(item)}>Delete</button>
                       </td>
                     </tr>
                   ))}
@@ -585,6 +686,16 @@ export default function Content() {
           )}
         </div>
       </div>
+
+      {modal && (
+        <ConfirmModal
+          title={modal.title}
+          message={modal.message}
+          onConfirm={modal.action}
+          onClose={() => setModal(null)}
+        />
+      )}
+
     </div>
   );
 }
