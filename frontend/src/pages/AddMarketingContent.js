@@ -8,13 +8,15 @@ export default function AddMarketingContent({ onBack, onSaveDraft, onPublish }) 
   const [body, setBody] = useState("");
   const [imageFileName, setImageFileName] = useState("Upload an image");
   const [url, setUrl] = useState("");
+  const [imageFile, setImageFile] = useState(null); // Select Photo
 
   const handlePickFile = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setImageFile(file);
     setImageFileName(file.name);
   };
-
+  
   const handleCancel = () => onBack?.();
 
   const handleSaveDraft = () => {
@@ -22,7 +24,8 @@ export default function AddMarketingContent({ onBack, onSaveDraft, onPublish }) 
       section,
       title,
       body,
-      url,
+      imageFile,   // file object
+      imageUrl: url,   // text field
       status: "Draft",
     });
     alert("Saved as draft");
@@ -34,7 +37,8 @@ export default function AddMarketingContent({ onBack, onSaveDraft, onPublish }) 
       section,
       title,
       body,
-      url,
+      imageFile,   // file object
+      imageUrl: url,   // text field
       status: "Published",
     });
     alert("Saved & Published");
