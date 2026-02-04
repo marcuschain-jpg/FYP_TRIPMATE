@@ -148,14 +148,24 @@ function UserNavbar({ outletContext }) {
                 .profile-menu-item:hover {
                     background: #eeeeee;
                 }
+
+                .nav-right {
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
+                }
+
                 .locale-selector {
                     background: transparent;
                     color: white;
                     border: 1px solid white;
                     border-radius: 5px;
-                    padding: 3px 3px;
+                    padding: 5px 8px;
                     font-size: 14px;
                     cursor: pointer;
+                    height: 36px;
+                    display: flex;
+                    align-items: center;
                 }
             `}</style>
 
@@ -174,11 +184,11 @@ function UserNavbar({ outletContext }) {
                         <Link to="/mytrips" className="nav-link">
                             {t("reg_nav_mytrips")}
                         </Link>
-                        <Link to="/profile" className="nav-link">
-                            {t("reg_nav_myprofile")}
-                        </Link>
                         <Link to="/join-trip" className="nav-link">
                             {t("reg_nav_joinatrip")}
+                        </Link>
+                        <Link to="/profile" className="nav-link">
+                            {t("reg_nav_myprofile")}
                         </Link>
                     </div>
 

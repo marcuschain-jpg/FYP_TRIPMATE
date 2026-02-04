@@ -6,12 +6,12 @@ import axios from "axios";
 export default function ChatbotPage() {
   const navigate = useNavigate();
 
-  // In-memory chat sessions only
+  //In-memory chat sessions only
   const [chats, setChats] = useState([]);
   const [activeChatIndex, setActiveChatIndex] = useState(null);
   const [inputValue, setInputValue] = useState("");
 
-  // Fetch Neccesary Data/Communicate with Backend
+  //Fetch Neccesary Data/Communicate with Backend
   const sendToBackend = async (text) => {
     try {
       const res = await axios.post(
@@ -27,7 +27,7 @@ export default function ChatbotPage() {
     }
   };
 
-  // Create new chat (DO NOT activate yet)
+  //Create new chat 
   const createNewChat = () => {
     const newChat = {
       title: "",
@@ -38,13 +38,13 @@ export default function ChatbotPage() {
     setActiveChatIndex(null);
   };
 
-  // Delete chat
+  //Delete chat
   const deleteChat = (index) => {
     setChats((prev) => prev.filter((_, i) => i !== index));
     setActiveChatIndex(null);
   };
 
-  // Send message
+  //Send message
   const handleSend = async () => {
     if (!inputValue.trim()) return;
 
@@ -53,7 +53,7 @@ export default function ChatbotPage() {
 
     let currentIndex = activeChatIndex;
 
-    // Create chat if none
+    //Create chat if none
     if (currentIndex === null) {
       setChats(prev => [
         ...prev,
@@ -129,7 +129,6 @@ export default function ChatbotPage() {
     }
   };
 
-  // Enter key support (no double send)
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -137,13 +136,27 @@ export default function ChatbotPage() {
     }
   };
 
+  //Handle suggestion click
+  const handleSuggestion = (suggestion) => {
+    setInputValue(suggestion);
+  };
+
   const activeChat =
     activeChatIndex !== null ? chats[activeChatIndex] : null;
+
+  //Suggestion prompts
+  const suggestions = [
+    "Plan a trip to Singapore",
+    "I'm looking for food experiences",
+    "Weekend getaway ideas",
+    "Budget-friendly itinerary",
+    "Adventure activities",
+  ];
 
   return (
     <div className="chatbot-container">
 
-      {/* Top bar */}
+      {/*Topbar */}
       <div className="chatbot-topbar">
         <button
           className="chatbot-back-btn"
@@ -151,12 +164,12 @@ export default function ChatbotPage() {
         >
           ←
         </button>
-        <h2 className="chatbot-title">Chatbot</h2>
+        <h2 className="chatbot-title">TripMate Chatbot</h2>
       </div>
 
       <div className="chatbot-layout">
 
-        {/* Sidebar */}
+        {/*Sidebar*/}
         <div className="chatbot-sidebar">
           <button
             className="chatbot-new-chat"
@@ -188,10 +201,10 @@ export default function ChatbotPage() {
           </div>
         </div>
 
-        {/* Main chat */}
+        {/*Main chat*/}
         <div className="chatbot-main">
 
-          {/* Messages area */}
+          {/*Messages area*/}
           <div className="chatbot-messages">
 
             {!activeChat && (
@@ -199,6 +212,17 @@ export default function ChatbotPage() {
                 <h1 className="chatbot-heading">
                   How May I Assist You?
                 </h1>
+                <div className="chatbot-suggestions">
+                  {suggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      className="chatbot-suggestion-btn"
+                      onClick={() => handleSuggestion(suggestion)}
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -222,7 +246,7 @@ export default function ChatbotPage() {
             ))}
           </div>
 
-          {/* Input */}
+          {/*Input*/}
           <div className="chatbot-input-wrapper">
             <input
               type="text"
@@ -238,6 +262,15 @@ export default function ChatbotPage() {
               onClick={handleSend}
             >
               ➤
+            </button>
+            <button
+              type="button"
+              className="chatbot-edit-btn"
+              title="Edit"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+              </svg>
             </button>
           </div>
 
