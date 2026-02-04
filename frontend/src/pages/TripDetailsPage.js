@@ -64,12 +64,15 @@ function TripDetailsPage() {
         setLoading(false);
       })
       .catch(err =>{
-        if(err.response.status === 401 || err.response.status === 403)
+        if(err.response){
+          if(err.response.status === 401 || err.response.status === 403)
           {
             const errData = err.response;
             const errorMsg = errData.status + ": " + errData.data.message;
             navigate(`/login/${errorMsg}`);
-          }      
+          }
+        }
+        else console.log("general error", err);      
       });
       
     Axios.post("GetRoleForUser", {}, {withCredentials:true})
@@ -112,13 +115,12 @@ function TripDetailsPage() {
       isHost: res[0].isHost
     };
 
-    if(res[0].email){
+    if(res.length > 1){
       mapCollab = [
         {name: "Me", email:""},
-        ...res.map(item => ({
-        name: item.first_name + " " + item.last_name,
-        email: item.email
-        }))
+        ...res
+        .filter (item => item.email !== null)
+        .map(item => ({name: item.first_name + " " + item.last_name, email: item.email}))
       ];
     }
     else{
@@ -127,6 +129,7 @@ function TripDetailsPage() {
       ]
     }
     
+    console.log("test!!", mapCollab);
     setCollaborators(mapCollab);
     setTrip(mapTrips);
   };

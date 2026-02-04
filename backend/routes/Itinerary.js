@@ -265,9 +265,11 @@ router.get("/GetItinerary", RequireAuth(["registered", "premium"]), async(req, r
        WHERE i.itinerary_id = $1`, [i_id]
     );
     let data = rawdata.rows
-    .filter(item => item.userid_db !== userid)
     .map(({user_host_id,userid_db,...item}) => {
-      return{...item, isHost: user_host_id === userid}
+      if(userid_db === userid){
+        return {...item, isHost: user_host_id === userid, email: null, first_name: null, last_name: null}
+      }
+      else return{...item, isHost: user_host_id === userid}
     })
     return res.json(data);
   }
