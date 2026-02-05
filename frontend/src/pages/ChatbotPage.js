@@ -11,23 +11,24 @@ export default function ChatbotPage() {
   const [activeChatIndex, setActiveChatIndex] = useState(null);
   const [inputValue, setInputValue] = useState("");
 
-  //Fetch Neccesary Data/Communicate with Backend
-  const sendToBackend = async (text) => {
+  // Fetch Neccesary Data/Communicate with Backend
+  const sendToBackend = async (text, history) => {
     try {
       const res = await axios.post(
         "http://localhost:8080/Chatbot/message",
-        { message: text },
+        { 
+          message: text,
+          history 
+        },
         { withCredentials: true }
       );
-
       return res.data;
-    } catch (err) {
-      console.error("Chatbot request failed:", err);
+    } catch {
       return null;
     }
   };
 
-  //Create new chat 
+  // Create new chat (DO NOT activate yet)
   const createNewChat = () => {
     const newChat = {
       title: "",
@@ -80,8 +81,13 @@ export default function ChatbotPage() {
     }
 
     try {
-      const data = await sendToBackend(userMessage);
+      const data = await sendToBackend(
+            userMessage,
+            currentIndex !== null ? chats[currentIndex]?.messages || [] : []
+      );
 
+      console.log("Chatbot response:", data);
+      
       if (!data) {
         throw new Error("No response from server");
       }
@@ -107,7 +113,7 @@ export default function ChatbotPage() {
                 }
           ]
         };
-
+        
         return updated;
       });
 

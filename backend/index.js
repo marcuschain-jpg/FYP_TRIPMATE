@@ -17,9 +17,12 @@ const RequireAuths = require('./middlewares/RequireAuths.js');
 const usersRoute = require("./routes/users");
 const groupTripsRouter = require("./routes/GroupTrip.js");
 const chatbotRouter = require("./routes/ChatbotPage.js")
+const navbarRouter = require("./routes/navbar.js");
 const usersAdminRoute = require("./adminroutes/Users.js");
 const contentsAdminRoute = require("./adminroutes/Content.js");
-const navbarRouter = require("./routes/navbar.js");
+const supportTicketRoute = require("./adminroutes/supportTicket.js");
+const faqRoute = require("./adminroutes/Faq.js");
+const overviewRoute = require("./adminroutes/Overview.js");
 
 const app = express();
 const server = http.createServer(app);
@@ -47,7 +50,10 @@ app.use("/Chatbot", chatbotRouter); //Anything relating to chatbot API
 app.use("/api/users", usersAdminRoute); //Realtime Update for User in Admin Page
 app.use("/api/content", contentsAdminRoute); //Content Related in Admin Page
 app.use("/api/content/reviews", contentsAdminRoute); //User Reviews Related in Admin Page
-app.use("/api/content/marketing", contentsAdminRoute); //Marketing Content Related in Admin Page
+app.use("/api/content/marketing", contentsAdminRoute); //Marketing Content Related in Admin Page  
+app.use("/api/support", supportTicketRoute); //Support Ticket Page in Admin Page
+app.use("/api/faq", faqRoute); //FAQ related in Admin Page
+app.use("/api/overview", overviewRoute); //Overview Related in Admin Page
 
 // Basic Auth function for pages that dont need get any information
 app.post("/GetRoleForUser", RequireAuths(["registered", "premium"]), (req, res) => {

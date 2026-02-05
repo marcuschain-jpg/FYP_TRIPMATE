@@ -119,12 +119,12 @@ router.get("/reviews", async (req, res) => {
       SELECT
         r.review_id,
         r.r_content,
-        r.r_ratings,
+        r.r_rating,
         r.status,
         r.createdat,
         u.email
       FROM review r
-      JOIN users u ON u.userid = r.user_id
+      JOIN users u ON u.userid = r.userid
     `;
     const values = [];
 
@@ -134,7 +134,7 @@ router.get("/reviews", async (req, res) => {
     }
 
     if (sort === "old") query += ` ORDER BY r.createdat ASC`;
-    else if (sort === "rating") query += ` ORDER BY r.r_ratings DESC`;
+    else if (sort === "rating") query += ` ORDER BY r.r_rating DESC`;
     else query += ` ORDER BY r.createdat DESC`; // default = new
 
     const result = await pool.query(query, values);
@@ -142,7 +142,7 @@ router.get("/reviews", async (req, res) => {
     const reviews = result.rows.map((row) => ({
       id: row.review_id,
       review: row.r_content,
-      rating: row.r_ratings,
+      rating: row.r_rating,
       status: row.status,
       user: row.email,
       created: row.createdat

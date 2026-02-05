@@ -337,6 +337,13 @@
   height: 16px;
 }
 
+.sc-msg-attachment {
+  max-width: 200px;
+  max-height: 150px;
+  margin-top: 4px;
+  border-radius: 4px;
+}
+
 .sc-compose-right {
   display: flex;
   gap: 10px;

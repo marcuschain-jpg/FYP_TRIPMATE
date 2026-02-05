@@ -2,33 +2,27 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Search, Paperclip } from "lucide-react";
 import "../styles/Support.css";
+import axios from "axios";
 
-import {
-  mockTickets as initialTickets,
-  mockFAQs as initialFAQs,
-} from "../data/mockSupport";
+// import {
+//   mockTickets as initialTickets,
+//   mockFAQs as initialFAQs,
+// } from "../data/mockSupport";
 
 import AddFAQArticle from "./AddFAQArticle";
 import EditFAQArticle from "./EditFAQArticle";
 
 export default function Support() {
-  const [activeTab, setActiveTab] = useState("tickets"); // "tickets" | "faq"
+  //Tabs
+  const [activeTab, setActiveTab] = useState("tickets");
 
-  // ✅ tickets are stateful so status/priority updates reflect in list
-  const [tickets, setTickets] = useState(initialTickets);
+  //Data State
+  const [tickets, setTickets] = useState([]);
+  const [faqs, setFaqs] = useState([]);
 
-  // ✅ FAQs are stateful so add/edit/delete updates the table
-  const [faqs, setFaqs] = useState(() =>
-    initialFAQs.map((f) => ({
-      ...f,
-      answer: f.answer || "",
-    }))
-  );
-
-  // Tickets UI state
-  const [selectedTicketId, setSelectedTicketId] = useState(
-    initialTickets[2]?.id || initialTickets[0]?.id || null
-  );
+  //Ticket UI State
+  const [selectedTicketId, setSelectedTicketId] = useState(null);
+  const [attachments, setAttachments] = useState([]);
   const [ticketSearch, setTicketSearch] = useState("");
   const [responseText, setResponseText] = useState("");
 
@@ -46,26 +40,110 @@ export default function Support() {
     high: false,
   });
 
-  // FAQ "sub-pages" inside Support
-  const [faqMode, setFaqMode] = useState("list"); // list | add | edit
+  //FAQ UI State
+  const [faqMode, setFaqMode] = useState("list");
   const [editingFaqId, setEditingFaqId] = useState(null);
-
-  // ✅ FAQ search
   const [faqSearch, setFaqSearch] = useState("");
 
+  //---------------- Support Tickets --------------------
+  //API Calls
+  const fetchTickets = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:8080/api/support",
+        { withCredentials: true }
+      );
+
+      const normalized = res.data.map(t => ({
+        id: t.ticketId,
+        user: t.userEmail || "Unknown",
+        userEmail: t.userEmail || "Unknown",
+        title: t.title,
+        status: t.status,
+        priority: t.priority,
+        created: t.createdAt,
+        messages: t.messages || []
+      }));
+
+      setTickets(normalized);
+    } catch (err) {
+      console.error("Failed to fetch tickets", err);
+    }
+  };
+
+  //Messages For Ticket
+  const fetchMessages = async (ticketId) => {
+    try {
+      const res = await axios.get(
+        `http://localhost:8080/api/support/${ticketId}/messages`,
+        { withCredentials: true }
+      );
+
+      setTickets(prev =>
+        prev.map(t =>
+          t.id === ticketId
+            ? { ...t, messages: res.data }
+            : t
+        )
+      );
+    } catch (err) {
+      console.error("Failed to fetch messages", err);
+    }
+  };
+
+  //FAQs
+  const fetchFaqs = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:8080/api/faq",
+        { withCredentials: true }
+      );
+
+      const normalized = res.data.map(f => ({
+        id: f.faqId,          
+        question: f.question,  
+        answer: f.answer,
+        category: f.category,
+        lastUpdated: f.lastUpdated
+      }));
+
+      setFaqs(normalized);
+    } catch (err) {
+      console.error("Failed to fetch FAQs", err);
+    }
+  };
+
+  //Load Effects
+  useEffect(() => {
+    fetchTickets();
+    fetchFaqs();
+  }, []);
+
+  useEffect(() => {
+    if (tickets.length > 0 && !selectedTicketId) {
+      setSelectedTicketId(tickets[0].id);
+    }
+  }, [tickets, selectedTicketId]);
+
+  useEffect(() => {
+    if (!selectedTicketId) return;
+    fetchMessages(selectedTicketId);
+  }, [selectedTicketId]);
+
+  //Derived State
   const selectedTicket = useMemo(() => {
-    return tickets.find((t) => t.id === selectedTicketId) || null;
+    return tickets.find(t => t.id === selectedTicketId) || null;
   }, [tickets, selectedTicketId]);
 
   const filteredTickets = useMemo(() => {
     const q = ticketSearch.trim().toLowerCase();
 
-    return tickets.filter((ticket) => {
+    return tickets.filter(ticket => {
       const hasActiveStatus = Object.values(statusFilters).some(Boolean);
-      const statusKey = ticket.status.toLowerCase(); // new/open/pending/resolved
+      const statusKey = ticket.status.toLowerCase();
       const matchesStatus = !hasActiveStatus || statusFilters[statusKey];
 
-      const priorityKey = ticket.priority.toLowerCase(); // low/medium/high
+      const priorityKey = ticket.priority.toLowerCase();
       const matchesPriority =
         priorityFilters.all || priorityFilters[priorityKey];
 
@@ -78,73 +156,161 @@ export default function Support() {
     });
   }, [tickets, ticketSearch, statusFilters, priorityFilters]);
 
-  // ✅ FAQ filtering by question/category (and answer if present)
   const filteredFaqs = useMemo(() => {
     const q = faqSearch.trim().toLowerCase();
     if (!q) return faqs;
 
-    return faqs.filter((f) => {
-      return (
-        f.question.toLowerCase().includes(q) ||
-        (f.category || "").toLowerCase().includes(q) ||
-        (f.answer || "").toLowerCase().includes(q)
-      );
-    });
+    return faqs.filter(f =>
+      f.question.toLowerCase().includes(q) ||
+      (f.category || "").toLowerCase().includes(q) ||
+      (f.answer || "").toLowerCase().includes(q)
+    );
   }, [faqs, faqSearch]);
 
-  // ✅ if filters/search remove the selected ticket, auto-select first visible one
+
+  //Ticket Selection Function
   useEffect(() => {
     if (activeTab !== "tickets") return;
     if (!filteredTickets.length) return;
 
-    const stillVisible = filteredTickets.some((t) => t.id === selectedTicketId);
-    if (!stillVisible) setSelectedTicketId(filteredTickets[0].id);
+    const stillVisible =
+      filteredTickets.some(t => t.id === selectedTicketId);
+
+    if (!stillVisible) {
+      setSelectedTicketId(filteredTickets[0].id);
+    }
   }, [activeTab, filteredTickets, selectedTicketId]);
 
-  const updateSelectedTicket = (patch) => {
+  //Update Helpers
+  const updateTicket = async (patch) => {
     if (!selectedTicket) return;
-    setTickets((prev) =>
-      prev.map((t) =>
-        t.id === selectedTicket.id ? { ...t, ...patch } : t
-      )
-    );
-  };
 
-  const handleSendResponse = () => {
-    if (!selectedTicket) return;
-    if (!responseText.trim()) return;
-
-    const now = new Date();
-    const hh = String(now.getHours()).padStart(2, "0");
-    const mm = String(now.getMinutes()).padStart(2, "0");
-    const stamp = `${hh}:${mm}`;
-
-    setTickets((prev) =>
-      prev.map((t) =>
-        t.id === selectedTicket.id
-          ? {
-              ...t,
-              messages: [
-                ...t.messages,
-                {
-                  sender: "Admin01",
-                  content: responseText.trim(),
-                  timestamp: stamp,
-                },
-              ],
-            }
-          : t
+    // Merge changes for UI immediately
+    const updatedTicket = { ...selectedTicket, ...patch };
+    setTickets(prev =>
+      prev.map(t =>
+        t.id === selectedTicket.id ? updatedTicket : t
       )
     );
 
-    setResponseText("");
-    alert(`Response sent to ticket #${selectedTicket.id}`);
+    // Prepare payload for backend
+    const statusToUpdate = patch.status || selectedTicket.status;
+    const priorityToUpdate = patch.priority || selectedTicket.priority;
+
+    try {
+      await axios.patch(
+        `http://localhost:8080/api/support/${selectedTicket.id}`,
+        { status: statusToUpdate, priority: priorityToUpdate },
+        { withCredentials: true }
+      );
+
+      // Ensure UI matches backend
+      setTickets(prev =>
+        prev.map(t =>
+          t.id === selectedTicket.id
+            ? { ...t, status: statusToUpdate, priority: priorityToUpdate }
+            : t
+        )
+      );
+    } catch (err) {
+      console.error("Failed to update ticket:", err);
+
+      // Revert UI to previous state if backend fails
+      setTickets(prev =>
+        prev.map(t =>
+          t.id === selectedTicket.id ? selectedTicket : t
+        )
+      );
+    }
   };
 
-  const handleAttach = () => alert("Attach file dialog would open here");
+  //Ticket Actions
+  const handleSendResponse = async () => {
+    if (!selectedTicket) return;
+    if (!responseText.trim() && attachments.length === 0) return;
+
+    try {
+      await axios.post(
+        `http://localhost:8080/api/support/${selectedTicket.id}/message`,
+        {
+          content: responseText,
+          attachments: attachments // array of { type, url, key }
+        },
+        { withCredentials: true }
+      );
+
+      // Update UI immediately
+      // setTickets(prev =>
+      //   prev.map(t =>
+      //     t.id === selectedTicket.id
+      //       ? {
+      //           ...t,
+      //           messages: [
+      //             ...t.messages,
+      //             {
+      //               sender: "You",
+      //               content: responseText,
+      //               timestamp: new Date().toISOString(),
+      //               attachments: payload.attachments
+      //             }
+      //           ]
+      //         }
+      //       : t
+      //   )
+      // );
+
+      setResponseText("");
+      setAttachments([]);
+      fetchMessages(selectedTicket.id);
+
+    } catch (err) {
+      console.error("Send reply failed", err);
+    }
+  };
+
+  const handleAttach = () => {
+    if (!selectedTicket) return;
+
+    // Create a temporary file input
+    const input = document.createElement("input");
+    input.type = "file";
+    input.multiple = true; // allow multiple files
+    input.accept = "image/*,video/*"; // restrict to images/videos
+
+    input.onchange = async (e) => {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+
+      const formData = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        formData.append("media", files[i]);
+      }
+
+      try {
+        const res = await axios.post(
+          `http://localhost:8080/api/support/${selectedTicket.id}/upload`,
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+            withCredentials: true,
+          }
+        );
+
+        // Update attachments state
+        setAttachments(prev => [...prev, ...res.data]);
+
+      } catch (err) {
+        console.error("File upload failed", err);
+      }
+    };
+
+    // Trigger file picker
+    input.click();
+  };
+
   const handleCancel = () => setResponseText("");
 
-  // Filter helpers
+  //Filter Helpers
   const setPriority = (key, checked) => {
     if (key === "all") {
       setPriorityFilters({
@@ -155,14 +321,19 @@ export default function Support() {
       });
       return;
     }
-    setPriorityFilters((prev) => ({ ...prev, all: false, [key]: checked }));
+
+    setPriorityFilters(prev => ({
+      ...prev,
+      all: false,
+      [key]: checked
+    }));
   };
 
   const toggleStatus = (key, checked) => {
-    setStatusFilters((prev) => ({ ...prev, [key]: checked }));
+    setStatusFilters(prev => ({ ...prev, [key]: checked }));
   };
 
-  // ---- FAQ actions (wired to Add/Edit pages) ----
+  //FAQ Actions
   const handleAddArticle = () => {
     setFaqMode("add");
     setEditingFaqId(null);
@@ -173,43 +344,44 @@ export default function Support() {
     setFaqMode("edit");
   };
 
-  const handleDeleteFAQ = (id) => {
-    setFaqs((prev) => prev.filter((f) => f.id !== id));
+  const handleDeleteFAQ = async (id) => {
+    try {
+      await axios.delete(
+        `http://localhost:8080/api/faq/${id}`,
+        { withCredentials: true }
+      );
+      fetchFaqs();
+    } catch (err) {
+      console.error("Delete FAQ failed", err);
+    }
   };
 
-  const handleSaveDraftFAQ = (payload) => {
-    const stamp = new Date().toISOString().replace("T", " ").slice(0, 16);
+  const handleSaveDraftFAQ = async (payload) => {
+    try {
+      // Map frontend keys to backend DB keys
+      const dbPayload = {
+        faq_category: payload.category,
+        faq_question: payload.question,
+        faq_answer: payload.answer,
+      };
 
-    if (payload.id) {
-      // edit existing
-      setFaqs((prev) =>
-        prev.map((f) =>
-          f.id === payload.id
-            ? {
-                ...f,
-                category: payload.category,
-                question: payload.question,
-                answer: payload.answer,
-                status: payload.status || f.status,
-                lastUpdated: stamp,
-              }
-            : f
-        )
-      );
-    } else {
-      // add new
-      const newId = `f${Date.now()}`;
-      setFaqs((prev) => [
-        {
-          id: newId,
-          question: payload.question,
-          answer: payload.answer,
-          category: payload.category,
-          status: payload.status || "Draft",
-          lastUpdated: stamp,
-        },
-        ...prev,
-      ]);
+      if (payload.id) {
+        await axios.patch(
+          `http://localhost:8080/api/faq/${payload.id}`,
+          dbPayload,
+          { withCredentials: true }
+        );
+      } else {
+        await axios.post(
+          "http://localhost:8080/api/faq",
+          dbPayload,
+          { withCredentials: true }
+        );
+      }
+
+      fetchFaqs();
+    } catch (err) {
+      console.error("Save FAQ failed", err);
     }
   };
 
@@ -241,7 +413,7 @@ export default function Support() {
 
       {activeTab === "faq" && faqMode === "edit" && (
         <EditFAQArticle
-          faqId={editingFaqId}
+          faq={faqs.find(f => f.id === editingFaqId)}  // pass the object directly
           onBack={() => setFaqMode("list")}
           onDelete={(id) => {
             handleDeleteFAQ(id);
@@ -455,31 +627,31 @@ export default function Support() {
                           className="sc-select"
                           value={selectedTicket.status}
                           onChange={(e) =>
-                            updateSelectedTicket({ status: e.target.value })
+                            updateTicket({ status: e.target.value })
                           }
                         >
-                          <option>Pending</option>
-                          <option>Open</option>
-                          <option>Resolved</option>
-                          <option>New</option>
+                            <option value="NEW">New</option>
+                            <option value="OPEN">Open</option>
+                            <option value="PENDING">Pending</option>
+                            <option value="RESOLVED">Resolved</option>
                         </select>
 
                         <select
                           className="sc-select"
                           value={selectedTicket.priority}
                           onChange={(e) =>
-                            updateSelectedTicket({ priority: e.target.value })
+                            updateTicket({ priority: e.target.value })
                           }
                         >
-                          <option>Medium</option>
-                          <option>Low</option>
-                          <option>High</option>
+                          <option value="LOW">Low</option>
+                          <option value="MEDIUM">Medium</option>
+                          <option value="HIGH">High</option>
                         </select>
                       </div>
                     </div>
 
                     <div className="sc-messages">
-                      {selectedTicket.messages.length === 0 ? (
+                      {(selectedTicket.messages || []).length === 0 ? (
                         <div className="sc-empty-msg">No messages yet.</div>
                       ) : (
                         selectedTicket.messages.map((m, idx) => (
@@ -489,10 +661,12 @@ export default function Support() {
                                 {m.sender}
                               </span>
                               <span className="sc-message-time">
-                                {m.timestamp}
+                                {m.created_at}
                               </span>
                             </div>
-                            <div className="sc-message-bubble">{m.content}</div>
+                            <div className="sc-message-bubble">
+                              {m.content && <p>{m.content}</p>}
+                            </div>
                           </div>
                         ))
                       )}
@@ -576,32 +750,18 @@ export default function Support() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredFaqs.map((f) => (
+                    {filteredFaqs.map(f => (
                       <tr key={f.id}>
                         <td className="sc-ellipsis">{f.question}</td>
                         <td>{f.category}</td>
                         <td>{f.lastUpdated}</td>
                         <td className="sc-actions">
-                          <button
-                            type="button"
-                            onClick={() => handleViewFAQ(f.id)}
-                          >
-                            View
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (
-                                window.confirm(
-                                  "Are you sure you want to delete this FAQ?"
-                                )
-                              ) {
-                                handleDeleteFAQ(f.id);
-                              }
-                            }}
-                          >
-                            Delete
-                          </button>
+                          <button type="button" onClick={() => handleViewFAQ(f.id)}>View</button>
+                          <button type="button" onClick={() => {
+                            if(window.confirm("Are you sure you want to delete this FAQ?")) {
+                              handleDeleteFAQ(f.id);
+                            }
+                          }}>Delete</button>
                         </td>
                       </tr>
                     ))}
