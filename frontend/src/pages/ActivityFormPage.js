@@ -397,6 +397,10 @@ function ActivityFormPage() {
                 {
                   setLocationName(e.target.value)
                   setShowLocSearch(false)
+                  setAddress("");
+                  setPlaceID("");
+                  setLongitude(0);
+                  setLatitude(0);
                 }}
             />
             { showLocSearch && (

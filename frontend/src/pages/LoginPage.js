@@ -36,8 +36,12 @@ export default function LoginPage({ setCurrentUserProfile, markAsFirstTimeUser }
     try {
       const res = await Axios.post("AuthService/Login", {email, password, role}, {withCredentials:true});
 
-      if(res.data.check === false) {
-        showToast(res.data.message, "error");
+      if(res.data.checkEmail === false) {
+        showToast(t("login_err_email"), "error");
+        return;
+      }
+      else if(res.data.checkPassword === false) {
+        showToast(t("login_err_password"), "error");
         return;
       }
       else if(res.data.check === true) {

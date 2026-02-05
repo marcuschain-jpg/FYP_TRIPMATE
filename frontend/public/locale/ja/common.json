@@ -51,6 +51,8 @@
     "login_success": "ログインに成功しました。リダイレクトしています...",
     "login_failed": "ログインに失敗しました。もう一度お試しください。",
     "login_validate": "すべてのフィールドに入力してください。",
+    "login_err_email": "入力されたメールアドレスのアカウントが見つかりません",
+    "login_err_password": "パスワードが間違っています",
 
     "__PASSWORD PAGE": " ========== PASSWORD PAGE ==========",
     "cacc_title": "アカウントを作成",

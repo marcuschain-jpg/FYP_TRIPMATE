@@ -413,6 +413,7 @@ function GroupTripsPage() {
                   onChange={(e) => {
                     setLocation(e.target.value)
                     setShowLocSearch(false);
+                    setNewFullDest({});
                   }}
                 />
                 { showLocSearch && (

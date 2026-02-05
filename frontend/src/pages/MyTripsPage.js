@@ -57,6 +57,7 @@ function MyTripsPage() {
   const [newDestination, setNewDestination] = useState("");
   const [newStart, setNewStart] = useState("");
   const [newEnd, setNewEnd] = useState("");
+  const [tripType, setTripType] = useState("");
 
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
@@ -227,6 +228,7 @@ function MyTripsPage() {
     setShowAddTripModal(true);
     setShowLocSearch(false);
     setNewFullDest(trip.fullDest);
+    setTripType(trip.isGroupTrip ? "Group" : "Private");
   };
 
   //Create or update trip
@@ -255,7 +257,7 @@ function MyTripsPage() {
             iDest: newFullDest,
             start: formatDateForInput(newStart),
             end: formatDateForInput(newEnd),
-            type: "Private"
+            type: tripType,
           },
           { withCredentials: true }
         );
@@ -277,6 +279,7 @@ function MyTripsPage() {
             )
           );
           setSuccessMsg(t("mt_succmsg_tripupdate"));
+          
 
           setNewTripName("");
           setNewDestination("");
@@ -286,7 +289,9 @@ function MyTripsPage() {
           setFirstLoad(true);
           setShowLocSearch(false);
           setNewFullDest({});
+          setTripType("");
           setTimeout(() => setShowAddTripModal(false), 300);
+          setTimeout(() => setSuccessMsg(""), 1500);
         } else {
           setErrorMsg(t("mt_errmsg_update"));
         }
@@ -334,6 +339,7 @@ function MyTripsPage() {
           setNewFullDest({});
           setFirstLoad(true);
           setTimeout(() => setShowAddTripModal(false), 300);
+          setTimeout(() => setSuccessMsg(""), 1500);
         } else {
           setErrorMsg(t("mt_errmsg_insert"));
         }
@@ -681,6 +687,7 @@ function MyTripsPage() {
                   value={newDestination}
                   onChange={(e) => {
                     setNewDestination(e.target.value);
+                    setNewFullDest({});
                     setShowLocSearch(false);
                   }}
                 />

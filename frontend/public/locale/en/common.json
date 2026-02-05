@@ -53,6 +53,8 @@
         "login_success": "Login successful! Redirecting...",
         "login_failed": "Login failed. Please try again.",
         "login_validate": "Please fill in all fields.",
+        "login_err_email": "No Account with entered email found",
+        "login_err_password": "Wrong Password",
 
         "__CREATE PAGE": " ========== CREATE ACCOUNT PAGE ==========",
         "cacc_title": "Create An Account",
