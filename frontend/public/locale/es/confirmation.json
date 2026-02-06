@@ -25,6 +25,7 @@
         "rp_succ_email": "El enlace de restablecimiento fue enviado a tu correo electrónico",
 
         "rp_validating": "Validando el enlace de restablecimiento...",
+        "rp_err_validating": "Enlace de restablecimiento de contraseña no válido, envíe otra solicitud de restablecimiento",
         "rp_forgetpassword_title": "¿Olvidaste tu contraseña?",
         "rp_forgetpassword_text": "Introduce tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña",
         "rp_enteremail_tb": "Correo electrónico",

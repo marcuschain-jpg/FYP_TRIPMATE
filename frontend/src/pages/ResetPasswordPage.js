@@ -52,6 +52,10 @@ export default function ResetPasswordPage() {
         if (res.data === true) {
           setTokenValid(true);
         }
+        else {
+          setTokenValid(false);
+          setIsValidating(false);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -151,6 +155,16 @@ export default function ResetPasswordPage() {
       <div className="reset-container">
         <div className="reset-card">
           <p style={{ textAlign: "center", color: "#666", fontSize: "16px" }}>{t("rp_validating")}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isValidating && !tokenValid) {
+    return (
+      <div className="reset-container">
+        <div className="reset-card">
+          <p style={{ textAlign: "center", color: "#666", fontSize: "16px" }}>{t("rp_err_validating")}</p>
         </div>
       </div>
     );
