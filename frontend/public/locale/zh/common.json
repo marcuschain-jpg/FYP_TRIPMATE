@@ -53,6 +53,7 @@
     "login_validate": "請填寫所有欄位。",
     "login_err_email": "找不到使用此電子郵件的帳戶",
     "login_err_password": "密碼錯誤",
+    "login_err_suspended": "您的账户已被暂停。请联系TripMate获取更多信息",
 
     "__PASSWORD PAGE": " ========== PASSWORD PAGE ==========",
     "cacc_title": "建立帳號",

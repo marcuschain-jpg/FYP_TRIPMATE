@@ -14,7 +14,7 @@ router.post('/Login', async (req, res) => {
     try{    
         // Check if email exist or role is correct
         const userData = await pool.query(
-        `SELECT 1, userid, email, password, type
+        `SELECT 1, userid, email, password, type, suspended
          FROM users
          WHERE email = $1`, [email]
         );
@@ -29,6 +29,7 @@ router.post('/Login', async (req, res) => {
             if((realRole === "registered" || realRole === "premium") && role === "user") chkRole = true;
             if(realRole === "admin" && role === "admin") chkRole = true;  
             if(!chkRole) return res.send({checkEmail: false});
+            if(userData.rows[0].suspended) return res.send({checkSuspended: true});
             else
             {
                 

@@ -55,6 +55,7 @@
         "login_validate": "Please fill in all fields.",
         "login_err_email": "No Account with entered email found",
         "login_err_password": "Wrong Password",
+        "login_err_suspended": "You account has been suspended. Please contact TripMate for further updates",
 
         "__CREATE PAGE": " ========== CREATE ACCOUNT PAGE ==========",
         "cacc_title": "Create An Account",

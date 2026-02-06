@@ -44,6 +44,10 @@ export default function LoginPage({ setCurrentUserProfile, markAsFirstTimeUser }
         showToast(t("login_err_password"), "error");
         return;
       }
+      else if(res.data.checkSuspended){
+        showToast(t("login_err_suspended"), "error");
+        return;
+      }  
       else if(res.data.check === true) {
         const token = res.data.token;
         //Check if user has completed profile setup from backend

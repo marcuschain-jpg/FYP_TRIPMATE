@@ -53,6 +53,7 @@
     "login_validate": "Veuillez remplir tous les champs.",
     "login_err_email": "Aucun compte trouvé avec l'adresse e-mail saisie",
     "login_err_password": "Mot de passe incorrect",
+    "login_err_suspended": "Votre compte a été suspendu. Veuillez contacter TripMate pour plus d'informations",
     
     "__PASSWORD PAGE": " ========== PASSWORD PAGE ==========",
     "cacc_title": "Créer un compte",
