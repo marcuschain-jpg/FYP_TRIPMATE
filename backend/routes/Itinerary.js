@@ -312,9 +312,9 @@ router.post("/AddCollaborator", RequireAuth(["premium"]), async(req,res) => {
     const data = await pool.query(
       `SELECT userid, type, first_name, last_name FROM users WHERE email = $1 OR userid = $2`, [email, host_userid]
     )
-    if(data.rowCount === 1) return res.status(500).send({message: "No user found with this email"});
+    if(data.rowCount === 1) return res.send({check: false, errType:'email'});
     data.rows.forEach(element => {
-      if (element.type !== "premium") return res.status(500).send({message: "Invitee needs to be a premium user"});
+      if (element.type !== "premium") return res.send({check: false, errType:'premium'});
       else if(element.userid === host_userid) host_name = `${element.first_name} ${element.last_name}`;
       else if(element.userid !== host_userid) userid_collab = element.userid;
     });
@@ -352,7 +352,7 @@ router.post("/AddCollaborator", RequireAuth(["premium"]), async(req,res) => {
       <p><a href=http://localhost:3000/confirm/${inv_id}>Click me!</a></p>`
     };
     SendEmail(content).catch(err => console.log("Error sending email", err));
-    return res.send(true);
+    return res.send({check: true});
   }
 });
 
