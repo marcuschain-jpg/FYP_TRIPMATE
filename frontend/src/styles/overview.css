@@ -27,6 +27,22 @@ body{
   padding: 18px 14px;
 }
 
+.tm-btn-logout {
+  width: 100%;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background-color: #ef4444;
+  color: white;
+  font-weight: 900;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.tm-btn-logout:hover {
+  background-color: #dc2626;
+}
+
 .tm-brand{
   display:flex;
   align-items:center;
@@ -34,31 +50,14 @@ body{
   padding: 6px 6px 18px 6px;
 }
 
-.tm-brand-badge{
-  width: 36px;
-  height: 36px;
-  border-radius: 999px;
-  background: #eaf7fb;
-  position: relative;
-  display:grid;
-  place-items:center;
+.tm-brand-logo {
+  width: 40px;          /* adjust size */
+  height: 40px;
+  border-radius: 50%;   /* circle shape, optional */
+  object-fit: cover;
+  display: block;
 }
-.tm-brand-pin{
-  width: 14px;
-  height: 14px;
-  border-radius: 999px;
-  background: var(--tm-sidebar);
-  position: relative;
-}
-.tm-brand-dot{
-  position:absolute;
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: #ff3b5c;
-  left: 10px;
-  top: 10px;
-}
+
 .tm-brand-name{
   font-weight: 700;
   letter-spacing: .2px;

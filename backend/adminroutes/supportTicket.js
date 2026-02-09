@@ -4,6 +4,7 @@ const pool = require("../helper/db.js");
 const InsertPhoto = require("../middlewares/PhotoImp.js");
 const { ImportPhotoS3 } = require("../helper/S3FileSys.js");
 const AWS = require("aws-sdk");
+const SendEmail = require("../helper/SendEmail.js");
 // --- Authenticate ---
 const RequireAuth = require("../middlewares/RequireAuths.js"); // Authenticate and authorize user
 router.use(RequireAuth(["admin"]))
@@ -15,31 +16,36 @@ const s3 = new AWS.S3({
 });
 const myBucket = process.env.AWSBUCKET
 
+const normalizeCategory = (raw) => {
+  if (!raw) return "others";
+
+  const v = raw;
+
+  if (v === "bug" || v === "bug_report") return "bugs";
+  if (v === "account") return "account";
+  if (v === "technical") return "technical";
+  if (v === "other" || v === "others") return "others";
+
+  return "others";
+};
+
 // GET Function
 router.get("/", async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
-        t.ticket_id, 
-        t.userid, 
-        u.email AS user_email,
-        t.title, 
-        t.status, 
-        t.priority, 
-        t.category, 
-        t.created_at,
-        m.content AS latest_message, 
-        m.created_at AS last_updated
-      FROM support_ticket t
-      JOIN users u ON t.userid = u.userid
-      LEFT JOIN LATERAL (
-        SELECT content, attachments, created_at
-        FROM support_ticket_message
-        WHERE ticket_id = t.ticket_id
-        ORDER BY created_at DESC
-        LIMIT 1
-      ) m ON true
-      ORDER BY t.created_at DESC
+      t.ticket_id, 
+      t.userid, 
+      u.email AS user_email,
+      t.title, 
+      t.contents,            -- ✅ source of truth
+      t.status, 
+      t.category, 
+      t.created_at,
+      t.created_at AS last_updated
+    FROM support_ticket t
+    JOIN users u ON t.userid = u.userid
+    ORDER BY t.created_at DESC
     `);
 
     const tickets = result.rows.map(t => ({
@@ -48,11 +54,10 @@ router.get("/", async (req, res) => {
       userEmail: t.user_email,
       title: t.title,
       status: t.status.toUpperCase(),
-      priority: t.priority.toUpperCase(),
-      category: t.category,
+      category: normalizeCategory(t.category),
       createdAt: t.created_at,
-      latestMessage: t.latest_message || "",
-      latestMessageAttachments: t.attachments || [],
+      description: t.contents || "",
+      reason: t.contents || t.title,
       lastUpdated: t.last_updated || t.created_at
     }));
 
@@ -88,43 +93,23 @@ router.get("/:ticketId/messages", async (req, res) => {
 });
 
 // --- Actions ---
-// Update Status/Priority Function
+// Update Status/Category Function
 router.patch("/:ticketId", async (req, res) => {
   const { ticketId } = req.params;
-  const { status, priority } = req.body;
+  const { status } = req.body;
+
+  if (!status) return res.status(400).json({ message: "Status required" });
 
   try {
-    const fields = [];
-    const values = [];
-    let idx = 1;
-
-    if (status) {
-      fields.push(`status=$${idx++}`);
-      values.push(status);
-    }
-
-    if (priority) {
-      fields.push(`priority=$${idx++}`);
-      values.push(priority);
-    }
-
-    if (fields.length === 0) {
-      return res.status(400).json({ message: "Nothing to update" });
-    }
-
     const result = await pool.query(
-      `
-      UPDATE support_ticket
-      SET ${fields.join(", ")}
-      WHERE ticket_id=$${idx}
-      RETURNING *
-      `,
-      [...values, ticketId]
+      `UPDATE support_ticket
+       SET status=$1
+       WHERE ticket_id=$2
+       RETURNING *`,
+      [status, ticketId]
     );
 
-    if (result.rowCount === 0) {
-      return res.status(404).json({ message: "Ticket not found" });
-    }
+    if (result.rowCount === 0) return res.status(404).json({ message: "Ticket not found" });
 
     res.json({ updated: true, ticket: result.rows[0] });
 
@@ -134,38 +119,109 @@ router.patch("/:ticketId", async (req, res) => {
   }
 });
 
-// Message Reply Function
-router.post("/:ticketId/message", async (req, res) => {
+// Message Reply Function (Email)
+router.post("/:ticketId/send-email", async (req, res) => {
   const { ticketId } = req.params;
-  const { content, attachments } = req.body;
 
   try {
-    const safeAttachments = Array.isArray(attachments) ? attachments : [];
+    // Fetch ticket + user email
+    const ticketRes = await pool.query(`
+      SELECT
+      u.email,
+      t.title,
+      t.contents AS description,
+      t.category,
+      t.status
+    FROM support_ticket t
+    JOIN users u ON t.userid = u.userid
+    WHERE t.ticket_id = $1
+    `, [ticketId]);
 
-    const result = await pool.query(`
-      INSERT INTO support_ticket_message (
-        ticket_id,
-        sender,
-        content,
-        attachments
-      )
-      VALUES ($1, 'admin', $2, $3)
-      RETURNING *
-    `, [ticketId, content, safeAttachments]);
+    if (ticketRes.rowCount === 0) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
 
+    const ticket = ticketRes.rows[0];
+
+    //Send email
+    const issueContent = ticket.description || ticket.title;
+
+    const emailSent = await SendEmail({
+      recipient: ticket.email,
+      subject: `Support Ticket Update — ${ticket.title}`,
+      text: `
+    Hello,
+
+    We have received your support request.
+
+    Title:
+    ${ticket.title}
+
+    Category:
+    ${ticket.category.toUpperCase()}
+
+    Description:
+    ${ticket.description}
+
+    Status:
+    ${ticket.status}
+
+    Our support team will follow up with you shortly.
+
+    Best regards,
+    TripMate Support Team
+    `,
+      html: `
+        <p>Hello,</p>
+
+        <p>We have received your support request. Below are the details:</p>
+
+        <table style="border-collapse: collapse;">
+          <tr>
+            <td><strong>Title</strong></td>
+            <td>${ticket.title}</td>
+          </tr>
+          <tr>
+            <td><strong>Category</strong></td>
+            <td>${ticket.category.toUpperCase()}</td>
+          </tr>
+          <tr>
+            <td><strong>Description</strong></td>
+            <td>${ticket.description}</td>
+          </tr>
+          <tr>
+            <td><strong>Status</strong></td>
+            <td>${ticket.status}</td>
+          </tr>
+        </table>
+
+        <p>Our support team will follow up with you shortly.</p>
+
+        <p>Best regards,<br/>
+        <strong>TripMate Support Team</strong></p>
+      `
+    });
+
+    if (!emailSent) {
+      return res.status(500).json({ error: "Email service failed" });
+    }
+
+    // UPDATE STATUS — PUT IT HERE
     await pool.query(
-      `UPDATE support_ticket
-       SET status='OPEN'
-       WHERE ticket_id=$1`,
+      `UPDATE support_ticket SET status='PENDING' WHERE ticket_id=$1`,
       [ticketId]
     );
 
-    res.json(result.rows[0]);
+    // Respond success
+    res.json({ success: true });
+
   } catch (err) {
-    console.error(`POST /support-tickets/${ticketId}/message error:`, err);
-    res.status(500).json({ error: "Failed to post message" });
+    console.error("Failed to send ticket email:", err);
+    res.status(500).json({ error: "Failed to send email" });
   }
 });
+
+
 
 // Delete Ticket Function
 router.delete("/:ticketId", async (req, res) => {
@@ -227,5 +283,6 @@ router.post("/:ticketId/upload", InsertPhoto(), async (req, res) => {
     res.status(500).json({ error: "Failed to upload files" });
   }
 });
+
 
 module.exports = router;

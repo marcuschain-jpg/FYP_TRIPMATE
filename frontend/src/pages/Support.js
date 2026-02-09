@@ -1,6 +1,6 @@
 // src/pages/Support.js
 import React, { useEffect, useMemo, useState } from "react";
-import { Search, Paperclip } from "lucide-react";
+import { Search } from "lucide-react";
 import "../styles/Support.css";
 import axios from "axios";
 
@@ -22,9 +22,9 @@ export default function Support() {
 
   //Ticket UI State
   const [selectedTicketId, setSelectedTicketId] = useState(null);
-  const [attachments, setAttachments] = useState([]);
   const [ticketSearch, setTicketSearch] = useState("");
-  const [responseText, setResponseText] = useState("");
+  const [currentPage, setCurrentPage] = useState(1); //Limit Tickets Showing
+  const ticketsPerPage = 6; 
 
   const [statusFilters, setStatusFilters] = useState({
     new: false,
@@ -33,17 +33,55 @@ export default function Support() {
     resolved: false,
   });
 
-  const [priorityFilters, setPriorityFilters] = useState({
+  const [categoryFilters, setCategoryFilters] = useState({
     all: true,
-    low: false,
-    medium: false,
-    high: false,
+    bugs: false,
+    account: false,
+    technical: false,
+    others: false,
   });
+
+  const categoryCaps = {
+  bugs: "BUG",
+  account: "ACCOUNT",
+  technical: "TECHNICAL",
+  others: "OTHERS"
+};
 
   //FAQ UI State
   const [faqMode, setFaqMode] = useState("list");
   const [editingFaqId, setEditingFaqId] = useState(null);
   const [faqSearch, setFaqSearch] = useState("");
+
+  //Confirm Modal
+  const [modal, setModal] = useState(null);
+
+  const confirmAction = ({ title, message, onConfirm }) => {
+    setModal({
+      title,
+      message,
+      onConfirm,
+    });
+  };
+
+  function ConfirmModal({ title, message, onConfirm, onClose }) {
+    return (
+      <div className="um-modal-backdrop">
+        <div className="um-modal">
+          <h3>{title}</h3>
+          <p>{message}</p>
+          <div className="um-modal-actions">
+            <button className="btn btn-danger" onClick={onConfirm}>
+              Confirm
+            </button>
+            <button className="btn" onClick={onClose}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   //---------------- Support Tickets --------------------
   //API Calls
@@ -60,8 +98,9 @@ export default function Support() {
         userEmail: t.userEmail || "Unknown",
         title: t.title,
         status: t.status,
-        priority: t.priority,
+        category: t.category,
         created: t.createdAt,
+        description: t.description, 
         messages: t.messages || []
       }));
 
@@ -130,6 +169,10 @@ export default function Support() {
     fetchMessages(selectedTicketId);
   }, [selectedTicketId]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [ticketSearch, statusFilters, categoryFilters]);
+
   //Derived State
   const selectedTicket = useMemo(() => {
     return tickets.find(t => t.id === selectedTicketId) || null;
@@ -143,18 +186,28 @@ export default function Support() {
       const statusKey = ticket.status.toLowerCase();
       const matchesStatus = !hasActiveStatus || statusFilters[statusKey];
 
-      const priorityKey = ticket.priority.toLowerCase();
-      const matchesPriority =
-        priorityFilters.all || priorityFilters[priorityKey];
+      // --- CATEGORY FILTER (refactored like status) ---
+      const categoryKey = ticket.category?.toLowerCase(); // e.g., 'bugs', 'account'
+      const matchesCategory = categoryFilters.all || categoryFilters[categoryKey];
 
+      // --- SEARCH FILTER ---
       const matchesSearch =
         !q ||
         ticket.userEmail.toLowerCase().includes(q) ||
         ticket.title.toLowerCase().includes(q);
 
-      return matchesStatus && matchesPriority && matchesSearch;
+      return matchesStatus && matchesCategory && matchesSearch;
     });
-  }, [tickets, ticketSearch, statusFilters, priorityFilters]);
+  }, [tickets, ticketSearch, statusFilters, categoryFilters]);
+
+  //Set Pages For Tickets
+  const totalPages = Math.ceil(filteredTickets.length / ticketsPerPage);
+  
+  const paginatedTickets = useMemo(() => {
+    const start = (currentPage - 1) * ticketsPerPage;
+    const end = start + ticketsPerPage;
+    return filteredTickets.slice(start, end);
+  }, [filteredTickets, currentPage]);
 
   const filteredFaqs = useMemo(() => {
     const q = faqSearch.trim().toLowerCase();
@@ -181,151 +234,63 @@ export default function Support() {
     }
   }, [activeTab, filteredTickets, selectedTicketId]);
 
-  //Update Helpers
-  const updateTicket = async (patch) => {
-    if (!selectedTicket) return;
-
-    // Merge changes for UI immediately
-    const updatedTicket = { ...selectedTicket, ...patch };
-    setTickets(prev =>
-      prev.map(t =>
-        t.id === selectedTicket.id ? updatedTicket : t
-      )
-    );
-
-    // Prepare payload for backend
-    const statusToUpdate = patch.status || selectedTicket.status;
-    const priorityToUpdate = patch.priority || selectedTicket.priority;
-
-    try {
-      await axios.patch(
-        `http://localhost:8080/api/support/${selectedTicket.id}`,
-        { status: statusToUpdate, priority: priorityToUpdate },
-        { withCredentials: true }
-      );
-
-      // Ensure UI matches backend
-      setTickets(prev =>
-        prev.map(t =>
-          t.id === selectedTicket.id
-            ? { ...t, status: statusToUpdate, priority: priorityToUpdate }
-            : t
-        )
-      );
-    } catch (err) {
-      console.error("Failed to update ticket:", err);
-
-      // Revert UI to previous state if backend fails
-      setTickets(prev =>
-        prev.map(t =>
-          t.id === selectedTicket.id ? selectedTicket : t
-        )
-      );
-    }
-  };
-
   //Ticket Actions
-  const handleSendResponse = async () => {
-    if (!selectedTicket) return;
-    if (!responseText.trim() && attachments.length === 0) return;
-
+  const sendTicketEmail = async (ticketId) => {
     try {
       await axios.post(
-        `http://localhost:8080/api/support/${selectedTicket.id}/message`,
-        {
-          content: responseText,
-          attachments: attachments // array of { type, url, key }
-        },
+        `http://localhost:8080/api/support/${ticketId}/send-email`,
+        {}, // optional template info
         { withCredentials: true }
       );
-
-      // Update UI immediately
-      // setTickets(prev =>
-      //   prev.map(t =>
-      //     t.id === selectedTicket.id
-      //       ? {
-      //           ...t,
-      //           messages: [
-      //             ...t.messages,
-      //             {
-      //               sender: "You",
-      //               content: responseText,
-      //               timestamp: new Date().toISOString(),
-      //               attachments: payload.attachments
-      //             }
-      //           ]
-      //         }
-      //       : t
-      //   )
-      // );
-
-      setResponseText("");
-      setAttachments([]);
-      fetchMessages(selectedTicket.id);
-
+      alert("Email sent to user!");
     } catch (err) {
-      console.error("Send reply failed", err);
+      console.error("Failed to send email", err);
+      alert("Failed to send email");
     }
   };
 
-  const handleAttach = () => {
-    if (!selectedTicket) return;
+  const handleResolveTicket = (ticketId) => {
+    const ticket = tickets.find(t => t.id === ticketId);
+    if (!ticket) return;
 
-    // Create a temporary file input
-    const input = document.createElement("input");
-    input.type = "file";
-    input.multiple = true; // allow multiple files
-    input.accept = "image/*,video/*"; // restrict to images/videos
-
-    input.onchange = async (e) => {
-      const files = e.target.files;
-      if (!files || files.length === 0) return;
-
-      const formData = new FormData();
-      for (let i = 0; i < files.length; i++) {
-        formData.append("media", files[i]);
-      }
-
-      try {
-        const res = await axios.post(
-          `http://localhost:8080/api/support/${selectedTicket.id}/upload`,
-          formData,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
+    confirmAction({
+      title: "Resolve Ticket",
+      message: `Are you sure you want to mark ticket #${ticket.id} as resolved?`,
+      onConfirm: async () => {
+        try {
+          await axios.patch(`/api/support/tickets/${ticket.id}/resolve`, {}, {
             withCredentials: true,
-          }
-        );
+          });
 
-        // Update attachments state
-        setAttachments(prev => [...prev, ...res.data]);
-
-      } catch (err) {
-        console.error("File upload failed", err);
-      }
-    };
-
-    // Trigger file picker
-    input.click();
+          setTickets(prev =>
+            prev.map(t =>
+              t.id === ticket.id ? { ...t, status: "RESOLVED" } : t
+            )
+          );
+        } catch (err) {
+          console.error("Failed to resolve ticket", err);
+        }
+      },
+    });
   };
 
-  const handleCancel = () => setResponseText("");
-
   //Filter Helpers
-  const setPriority = (key, checked) => {
+  const setCategory = (key, checked) => {
     if (key === "all") {
-      setPriorityFilters({
+      setCategoryFilters({
         all: checked,
-        low: false,
-        medium: false,
-        high: false,
+        bugs: false,
+        account: false,
+        technical: false,
+        others: false,
       });
       return;
     }
 
-    setPriorityFilters(prev => ({
+    setCategoryFilters(prev => ({
       ...prev,
       all: false,
-      [key]: checked
+      [key]: checked,
     }));
   };
 
@@ -344,16 +309,19 @@ export default function Support() {
     setFaqMode("edit");
   };
 
-  const handleDeleteFAQ = async (id) => {
-    try {
-      await axios.delete(
-        `http://localhost:8080/api/faq/${id}`,
-        { withCredentials: true }
-      );
-      fetchFaqs();
-    } catch (err) {
-      console.error("Delete FAQ failed", err);
-    }
+  const handleDeleteFAQ = (faq) => {
+    confirmAction({
+      title: "Delete FAQ",
+      message: `Are you sure you want to delete this FAQ? This action cannot be undone.`,
+      onConfirm: async () => {
+        try {
+          await axios.delete(`/api/faq/${faq.id}`, { withCredentials: true });
+          setFaqs((prev) => prev.filter((f) => f.id !== faq.id));
+        } catch (err) {
+          console.error("Failed to delete FAQ", err);
+        }
+      },
+    });
   };
 
   const handleSaveDraftFAQ = async (payload) => {
@@ -390,399 +358,325 @@ export default function Support() {
   };
 
   return (
-    <div className="sc-page">
-      <header className="sc-header">
-        <h1>Support Centre</h1>
-        <p>Manage support tickets and FAQ articles</p>
-      </header>
+  <div className="sc-page">
+    <header className="sc-header">
+      <h1>Support Centre</h1>
+      <p>Manage support tickets and FAQ articles</p>
+    </header>
 
-      {/* FAQ add/edit "pages" */}
-      {activeTab === "faq" && faqMode === "add" && (
-        <AddFAQArticle
-          onBack={() => setFaqMode("list")}
-          onSaveDraft={(payload) => {
-            handleSaveDraftFAQ(payload);
-            setFaqMode("list");
-          }}
-          onPublish={(payload) => {
-            handlePublishFAQ(payload);
-            setFaqMode("list");
-          }}
-        />
-      )}
+    {/* FAQ add/edit "pages" */}
+    {activeTab === "faq" && faqMode === "add" && (
+      <AddFAQArticle
+        onBack={() => setFaqMode("list")}
+        onSaveDraft={(payload) => {
+          handleSaveDraftFAQ(payload);
+          setFaqMode("list");
+        }}
+        onPublish={(payload) => {
+          handlePublishFAQ(payload);
+          setFaqMode("list");
+        }}
+      />
+    )}
 
-      {activeTab === "faq" && faqMode === "edit" && (
-        <EditFAQArticle
-          faq={faqs.find(f => f.id === editingFaqId)}  // pass the object directly
-          onBack={() => setFaqMode("list")}
-          onDelete={(id) => {
-            handleDeleteFAQ(id);
-            setFaqMode("list");
-          }}
-          onSaveDraft={(payload) => {
-            handleSaveDraftFAQ(payload);
-            setFaqMode("list");
-          }}
-          onPublish={(payload) => {
-            handlePublishFAQ(payload);
-            setFaqMode("list");
-          }}
-        />
-      )}
+    {activeTab === "faq" && faqMode === "edit" && (
+      <EditFAQArticle
+        faq={faqs.find(f => f.id === editingFaqId)}
+        onBack={() => setFaqMode("list")}
+        onDelete={(id) => {
+          handleDeleteFAQ(id);
+          setFaqMode("list");
+        }}
+        onSaveDraft={(payload) => {
+          handleSaveDraftFAQ(payload);
+          setFaqMode("list");
+        }}
+        onPublish={(payload) => {
+          handlePublishFAQ(payload);
+          setFaqMode("list");
+        }}
+      />
+    )}
 
-      {/* Main card (Tickets + FAQ list) */}
-      {(activeTab !== "faq" || faqMode === "list") && (
-        <div className="sc-card">
-          <div className="sc-tabs">
-            <button
-              type="button"
-              className={`sc-tab ${activeTab === "tickets" ? "is-active" : ""}`}
-              onClick={() => {
-                setActiveTab("tickets");
-                setFaqMode("list");
-                setEditingFaqId(null);
-              }}
-            >
-              Tickets
-            </button>
-            <button
-              type="button"
-              className={`sc-tab ${activeTab === "faq" ? "is-active" : ""}`}
-              onClick={() => {
-                setActiveTab("faq");
-                setFaqMode("list");
-                setEditingFaqId(null);
-              }}
-            >
-              FAQ
-            </button>
-          </div>
+    {/* Main card (Tickets + FAQ list) */}
+    {(activeTab !== "faq" || faqMode === "list") && (
+      <div className="sc-card">
+        <div className="sc-tabs">
+          <button
+            type="button"
+            className={`sc-tab ${activeTab === "tickets" ? "is-active" : ""}`}
+            onClick={() => {
+              setActiveTab("tickets");
+              setFaqMode("list");
+              setEditingFaqId(null);
+            }}
+          >
+            Tickets
+          </button>
+          <button
+            type="button"
+            className={`sc-tab ${activeTab === "faq" ? "is-active" : ""}`}
+            onClick={() => {
+              setActiveTab("faq");
+              setFaqMode("list");
+              setEditingFaqId(null);
+            }}
+          >
+            FAQ
+          </button>
+        </div>
 
-          {activeTab === "tickets" ? (
-            <div className="sc-tickets">
-              {/* Left */}
-              <aside className="sc-left">
-                <div className="sc-left-block">
-                  <div className="sc-search">
-                    <Search className="sc-search-icon" />
-                    <input
-                      value={ticketSearch}
-                      onChange={(e) => setTicketSearch(e.target.value)}
-                      placeholder="Search by email"
-                      aria-label="Search tickets by email"
-                    />
-                  </div>
-                </div>
-
-                <div className="sc-left-block sc-filters">
-                  <div className="sc-filter-group">
-                    <div className="sc-filter-title">Status</div>
-
-                    <label className="sc-check">
-                      <input
-                        type="checkbox"
-                        checked={statusFilters.new}
-                        onChange={(e) =>
-                          toggleStatus("new", e.target.checked)
-                        }
-                      />
-                      <span>New</span>
-                    </label>
-
-                    <label className="sc-check">
-                      <input
-                        type="checkbox"
-                        checked={statusFilters.open}
-                        onChange={(e) =>
-                          toggleStatus("open", e.target.checked)
-                        }
-                      />
-                      <span>Open</span>
-                    </label>
-
-                    <label className="sc-check">
-                      <input
-                        type="checkbox"
-                        checked={statusFilters.pending}
-                        onChange={(e) =>
-                          toggleStatus("pending", e.target.checked)
-                        }
-                      />
-                      <span>Pending</span>
-                    </label>
-
-                    <label className="sc-check">
-                      <input
-                        type="checkbox"
-                        checked={statusFilters.resolved}
-                        onChange={(e) =>
-                          toggleStatus("resolved", e.target.checked)
-                        }
-                      />
-                      <span>Resolved</span>
-                    </label>
-                  </div>
-
-                  <div className="sc-filter-group">
-                    <div className="sc-filter-title">Priority</div>
-
-                    <label className="sc-check">
-                      <input
-                        type="checkbox"
-                        checked={priorityFilters.all}
-                        onChange={(e) =>
-                          setPriority("all", e.target.checked)
-                        }
-                      />
-                      <span>All</span>
-                    </label>
-
-                    <label className="sc-check">
-                      <input
-                        type="checkbox"
-                        checked={priorityFilters.low}
-                        onChange={(e) =>
-                          setPriority("low", e.target.checked)
-                        }
-                      />
-                      <span>Low</span>
-                    </label>
-
-                    <label className="sc-check">
-                      <input
-                        type="checkbox"
-                        checked={priorityFilters.medium}
-                        onChange={(e) =>
-                          setPriority("medium", e.target.checked)
-                        }
-                      />
-                      <span>Medium</span>
-                    </label>
-
-                    <label className="sc-check">
-                      <input
-                        type="checkbox"
-                        checked={priorityFilters.high}
-                        onChange={(e) =>
-                          setPriority("high", e.target.checked)
-                        }
-                      />
-                      <span>High</span>
-                    </label>
-                  </div>
-                </div>
-              </aside>
-
-              {/* Middle */}
-              <section className="sc-mid">
-                <div className="sc-list">
-                  {filteredTickets.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      className={`sc-ticket-row ${
-                        selectedTicketId === t.id ? "is-active" : ""
-                      }`}
-                      onClick={() => setSelectedTicketId(t.id)}
-                    >
-                      <div className="sc-ticket-row-top">
-                        <div className="sc-ticket-title">
-                          <span className="sc-ticket-hash">#{t.id}</span>{" "}
-                          {t.title}
-                        </div>
-                        <div className="sc-ticket-priority">{t.priority}</div>
-                      </div>
-
-                      <div className="sc-ticket-user">{t.user}</div>
-                      <div className="sc-ticket-status">{t.status}</div>
-                    </button>
-                  ))}
-
-                  {filteredTickets.length === 0 && (
-                    <div className="sc-empty">No tickets found.</div>
-                  )}
-                </div>
-              </section>
-
-              {/* Right */}
-              <section className="sc-right">
-                {selectedTicket ? (
-                  <>
-                    <div className="sc-detail-head">
-                      <div className="sc-detail-head-left">
-                        <div className="sc-detail-title">
-                          #{selectedTicket.id} - {selectedTicket.title}
-                        </div>
-                        <div className="sc-detail-meta">
-                          <div>
-                            User: {selectedTicket.user} (
-                            {selectedTicket.userEmail})
-                          </div>
-                          <div>Created: {selectedTicket.created}</div>
-                        </div>
-                      </div>
-
-                      <div className="sc-detail-controls">
-                        <select
-                          className="sc-select"
-                          value={selectedTicket.status}
-                          onChange={(e) =>
-                            updateTicket({ status: e.target.value })
-                          }
-                        >
-                            <option value="NEW">New</option>
-                            <option value="OPEN">Open</option>
-                            <option value="PENDING">Pending</option>
-                            <option value="RESOLVED">Resolved</option>
-                        </select>
-
-                        <select
-                          className="sc-select"
-                          value={selectedTicket.priority}
-                          onChange={(e) =>
-                            updateTicket({ priority: e.target.value })
-                          }
-                        >
-                          <option value="LOW">Low</option>
-                          <option value="MEDIUM">Medium</option>
-                          <option value="HIGH">High</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="sc-messages">
-                      {(selectedTicket.messages || []).length === 0 ? (
-                        <div className="sc-empty-msg">No messages yet.</div>
-                      ) : (
-                        selectedTicket.messages.map((m, idx) => (
-                          <div className="sc-message" key={idx}>
-                            <div className="sc-message-head">
-                              <span className="sc-message-sender">
-                                {m.sender}
-                              </span>
-                              <span className="sc-message-time">
-                                {m.created_at}
-                              </span>
-                            </div>
-                            <div className="sc-message-bubble">
-                              {m.content && <p>{m.content}</p>}
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-
-                    <div className="sc-compose">
-                      <textarea
-                        className="sc-textarea"
-                        placeholder="Type response..."
-                        value={responseText}
-                        onChange={(e) => setResponseText(e.target.value)}
-                        rows={5}
-                      />
-                      <div className="sc-compose-actions">
-                        <button
-                          type="button"
-                          className="sc-attach"
-                          onClick={handleAttach}
-                        >
-                          <Paperclip className="sc-attach-icon" />
-                          Attach file
-                        </button>
-
-                        <div className="sc-compose-right">
-                          <button
-                            type="button"
-                            className="sc-btn"
-                            onClick={handleCancel}
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            type="button"
-                            className="sc-btn sc-btn-primary"
-                            onClick={handleSendResponse}
-                          >
-                            Send
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="sc-empty-right">
-                    Select a ticket to view details
-                  </div>
-                )}
-              </section>
-            </div>
-          ) : (
-            // FAQ LIST VIEW
-            <div className="sc-faq">
-              <div className="sc-faq-toolbar">
-                <div className="sc-search sc-search-wide">
+        {activeTab === "tickets" ? (
+          <div className="sc-tickets">
+            {/* Left */}
+            <aside className="sc-left">
+              <div className="sc-left-block">
+                <div className="sc-search">
                   <Search className="sc-search-icon" />
                   <input
-                    value={faqSearch}
-                    onChange={(e) => setFaqSearch(e.target.value)}
-                    placeholder="Search by FAQs"
-                    aria-label="Search FAQs"
+                    value={ticketSearch}
+                    onChange={(e) => setTicketSearch(e.target.value)}
+                    placeholder="Search by email"
+                    aria-label="Search tickets by email"
                   />
                 </div>
-
-                <button
-                  type="button"
-                  className="sc-btn sc-btn-primary"
-                  onClick={handleAddArticle}
-                >
-                  + Add Article
-                </button>
               </div>
 
-              <div className="sc-faq-table-wrap">
-                <table className="sc-table">
-                  <thead>
-                    <tr>
-                      <th>Question</th>
-                      <th className="sc-col-sm">Category</th>
-                      <th className="sc-col-md">Last Updated</th>
-                      <th className="sc-col-md">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredFaqs.map(f => (
-                      <tr key={f.id}>
-                        <td className="sc-ellipsis">{f.question}</td>
-                        <td>{f.category}</td>
-                        <td>{f.lastUpdated}</td>
-                        <td className="sc-actions">
-                          <button type="button" onClick={() => handleViewFAQ(f.id)}>View</button>
-                          <button type="button" onClick={() => {
-                            if(window.confirm("Are you sure you want to delete this FAQ?")) {
-                              handleDeleteFAQ(f.id);
-                            }
-                          }}>Delete</button>
-                        </td>
-                      </tr>
-                    ))}
+              <div className="sc-left-block sc-filters">
+                <div className="sc-filter-group">
+                  <div className="sc-filter-title">Status</div>
+                  {["new", "open", "pending", "resolved"].map((status) => (
+                    <label className="sc-check" key={status}>
+                      <input
+                        type="checkbox"
+                        checked={statusFilters[status]}
+                        onChange={(e) =>
+                          toggleStatus(status, e.target.checked)
+                        }
+                      />
+                      <span>{status.charAt(0).toUpperCase() + status.slice(1)}</span>
+                    </label>
+                  ))}
+                </div>
 
-                    {filteredFaqs.length === 0 && (
-                      <tr>
-                        <td
-                          colSpan={4}
-                          style={{ padding: 16, color: "#64748b" }}
+                <div className="sc-filter-group">
+                  <div className="sc-filter-title">Category</div>
+                  {["all", "bugs", "account", "technical", "others"].map((cat) => (
+                    <label className="sc-check" key={cat}>
+                      <input
+                        type="checkbox"
+                        checked={categoryFilters[cat]}
+                        onChange={(e) =>
+                          setCategory(cat, e.target.checked)
+                        }
+                      />
+                      <span>
+                        {cat === "all"
+                          ? "All"
+                          : cat === "bugs"
+                          ? "Bug Report"
+                          : cat === "account"
+                          ? "Account Issue"
+                          : cat === "technical"
+                          ? "Technical Support"
+                          : "Others"}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </aside>
+
+            {/* Middle */}
+            <section className="sc-mid">
+              <div className="sc-list">
+                {paginatedTickets.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    className={`sc-ticket-row ${
+                      selectedTicketId === t.id ? "is-active" : ""
+                    }`}
+                    onClick={() => setSelectedTicketId(t.id)}
+                  >
+                    <div className="sc-ticket-row-top">
+                      <div className="sc-ticket-title">
+                        <span className="sc-ticket-hash">#{t.id}</span> {t.title}
+                      </div>
+                      <div className="sc-ticket-category">
+                        {categoryCaps[t.category]}
+                      </div>
+                    </div>
+                    <div className="sc-ticket-user">{t.user}</div>
+                    <div className="sc-ticket-status">{t.status}</div>
+                  </button>
+                ))}
+
+                {filteredTickets.length === 0 && (
+                  <div className="sc-empty">No tickets found.</div>
+                )}
+              </div>
+
+              {/* Pagination Bottom */}
+              <div className="sc-pagination">
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    className={`sc-page-btn ${
+                      currentPage === i + 1 ? "active" : ""
+                    }`}
+                    onClick={() => setCurrentPage(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* Right */}
+            <section className="sc-right">
+              {selectedTicket ? (
+                <div className="sc-ticket-detail card">
+                  <div className="ticket-header">
+                    <h2>Ticket #{selectedTicket.id}</h2>
+                    <span
+                      className={`status-badge ${selectedTicket.status.toLowerCase()}`}
+                    >
+                      {selectedTicket.status}
+                    </span>
+                  </div>
+
+                  <div className="ticket-meta">
+                    <div>
+                      <span className="label">User</span>
+                      <span>{selectedTicket.userEmail}</span>
+                    </div>
+                    <div>
+                      <span className="label">Category</span>
+                      <span>{categoryCaps[selectedTicket.category]}</span>
+                    </div>
+                    <div>
+                      <span className="label">Created</span>
+                      <span>
+                        {new Date(selectedTicket.created).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="ticket-block">
+                    <span className="label">Title</span>
+                    <p>{selectedTicket.title}</p>
+                  </div>
+
+                  <div className="ticket-block">
+                    <span className="label">Description</span>
+                    <p className="description">
+                      {selectedTicket.description || "No description provided."}
+                    </p>
+                  </div>
+
+                  <div className="sc-ticket-actions">
+                    {selectedTicket.status !== "RESOLVED" && (
+                      <>
+                        <button
+                          className="sc-btn sc-btn-primary"
+                          onClick={() =>
+                            sendTicketEmail(selectedTicket.id)
+                          }
                         >
-                          No FAQ articles found.
-                        </td>
-                      </tr>
+                          Send Email
+                        </button>
+
+                        <button
+                          className="sc-btn sc-btn-success"
+                          onClick={() =>
+                            handleResolveTicket(selectedTicket.id)
+                          }
+                        >
+                          Resolve Ticket
+                        </button>
+                      </>
                     )}
-                  </tbody>
-                </table>
+                  </div>
+                </div>
+              ) : (
+                <div className="sc-empty-right">
+                  Select a ticket to view details
+                </div>
+              )}
+            </section>
+          </div>
+        ) : (
+          // FAQ LIST VIEW
+          <div className="sc-faq">
+            <div className="sc-faq-toolbar">
+              <div className="sc-search sc-search-wide">
+                <Search className="sc-search-icon" />
+                <input
+                  value={faqSearch}
+                  onChange={(e) => setFaqSearch(e.target.value)}
+                  placeholder="Search by FAQs"
+                  aria-label="Search FAQs"
+                />
               </div>
+
+              <button
+                type="button"
+                className="sc-btn sc-btn-primary"
+                onClick={handleAddArticle}
+              >
+                + Add Article
+              </button>
             </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
+
+            <div className="sc-faq-table-wrap">
+              <table className="sc-table">
+                <thead>
+                  <tr>
+                    <th>Question</th>
+                    <th className="sc-col-sm">Category</th>
+                    <th className="sc-col-md">Last Updated</th>
+                    <th className="sc-col-md">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredFaqs.map((f) => (
+                    <tr key={f.id}>
+                      <td className="sc-ellipsis">{f.question}</td>
+                      <td>{f.category}</td>
+                      <td>{f.lastUpdated}</td>
+                      <td className="sc-actions">
+                        <button type="button" onClick={() => handleViewFAQ(f.id)}>
+                          View
+                        </button>
+                        <button type="button" onClick={() => handleDeleteFAQ(f)}>
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+
+                  {filteredFaqs.length === 0 && (
+                    <tr>
+                      <td colSpan={4} style={{ padding: 16, color: "#64748b" }}>
+                        No FAQ articles found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    )}
+    {modal && (
+      <ConfirmModal
+        title={modal.title}
+        message={modal.message}
+        onConfirm={modal.onConfirm}
+        onClose={() => setModal(null)}
+      />
+    )}
+  </div>
+)};

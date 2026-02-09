@@ -27,7 +27,7 @@ export default function ChatbotPage() {
       return null;
     }
   };
-
+  
   // Create new chat (DO NOT activate yet)
   const createNewChat = () => {
     const newChat = {
@@ -81,13 +81,8 @@ export default function ChatbotPage() {
     }
 
     try {
-      const data = await sendToBackend(
-            userMessage,
-            currentIndex !== null ? chats[currentIndex]?.messages || [] : []
-      );
+      const data = await sendToBackend(userMessage);
 
-      console.log("Chatbot response:", data);
-      
       if (!data) {
         throw new Error("No response from server");
       }
@@ -233,18 +228,14 @@ export default function ChatbotPage() {
             )}
 
             {activeChat &&
-              activeChat.messages.map((msg, index) => (
+              activeChat.messages.map((msg, i) => (
                 <div
-                  key={index}
+                  key={i}
                   className={`chatbot-bubble ${msg.sender}`}
                   style={{
-                    cursor: msg.type === "itinerary" ? "pointer" : "default",
-                    textDecoration: msg.type === "itinerary" ? "underline" : "none"
-                  }}
-                  onClick={() => {
-                    if (msg.type === "itinerary") {
-                      navigate(`/Itinerary/${msg.tripId}/default`);
-                    }
+                    whiteSpace: "pre-wrap",
+                    fontFamily: msg.isItinerary ? "monospace" : "inherit",
+                    textDecoration: msg.isItinerary ? "underline" : "none"
                   }}
                 >
                   {msg.text}

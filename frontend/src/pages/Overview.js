@@ -1,4 +1,7 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
+import axios from "axios";
+
+/** ---------- Components ---------- **/
 
 function Kebab() {
   return (
@@ -13,14 +16,14 @@ function Card({ title, children }) {
     <section className="tm-card">
       <div className="tm-card-head">
         <h3 className="tm-card-title">{title}</h3>
-        <button className="tm-kebab tm-kebab--static" aria-label="More">⋯</button>
+        <button className="tm-kebab tm-kebab--static" aria-label="More">
+          ⋯
+        </button>
       </div>
       {children}
     </section>
   );
 }
-
-/** ---------- Charts (no libraries) ---------- **/
 
 function PieDistribution({ active, suspended }) {
   const total = active + suspended;
@@ -88,109 +91,6 @@ function PieDistribution({ active, suspended }) {
   );
 }
 
-function BarPostsPerMonth({ data }) {
-  const max = Math.max(...data.map(d => d.value), 1);
-
-  return (
-    <div className="tm-bar">
-      <svg viewBox="0 0 560 240" className="tm-svg" role="img" aria-label="Posts per month">
-        {[0, 1, 2, 3].map(i => (
-          <line
-            key={i}
-            x1="40"
-            y1={30 + i * 50}
-            x2="540"
-            y2={30 + i * 50}
-            stroke="#EEF2F6"
-          />
-        ))}
-
-        {data.map((d, i) => {
-          const x = 60 + i * 78;
-          const w = 44;
-          const h = (d.value / max) * 160;
-          const y = 190 - h;
-          return (
-            <g key={d.label}>
-              <rect x={x} y={y} width={w} height={h} rx="6" ry="6" fill="#0D6E8B" />
-              <text x={x + w / 2} y="220" textAnchor="middle" fontSize="11" fill="#8B97A6">
-                {d.label}
-              </text>
-            </g>
-          );
-        })}
-
-        <line x1="40" y1="190" x2="540" y2="190" stroke="#EEF2F6" />
-      </svg>
-    </div>
-  );
-}
-
-function LineFlaggedPosts({ data }) {
-  const max = Math.max(...data.map(d => d.value), 1);
-  const min = Math.min(...data.map(d => d.value), 0);
-
-  const W = 560, H = 240;
-  const padL = 44, padR = 18, padT = 24, padB = 44;
-
-  const xStep = (W - padL - padR) / (data.length - 1);
-  const yScale = (H - padT - padB) / (max - min || 1);
-
-  const pts = data.map((d, i) => {
-    const x = padL + i * xStep;
-    const y = padT + (max - d.value) * yScale;
-    return { x, y, ...d };
-  });
-
-  const dPath = pts
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
-    .join(" ");
-
-  return (
-    <div className="tm-line">
-      <svg viewBox={`0 0 ${W} ${H}`} className="tm-svg" role="img" aria-label="Flagged posts">
-        {[0, 1, 2, 3].map(i => (
-          <line
-            key={i}
-            x1={padL}
-            y1={padT + i * 48}
-            x2={W - padR}
-            y2={padT + i * 48}
-            stroke="#EEF2F6"
-          />
-        ))}
-
-        <path d={dPath} fill="none" stroke="#0D6E8B" strokeWidth="3" />
-        {pts.map(p => (
-          <circle key={p.label} cx={p.x} cy={p.y} r="5" fill="#0D6E8B" />
-        ))}
-
-        {pts.map((p, i) => (
-          <text
-            key={p.label}
-            x={p.x}
-            y={H - 18}
-            textAnchor="middle"
-            fontSize="11"
-            fill="#8B97A6"
-          >
-            {data[i].label}
-          </text>
-        ))}
-
-        {[0, Math.round(max / 2), max].map((v, i) => {
-          const y = padT + (max - v) * yScale;
-          return (
-            <text key={i} x={12} y={y + 4} fontSize="11" fill="#8B97A6">
-              {v}
-            </text>
-          );
-        })}
-      </svg>
-    </div>
-  );
-}
-
 function HeatmapUserActivity() {
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -246,64 +146,65 @@ function HeatmapUserActivity() {
   );
 }
 
+/** ---------- Main Overview ---------- **/
+
 export default function Overview() {
-  const stats = [
-    { value: "6421", label: "Total Users" },
-    { value: "847", label: "Active Users Today" },
-    { value: "24", label: "Newly Registered" },
-    { value: "2", label: "Suspended" },
-    { value: "1", label: "Pending Tickets" },
-    { value: "3", label: "Flagged Content" },
-  ];
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    activeUsers: 0,
+    suspendedUsers: 0,
+    pendingTickets: 0,
+  });
 
-  const activeUsers = 6419;
-  const suspendedUsers = 2;
-
-  const barData = [
-    { label: "Jun 2025", value: 150 },
-    { label: "Jul 2025", value: 200 },
-    { label: "Aug 2025", value: 160 },
-    { label: "Sep 2025", value: 240 },
-    { label: "Oct 2025", value: 190 },
-    { label: "Nov 2025", value: 300 },
-  ];
-
-  const lineData = [
-    { label: "Jun 2025", value: 1 },
-    { label: "Jul 2025", value: 2 },
-    { label: "Aug 2025", value: 0 },
-    { label: "Sep 2025", value: 4 },
-    { label: "Oct 2025", value: 3 },
-    { label: "Nov 2025", value: 3 },
-  ];
+  useEffect(() => {
+    const fetchOverview = async () => {
+      try {
+        const res = await axios.get("http://localhost:8080/api/overview", {
+          withCredentials: true,
+        });
+        setStats(res.data);
+      } catch (err) {
+        console.error("Failed to fetch overview", err);
+      }
+    };
+    fetchOverview();
+  }, []);
 
   return (
     <div className="tm-page">
       <div className="tm-stats">
-        {stats.map((s) => (
-          <div key={s.label} className="tm-stat">
-            <Kebab />
-            <div className="tm-stat-value">{s.value}</div>
-            <div className="tm-stat-label">{s.label}</div>
-          </div>
-        ))}
+        <div className="tm-stat">
+          <Kebab />
+          <div className="tm-stat-value">{stats.totalUsers}</div>
+          <div className="tm-stat-label">Total Users</div>
+        </div>
+
+        <div className="tm-stat">
+          <Kebab />
+          <div className="tm-stat-value">{stats.activeUsers}</div>
+          <div className="tm-stat-label">Active Users</div>
+        </div>
+
+        <div className="tm-stat">
+          <Kebab />
+          <div className="tm-stat-value">{stats.suspendedUsers}</div>
+          <div className="tm-stat-label">Suspended Users</div>
+        </div>
+
+        <div className="tm-stat">
+          <Kebab />
+          <div className="tm-stat-value">{stats.pendingTickets}</div>
+          <div className="tm-stat-label">Pending Tickets</div>
+        </div>
       </div>
 
       <div className="tm-grid">
-        <Card title="Distribution of users">
-          <PieDistribution active={activeUsers} suspended={suspendedUsers} />
-        </Card>
-
-        <Card title="Number of posts per month">
-          <BarPostsPerMonth data={barData} />
+        <Card title="Distribution of Users">
+          <PieDistribution active={stats.activeUsers} suspended={stats.suspendedUsers} />
         </Card>
 
         <Card title="User Activity">
           <HeatmapUserActivity />
-        </Card>
-
-        <Card title="Number of flagged posts">
-          <LineFlaggedPosts data={lineData} />
         </Card>
       </div>
     </div>

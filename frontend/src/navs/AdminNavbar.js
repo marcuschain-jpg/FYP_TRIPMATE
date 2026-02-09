@@ -1,6 +1,9 @@
 import React from "react";
+import { useNavigate } from "react-router-dom"; 
 import { Outlet, NavLink } from "react-router-dom";
 import "../styles/overview.css";
+import Logo from "../Assets/Logo.jpg"; 
+import axios from "axios"
 
 function Item({ to, label, icon }) {
   return (
@@ -17,12 +20,39 @@ function Item({ to, label, icon }) {
   );
 }
 
+//LogOut Function
 export default function AdminNavbar() {
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        "http://localhost:8080/AuthService/logout",
+        {},
+        { withCredentials: true }
+      );
+
+      // Clear client-side auth state
+      localStorage.clear();
+      sessionStorage.clear();
+
+      // Prevent browser back navigation
+      navigate("/login", { replace: true });
+    } catch (err) {
+      console.error("Logout failed", err);
+    }
+  };
+
   return (
     <div className="tm-shell">
       <aside className="tm-sidebar">
         <div className="tm-brand">
           <div className="tm-brand-badge" aria-hidden="true">
+            <img
+              src= {Logo}  // replace with your logo path
+              alt="TripMate Logo"
+              className="tm-brand-logo"
+            />
             <div className="tm-brand-pin" />
             <div className="tm-brand-dot" />
           </div>
@@ -30,11 +60,13 @@ export default function AdminNavbar() {
         </div>
 
         <nav className="tm-nav">
-          <Item to="/admin/overview" label="Overview"  />
+          <Item to="/admin/overview" label="Overview" />
           <Item to="/admin/users" label="Users" />
-          <Item to="/admin/content" label="Content"  />
+          <Item to="/admin/content" label="Content" />
           <Item to="/admin/support" label="Support" />
         </nav>
+
+        
 
         <div className="tm-sidebar-footer">
           <div className="tm-admin">
@@ -42,6 +74,10 @@ export default function AdminNavbar() {
             <div className="tm-admin-name">Admin</div>
             <div className="tm-admin-caret" aria-hidden="true">▾</div>
           </div>
+
+          <button className="tm-btn-logout" onClick={handleLogout}>
+            Logout
+          </button>
         </div>
       </aside>
 
