@@ -10,7 +10,6 @@ import AdminNavbar from "./navs/AdminNavbar";
 
 //Pages
 import Landing from "./pages/Landing";
-import QuizPage from "./pages/QuizPage";
 import LoginPage from "./pages/LoginPage";
 import MyTripsPage from "./pages/MyTripsPage";
 import TripDetailsPage from "./pages/TripDetailsPage";
@@ -71,147 +70,7 @@ function AppRoutes() {
     setIsFirstTimeUser(false);
   };
 
-  //Group trips data - loaded from backend
-  const [groupTrips, setGroupTrips] = useState([]);
-
-  //trips that appear on My Trips page (group trips you joined/created)
-  const [myTrips, setMyTrips] = useState([]);
-  const [groupChats, setGroupChats] = useState({});
-
-  //Load all itineraries from backend on mount
-  useEffect(() => {
-    const loadAllItineraries = async () => {
-      try {
-        //Get group trips from GetGroupTrips endpoint
-        const response = await axios.get(
-          "http://localhost:8080/GroupTrips/GetGroupTrips",
-          { withCredentials: true }
-        );
-        
-        console.log("All group trips from backend:", response.data);
-        
-        //Map group trips
-        const groupTripsData = (response.data || [])
-          .map((trip) => ({
-            id: trip.itinerary_id,
-            owner: trip.owner || "Unknown",
-            title: trip.title,
-            date: `${trip.start_date} – ${trip.end_date}`,
-            capacity: trip.capacity || 0,
-            joined: trip.num_ppl || 0,
-            description: trip.description || "",
-            startDate: trip.start_date,
-            endDate: trip.end_date,
-            type: "group",
-          }));
-        
-        setGroupTrips(groupTripsData);
-        console.log("Processed group trips:", groupTripsData);
-      } catch (err) {
-        console.error("Error loading group trips:", err);
-      }
-    };
-
-    loadAllItineraries();
-  }, []);
-
-  //Create group trip
-  const createTrip = (trip) => {
-    setGroupTrips((prev) => [trip, ...prev]);
-    //Creator = auto joined
-    setMyTrips((prev) => {
-      if (prev.find((t) => t.id === trip.id)) return prev;
-      return [...prev, trip];
-    });
-    setGroupChats((prev) => ({
-      ...prev,
-      [trip.id]: [],
-    }));
-  };
-
-  //Join trip/add to My trips page 
-  const joinTrip = async (trip) => {
-    try {
-      console.log("Joining trip:", trip);
-      
-      //Add to myTrips immediately 
-      setMyTrips((prev) => {
-        if (prev.find((t) => t.id === trip.id)) return prev;
-        return [...prev, trip];
-      });
-
-      //Try to call backend if endpoints exist
-      try {
-        const response = await axios.post(
-          `http://localhost:8080/GroupTrips/JoinGroupTrip/${trip.id}`,
-          {},
-          {withCredentials: true}
-        );
-        console.log("Backend join successful:", response);
-      } catch(apiErr) {
-        console.log("Backend endpoint not available (expected), using local state");
-      }
-
-      //Update group trip member count
-      setGroupTrips((prev) =>
-        prev.map((t) =>
-          t.id === trip.id ? { ...t, joined: t.joined + 1 } : t
-        )
-      );
-
-      //Initialize group chat
-      setGroupChats((prev) => ({
-        ...prev,
-        [trip.id]: prev[trip.id] || [],
-      }));
-    } catch(err) {
-      console.error("Error in joinTrip:", err);
-      throw err;
-    }
-  };
-
-  //Exit trip--> remove from my trips
-  const exitTrip = async (tripId) => {
-    try {
-      console.log("Exiting trip:", tripId);
-      
-      //Remove from my trips immediately 
-      setMyTrips((prev) => prev.filter((t) => t.id !== tripId));
-
-      //Try to call backend if endpoints exist
-      try {
-        const response = await axios.post(
-          `http://localhost:8080/GroupTrips/ExitGroupTrip/${tripId}`,
-          {},
-          {withCredentials: true}
-        );
-        console.log("Backend exit successful:", response);
-      } catch(apiErr) {
-        console.log("Backend endpoint not available (expected), using local state");
-      }
-
-      //Update group trip member count
-      setGroupTrips((prev) =>
-        prev.map((t) =>
-          t.id === tripId ? { ...t, joined: Math.max(0, t.joined - 1) } : t
-        )
-      );
-    } catch(err) {
-      console.error("Error in exitTrip:", err);
-      throw err;
-    }
-  };
-
-  const removeTripFromJoinPage = (tripId) => {
-    setGroupTrips((prev) => prev.filter((t) => t.id !== tripId));
-  };
-
-  const sendMessage = (tripId, message) => {
-    setGroupChats((prev) => ({
-      ...prev,
-      [tripId]: [...(prev[tripId] || []), message],
-    }));
-  };
+  
 
   return (
     <BrowserRouter>
@@ -225,7 +84,6 @@ function AppRoutes() {
           <Route path="/register" element={<CreateAccountPage />} />
           <Route path="/login" element={<LoginPage setCurrentUserProfile={setCurrentUserProfile} markAsFirstTimeUser={markAsFirstTimeUser} />} />
           <Route path='/login/:errorMsg' element={<LoginPage setCurrentUserProfile={setCurrentUserProfile} markAsFirstTimeUser={markAsFirstTimeUser} />} />
-          <Route path="/quiz" element={<QuizPage />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/reviews" element={<ReviewsPage />} />
           {/* ================= RESET PASSWORD (TOP LEVEL - NO NAVBAR) ================= */}
@@ -241,14 +99,6 @@ function AppRoutes() {
           element={
             <UserNavbar
               outletContext={{
-                groupTrips,
-                myTrips,
-                groupChats,
-                createTrip,
-                joinTrip,
-                exitTrip,
-                removeTripFromJoinPage,
-                sendMessage,
                 isFirstTimeUser,
                 completeProfileSetup,
                 clearUserData,
