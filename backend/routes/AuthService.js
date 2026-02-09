@@ -14,21 +14,22 @@ router.post('/Login', async (req, res) => {
     try{    
         // Check if email exist or role is correct
         const userData = await pool.query(
-        `SELECT 1, userid, email, password, type
+        `SELECT 1, userid, email, password, type, suspended
          FROM users
          WHERE email = $1`, [email]
         );
         
         if(userData.rowCount === 0) // no acc in db
         { 
-            res.send({check: false, message: "No Account with entered email found"});
+            return res.send({checkEmail: false});
         }
         else
         {
             const realRole = userData.rows[0].type;
             if((realRole === "registered" || realRole === "premium") && role === "user") chkRole = true;
             if(realRole === "admin" && role === "admin") chkRole = true;  
-            if(!chkRole) res.send({check: false, message: "No Account with entered email found"});
+            if(!chkRole) return res.send({checkEmail: false});
+            if(userData.rows[0].suspended) return res.send({checkSuspended: true});
             else
             {
                 
@@ -40,7 +41,7 @@ router.post('/Login', async (req, res) => {
                 );
                 if(data.rowCount === 0) // wrong pw
                 {
-                    res.send({check: false, message: "Wrong Password"});
+                    return res.send({checkPassword: false});
                 }
                 else if(data.rowCount === 1 && chkRole) // success
                 {
@@ -56,7 +57,7 @@ router.post('/Login', async (req, res) => {
                         sameSite: 'lax'
                     });
 
-                    res.send({check: true, token});
+                    return res.send({check: true, token});
                 }
             }
         }
@@ -77,10 +78,10 @@ router.post('/CreateAccount', async(req, res) =>{
              VALUES ($1, $2, $3, $4, 'registered');`, [email, password, firstname, lastname]
         );
         //email already exist
-        res.send(true)
+        return res.send(true)
     }
     catch(err){
-        res.send(false)
+        return res.send(false)
     }
 });
 
@@ -90,7 +91,7 @@ router.post("/Logout", (req, res) => {
         secure: false, // set to true only when https
         sameSite: "Strict"
     })
-    res.send({ success: true});
+    return res.send({ success: true});
 });
 
 router.post("/SendResetEmail", async(req,res) => {

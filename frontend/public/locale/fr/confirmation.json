@@ -25,6 +25,7 @@
         "rp_succ_email": "Le lien de réinitialisation a été envoyé à votre e-mail",
 
         "rp_validating": "Validation du lien de réinitialisation...",
+        "rp_err_validating": "Lien de réinitialisation de mot de passe invalide, veuillez envoyer une nouvelle demande",
         "rp_forgetpassword_title": "Mot de passe oublié ?",
         "rp_forgetpassword_text": "Saisissez votre e-mail et nous vous enverrons un lien pour réinitialiser votre mot de passe",
         "rp_enteremail_tb": "Adresse e-mail",

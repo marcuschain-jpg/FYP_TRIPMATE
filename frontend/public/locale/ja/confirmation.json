@@ -24,6 +24,7 @@
         "rp_succ_email": "リセットリンクをメールで送信しました",
 
         "rp_validating": "リセットリンクを確認中...",
+        "rp_err_validating": "パスワードリセットリンクが無効です。再度パスワードリセットをリクエストしてください",
         "rp_forgetpassword_title": "パスワードをお忘れですか？",
         "rp_forgetpassword_text": "メールアドレスを入力すると、パスワード再設定用のリンクを送信します",
         "rp_enteremail_tb": "メールアドレス",

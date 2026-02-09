@@ -29,4 +29,3 @@ frontend/yarn-error.log*
 # keys.env - api keys all store here
 # uploads - i use it to store images here temporarily for geocoding images
 backend/keys.env
-backend/uploads

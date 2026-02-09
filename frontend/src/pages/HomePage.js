@@ -6,12 +6,14 @@ import HomeMainPhoto from "../Assets/HomeMainPhoto.jpg";
 import HomeSmall1 from "../Assets/HomeSmall1.jpg";
 import HomeSmall2 from "../Assets/HomeSmall2.jpg";
 import { useTranslation } from "react-i18next";
+import ChatbotModal from "./ChatbotPage";
 
 export default function HomePage() {
   const navigate = useNavigate();  
   const { t } = useTranslation(); 
   const [role, setRole] = useState("");
   const [name, setName] = useState("");
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   useEffect(() => {
     Axios.get("Landing/GetHome", {withCredentials: true})
@@ -19,7 +21,7 @@ export default function HomePage() {
         setName(res.data[0].first_name);
       })
       .catch(err => {
-        if(err.response.status === 401 || 403){
+        if(err.response.status === 401 || err.response.status === 403){
           const errData = err.response;
           const errorMsg = errData.status + ": " + errData.data.message;
           navigate(`/login/${errorMsg}`);
@@ -37,7 +39,7 @@ export default function HomePage() {
 
       {/*2 Cards*/}
       <div className="home-cards">
-        {/*My calendar card--> brings user to profile page*/}
+        {/*My calendar card --> brings user to profile page*/}
         <div className="home-card">
           <img src={HomeSmall1} className="home-card-img" alt=""/>
           <h2 className="home-card-title">{t("hp_mycalendar")}</h2>
@@ -62,14 +64,20 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/*Floating Chatbot Button*/}
+      {/*Floating chatbot button*/}
       <button
         className="chatbot-fab"
-        onClick={() => navigate("/chatbot")}
+        onClick={() => setIsChatbotOpen(true)}
         aria-label="Open Chatbot"
       >
         🤖
       </button>
+
+      {/*Chatbot modal*/}
+      <ChatbotModal 
+        isOpen={isChatbotOpen} 
+        onClose={() => setIsChatbotOpen(false)} 
+      />
     </div>
   );
 }

@@ -749,7 +749,7 @@ function ItineraryPage() {
           ) : (
             <div
               ref={mapDivRef}
-              style={{ width: "100%", height: "100%", borderRadius: "12px" }}
+              style={{ width: "100%", flex: 1, borderRadius: "12px" }}
             />
           )}
         </div>

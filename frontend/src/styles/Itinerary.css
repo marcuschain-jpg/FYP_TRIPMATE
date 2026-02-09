@@ -274,8 +274,9 @@
     cursor: pointer;
     font-size: 13px;
     font-weight: 700;
-    min-width: 110px;
-    height: 44px;
+    min-width: 130px;
+    min-height: 44px;
+    height: auto;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -818,6 +819,8 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
     overflow: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
   }
   
   .right-side:hover {
@@ -1139,11 +1142,27 @@
   }
   
   /*============ ACTIVITY FORM PAGE ============*/
-  .activity-form-page {
+   .activity-form-page {
     background: linear-gradient(135deg, #f0f9ff 0%, #eff6ff 50%, #f5f3ff 100%);
     min-height: 100vh;
     padding: 40px 80px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  }
+  
+  .back-btn {
+    background: none;
+    border: none;
+    color: #3b82f6;
+    font-size: 16px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-bottom: 20px;
+    transition: var(--transition);
+  }
+  
+  .back-btn:hover {
+    color: #1e40af;
+    transform: translateX(-4px);
   }
   
   .form-title {
@@ -1152,7 +1171,7 @@
     color: #0f172a;
     margin-top: 10px;
   }
-  
+
   .activity-form-layout {
     display: flex;
     gap: 40px;
@@ -1165,7 +1184,26 @@
     padding: 30px;
     border-radius: 12px;
     border: 2px solid #e2e8f0;
-    box-shadow: 0px 2px 6px rgba(0,0,0,0.08);
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.08);
+  }
+  
+  .activity-right-map {
+    flex: 1;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    overflow: hidden;
+    height: 600px;
+  }
+  
+  .activity-right-map > div {
+    width: 100% !important;
+    height: 100% !important;
+  }
+  
+  #map {
+    width: 100% !important;
+    height: 100% !important;
   }
   
   .form-label {
@@ -1203,6 +1241,14 @@
     box-shadow: 0 0 0 4px var(--accent-lighter);
   }
   
+  .form-input[type="date"] {
+    cursor: pointer;
+  }
+  
+  .form-input[type="number"] {
+    padding-right: 10px;
+  }
+  
   .event-name-row {
     display: flex;
     justify-content: space-between;
@@ -1230,6 +1276,39 @@
     margin-bottom: 18px;
   }
   
+  .form-input-search {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .form-input-search-res {
+    padding: 12px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 13px;
+    color: #4a5568;
+    transition: background-color 0.2s;
+  }
+  
+  .form-input-search-res:hover {
+    background-color: #f8f9fa;
+    color: #0f172a;
+  }
+  
+  .form-input-search-res:last-child {
+    border-bottom: none;
+  }
+  
   .upload-media-btn {
     width: 100%;
     height: 120px;
@@ -1245,6 +1324,7 @@
     color: #6b7585;
     font-weight: 600;
     text-align: center;
+    flex-direction: column;
   }
   
   .upload-media-btn:hover {
@@ -1254,6 +1334,59 @@
   
   .upload-media-btn input {
     display: none;
+  }
+  
+  .media-preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  
+  .media-preview-item {
+    width: 110px;
+    height: 110px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #cdd4dd;
+    background: #f8fafc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+  }
+  
+  .media-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .media-file-icon {
+    font-size: 12px;
+    text-align: center;
+    padding: 10px;
+    color: #4a5568;
+    word-break: break-word;
+  }
+  
+  .media-delete-existing {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(0, 0, 0, 0.55);
+    color: white;
+    border: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background-color 0.2s;
+  }
+  
+  .media-delete-existing:hover {
+    background: rgba(0, 0, 0, 0.75);
   }
   
   .form-button-row {
@@ -1305,270 +1438,47 @@
     box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
   }
   
-  .activity-right-map {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .activity-right-map > div {
-    width: 100%;
-    height: 100%;
-    border-radius: 12px;
-  }
-  
-  .media-preview-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-  
-  .media-preview-item {
-    width: 110px;
-    height: 110px;
-    border-radius: 10px;
-    overflow: hidden;
-    border: 1px solid #cdd4dd;
-    background: #f8fafc;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-  }
-  
-  .media-preview-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  
-  .media-file-icon {
-    font-size: 12px;
+  .map-loading-text {
+    font-size: 16px;
+    color: #6b7585;
     text-align: center;
-    padding: 10px;
-    color: #4a5568;
   }
-  
-  .media-delete-existing {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    background: rgba(0,0,0,0.55);
-    color: white;
-    border: none;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 13px;
-  }
-  
+    
   @media (max-width: 1200px) {
-    .view-layout {
-      gap: 20px;
+    .activity-form-page {
+      padding: 40px 60px;
     }
   
-    .left-side {
-      width: 32%;
+    .activity-left-box {
+      width: 40%;
     }
   
-    .right-side {
-      width: 68%;
+    .activity-right-map {
+      flex: 1;
     }
   }
   
   @media (max-width: 1024px) {
-    .mytrips-page {
-      padding: 40px 60px;
+    .activity-form-page {
+      padding: 30px 40px;
     }
   
-    .tripdetails-page {
-      padding: 30px 0;
+    .form-title {
+      font-size: 28px;
     }
   
-    .tripdetails-inner {
-      padding: 0 40px;
-    }
-  
-    .itinerary-view {
-      padding: 25px 60px;
-    }
-  
-    .trip-card {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 16px;
-    }
-  
-    .actions {
-      width: 100%;
-      justify-content: flex-end;
-    }
-  
-    .actions button {
-      flex: 1;
-      max-width: 100px;
-    }
-  
-    .view-layout {
-      flex-direction: column;
-      gap: 20px;
-    }
-  
-    .left-side {
-      width: 100%;
-    }
-  
-    .right-side {
-      width: 100%;
-      min-height: 500px;
+    .activity-left-box {
+      padding: 25px;
     }
   }
   
   @media (max-width: 768px) {
-    .mytrips-page {
-      padding: 30px 20px;
-    }
-  
-    .title {
-      font-size: 28px;
-      margin-bottom: 24px;
-    }
-  
-    .top-controls {
-      flex-direction: column;
-      align-items: stretch;
-    }
-  
-    .search-bar {
-      max-width: 100%;
-    }
-  
-    .add-trip-btn {
-      width: 100%;
-    }
-  
-    .trip-card {
-      padding: 16px;
-    }
-  
-    .trip-name {
-      font-size: 16px;
-    }
-  
-    .actions button {
-      padding: 8px 12px;
-      font-size: 11px;
-      min-width: 80px;
-      height: 40px;
-    }
-  
-    .modal-box {
-      width: 90%;
-      padding: 24px 20px;
-    }
-  
-    .modal-row {
-      flex-direction: column;
-    }
-  
-    .tripdetails-page {
-      padding: 20px 0;
-    }
-  
-    .tripdetails-inner {
-      padding: 0 20px;
-    }
-  
-    .tripdetails-title {
-      font-size: 28px;
-    }
-  
-    .section-card {
-      padding: 16px 20px;
-    }
-  
-    .section-content h2 {
-      font-size: 18px;
-    }
-  
-    .itinerary-view {
-      padding: 20px 16px;
-    }
-  
-    .itinerary-top-row h1 {
-      font-size: 28px;
-    }
-  
-    .itinerary-top-row h2 {
-      font-size: 18px;
-    }
-  
-    .view-layout {
-      flex-direction: column;
-    }
-  
-    .left-side,
-    .right-side {
-      width: 100%;
-    }
-  
-    .right-side {
-      min-height: 400px;
-    }
-  
-    .date-row {
-      flex-direction: column;
-      gap: 10px;
-    }
-  
-    .date-filter-dropdown {
-      width: 100%;
-    }
-  
-    .arrange-btn {
-      width: 100%;
-    }
-  
-    .activity-actions {
-      flex-direction: column;
-      gap: 8px;
-    }
-  
-    .activity-edit-btn,
-    .activity-delete-btn {
-      flex: auto;
-    }
-  
-    .cost-summary-cards {
-      flex-direction: column;
-      gap: 12px;
-    }
-  
-    .cost-card {
-      padding: 12px 16px;
-    }
-  
-    .cost-amount {
-      font-size: 24px;
-    }
-  
-    .cost-breakdown-table {
-      margin-top: 18px;
-      padding: 14px 16px;
-    }
-  
-    .cost-breakdown-table th,
-    .cost-breakdown-table td {
-      padding: 8px 10px;
-      font-size: 12px;
-    }
-  
     .activity-form-page {
       padding: 30px 20px;
+    }
+  
+    .form-title {
+      font-size: 24px;
     }
   
     .activity-form-layout {
@@ -1578,72 +1488,45 @@
   
     .activity-left-box {
       width: 100%;
+      padding: 20px;
     }
   
     .activity-right-map {
       width: 100%;
       min-height: 400px;
+      height: auto;
     }
   }
   
   @media (max-width: 480px) {
-    .title {
+    .activity-form-page {
+      padding: 20px 15px;
+    }
+  
+    .form-title {
       font-size: 22px;
     }
   
-    .actions {
-      flex-wrap: wrap;
+    .activity-left-box {
+      padding: 15px;
     }
   
-    .actions button {
-      flex: 1;
-      min-width: 60px;
+    .form-label {
+      font-size: 11px;
     }
   
-    .itinerary-view {
-      padding: 16px 12px;
-    }
-  
-    .itinerary-top-row h1 {
-      font-size: 24px;
-    }
-  
-    .itinerary-top-row h2 {
-      font-size: 16px;
-    }
-  
-    .activity-card {
-      padding: 14px 16px;
-    }
-  
-    .add-activity-big {
-      padding: 12px 14px;
+    .form-input {
+      padding: 10px 12px;
       font-size: 13px;
     }
-  }
   
-  .view-layout {
-      display: flex;
-      gap: 40px;
-  }
+    .cancel-btn,
+    .save-btn {
+      height: 40px;
+      font-size: 12px;
+    }
   
-  .left-side {
-      width: 35%;
-  }
-  
-  .right-side {
-      width: 65%;
-      background: white;
-      border-radius: 12px;
-      border: 1px solid #ddd;
-      padding: 0;
-      margin-top: 5%;
-      height: 600px;
-      display: flex;
-  }
-  
-  #map,
-  .right-side > div { /*Stretch map such that it fills up all the container space*/
-      width: 100% !important;
-      height: 100% !important;
+    .activity-right-map {
+      min-height: 300px;
+    }
   }

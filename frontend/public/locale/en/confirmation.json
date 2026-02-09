@@ -24,6 +24,7 @@
         "rp_succ_email": "Reset link sent to your email",
         
         "rp_validating": "Validating reset link...",
+        "rp_err_validating": "Invalid reset password link, send another password reset request",
         "rp_forgetpassword_title": "Forget Password?",
         "rp_forgetpassword_text": "Enter your email and we'll send you a link to reset your password",
         "rp_enteremail_tb": "Email Address",

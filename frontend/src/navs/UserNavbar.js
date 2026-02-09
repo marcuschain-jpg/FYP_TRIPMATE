@@ -7,7 +7,8 @@ function UserNavbar({ outletContext }) {
     const [showMenu, setShowMenu] = useState(false);
     const [defaultLang, setDefaultLang] = useState("English");
     const navigate = useNavigate();
-    // use effect load user pref lang
+    
+    //use effect load user pref lang
     useEffect(() => {
         const loadLang = async() => {
             try{
@@ -29,7 +30,7 @@ function UserNavbar({ outletContext }) {
         loadLang();
     }, [])
     
-
+    //handle logout functionality
     const handleLogout = async () => {
         localStorage.removeItem("user");
         await Axios
@@ -48,6 +49,8 @@ function UserNavbar({ outletContext }) {
 
     const { i18n } = useTranslation();
     const { t } = useTranslation();
+    
+    //change language functionality
     const changeLanguage = async(lng) => {
         try{
             const res = await Axios.patch("Navbar/ChangeLang", {lng}, {withCredentials:true});
@@ -67,7 +70,7 @@ function UserNavbar({ outletContext }) {
 
     return (
         <>
-            {/*Styling for registered user navbar--> shows up when user is logged in*/}
+            {/*Styling for registered user navbar --> shows up when user is logged in*/}
             <style>{`
                 .main-navbar {
                     width: 100%;
@@ -101,6 +104,8 @@ function UserNavbar({ outletContext }) {
                     display: flex;
                     align-items: center;
                     gap: 25px;
+                    flex: 1;
+                    justify-content: center;
                 }
 
                 .nav-link {
@@ -113,25 +118,45 @@ function UserNavbar({ outletContext }) {
                     text-decoration: underline;
                 }
 
-                .nav-profile-icon {
-                    width: 42px;
-                    height: 42px;
-                    border-radius: 50%;
-                    object-fit: cover;
-                    cursor: pointer;
+                .hamburger-menu {
+                    width: 36px;
+                    height: 36px;
+                    background: transparent;
                     border: 2px solid white;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    gap: 5px;
+                    padding: 0;
+                    transition: background 0.2s ease;
+                }
+
+                .hamburger-menu:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                }
+
+                .hamburger-line {
+                    width: 20px;
+                    height: 2px;
+                    background: white;
+                    border-radius: 1px;
                 }
 
                 .profile-menu {
                     position: absolute;
-                    top: 75px;
-                    right: 60px;
+                    top: 100%;
+                    right: 0;
                     background: white;
                     color: black;
                     border-radius: 8px;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
                     width: 150px;
                     overflow: hidden;
+                    z-index: 1000;
+                    margin-top: 5px;
                 }
 
                 .profile-menu-item {
@@ -153,6 +178,7 @@ function UserNavbar({ outletContext }) {
                     display: flex;
                     align-items: center;
                     gap: 15px;
+                    position: relative;
                 }
 
                 .locale-selector {
@@ -166,6 +192,10 @@ function UserNavbar({ outletContext }) {
                     height: 36px;
                     display: flex;
                     align-items: center;
+                }
+
+                .locale-selector option {
+                    color: black;
                 }
             `}</style>
 
@@ -201,12 +231,15 @@ function UserNavbar({ outletContext }) {
                             <option value="es">Español</option>
                             <option value="fr">Français</option>
                         </select>
-                        <img
-                            src="/profileicon.png"
-                            alt="profile"
-                            className="nav-profile-icon"
+                        <button
+                            className="hamburger-menu"
                             onClick={() => setShowMenu((prev) => !prev)}
-                        />
+                            aria-label="Menu"
+                        >
+                            <div className="hamburger-line"></div>
+                            <div className="hamburger-line"></div>
+                            <div className="hamburger-line"></div>
+                        </button>
 
                         {showMenu && (
                             <div className="profile-menu">

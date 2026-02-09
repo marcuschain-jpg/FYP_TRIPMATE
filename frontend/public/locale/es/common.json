@@ -51,6 +51,9 @@
     "login_success": "¡Inicio de sesión exitoso! Redireccionando...",
     "login_failed": "Error al iniciar sesión. Inténtalo de nuevo.",
     "login_validate": "Por favor, rellene todos los campos.",
+    "login_err_email": "No se encontró ninguna cuenta con el correo electrónico ingresado",
+    "login_err_password": "Contraseña incorrecta",
+    "login_err_suspended": "Tu cuenta ha sido suspendida. Por favor contacta a TripMate para más actualizaciones",
     
     "__PASSWORD PAGE": " ========== PASSWORD PAGE ==========",
     "cacc_title": "Crear una cuenta",

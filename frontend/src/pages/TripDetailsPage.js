@@ -168,7 +168,11 @@ function TripDetailsPage() {
 
     try{
       const res = await Axios.post("Itinerary/AddCollaborator", {i_id:tripId, email:newCollaborator, i_name: trip.name}, {withCredentials:true})
-      if(res.data){
+      if(!res.data.check){
+        if(res.data.errType === "email") {alert("No user with this email found"); return;}
+        else if(res.data.errType === "premium") {alert("Invitee needs to be a premium user"); return;}
+      }
+      else if(res.data.check){
       //setCollaborators(prev => [...prev, {name: `${res.data[0].first_name} ${res.data[0].last_name}`, email: res.data[0].email}]);
       alert(t("succ_email"));
       setNewCollaborator("");
