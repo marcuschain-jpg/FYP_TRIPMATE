@@ -1,114 +1,63 @@
 const express = require("express");
 const router = express.Router();
 const OpenAI = require("openai");
+const RequireAuth = require("../middlewares/RequireAuths.js"); // Authenticate user
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-const ITINERARY_REGEX =
-  /(trip|itinerary|schedule).*(create|plan|generate|build)|(create|plan|generate|build).*(trip|itinerary|schedule)/i;
-
 const CHAT_SYSTEM_PROMPT = "You are a helpful travel assistant. Answer naturally.";
 
-const PLAN_SYSTEM_PROMPT = `
+const ITINERARY_PROMPT = `
 You are a travel itinerary generator.
-You MUST respond with ONLY valid JSON.
-Do NOT include explanations, comments, markdown, or text outside JSON.
 
-{
-  "days": [
-    {
-      "day": 1,
-      "activities": [
-        {
-          "time": "morning",
-          "activity": "",
-          "location": ""
-        }
-      ]
-    }
-  ]
-}
+Create a pretty and readable travel itinerary. 
+Format it like this (Markdown/Plain Text):
+- Day 1: Place A (Address), Place B (Address)
+- Day 2: Place C (Address), Place D (Address)
+
+Do NOT return JSON. Return a friendly, human-readable text.
 `;
 
 // POST /Chatbot/message
-router.post("/message", async (req, res) => {
+router.post("/message", RequireAuth(["registered","premium"]), async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, history = [] } = req.body;
 
     if (!message) {
       return res.status(400).json({ error: "Message is required" });
     }
 
-    const inputLower = message.toLowerCase();
-    const isItinerary = ITINERARY_REGEX.test(inputLower);
+    const messages = [
+      { role: "system", content: CHAT_SYSTEM_PROMPT },
+      ...history.map(m => ({
+        role: m.sender === "user" ? "user" : "assistant",
+        content: m.text
+      })),
+      { role: "user", content: message }
+    ];
 
-    let systemPrompt = isItinerary
-      ? PLAN_SYSTEM_PROMPT
-      : CHAT_SYSTEM_PROMPT;
-
-    // Destination extraction
-    let destination = "";
-    const match = inputLower.match(/(to|in|for|at)\s+([a-zA-Z ]+)/);
-    if (match) {
-      destination = match[2].trim();
-    }
-
-    if (isItinerary && destination) {
-      systemPrompt += `\nDestination: ${destination}`;
-    }
-
+    // Call OpenAI
     const response = await client.responses.create({
       model: "gpt-4.1-mini",
-      input: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: message }
-      ]
+      input: messages
     });
 
     const outputText =
       response.output[0]?.content
         ?.filter(c => c.type === "output_text")
         .map(c => c.text)
-        .join("\n");
-
-    if (isItinerary) {
-
-      let itineraryJson;
-
-      try {
-        itineraryJson = JSON.parse(outputText);
-      } catch (e) {
-        return res.status(500).json({
-          error: "Invalid JSON returned by AI"
-        });
-      }
-
-      const tripId = await createTripFromItinerary(
-        itineraryJson,
-        req.user.userid
-      );
-
-
-      return res.json({
-        isItinerary: true,
-        tripId
-      });
-    }
+        .join("\n") || "No response.";
 
     return res.json({
-      isItinerary: false,
       reply: outputText
     });
 
   } catch (err) {
-      console.error(err);
-        return res.json({
-      isItinerary: false,
-      reply: "AI service unavailable. Please try again."
-    });
-    }
+    console.error(err);
+    return res.json({ reply: "AI service unavailable. Please try again." });
+  }
 });
 
 module.exports = router;

@@ -1,34 +1,35 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import "../styles/FAQArticle.css";
-import { mockFAQs } from "../data/mockSupport";
 
-export default function EditFAQArticle({ faqId, onBack, onDelete, onSaveDraft, onPublish }) {
-  const faq = useMemo(() => mockFAQs.find((f) => f.id === faqId), [faqId]);
-
+export default function EditFAQArticle({ faq, onBack, onDelete, onSaveDraft, onPublish }) {
   const [category, setCategory] = useState(faq?.category || "Account");
   const [question, setQuestion] = useState(faq?.question || "");
-  const [answer, setAnswer] = useState(faq?.answer || ""); // if you add answers later
+  const [answer, setAnswer] = useState(faq?.answer || "");
+  
+  if (!faq) {
+    return <div>FAQ not found.</div>;
+  }
 
   const handleCancel = () => onBack?.();
 
   const handleDelete = () => {
     const ok = window.confirm("Delete this FAQ article?");
     if (!ok) return;
-    onDelete?.(faqId);
+    onDelete?.(faq.id);
     alert("Deleted");
     onBack?.();
   };
 
   const handleSaveDraft = () => {
-    const payload = { id: faqId, category, question, answer, status: "Draft" };
+    const payload = { id: faq.id, category, question, answer, status: "Draft" };
     onSaveDraft?.(payload);
     alert("Saved as draft");
     onBack?.();
   };
 
   const handlePublish = () => {
-    const payload = { id: faqId, category, question, answer, status: "Published" };
+    const payload = { id: faq.id, category, question, answer, status: "Published" };
     onPublish?.(payload);
     alert("Saved & Published");
     onBack?.();

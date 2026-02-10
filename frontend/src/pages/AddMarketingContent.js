@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { ArrowLeft } from "lucide-react";
+import axios from "axios";
 import "../styles/MarketingContentForm.css";
 
 export default function AddMarketingContent({ onBack, onSaveDraft, onPublish }) {
@@ -8,7 +9,8 @@ export default function AddMarketingContent({ onBack, onSaveDraft, onPublish }) 
   const [body, setBody] = useState("");
   const [imageFileName, setImageFileName] = useState("Upload an image");
   const [url, setUrl] = useState("");
-  const [imageFile, setImageFile] = useState(null); // Select Photo
+  const [imageFile, setImageFile] = useState(null);
+  const [previewContent, setPreviewContent] = useState(null);
 
   const handlePickFile = (e) => {
     const file = e.target.files?.[0];
@@ -16,33 +18,63 @@ export default function AddMarketingContent({ onBack, onSaveDraft, onPublish }) 
     setImageFile(file);
     setImageFileName(file.name);
   };
-  
+
   const handleCancel = () => onBack?.();
 
-  const handleSaveDraft = () => {
-    onSaveDraft?.({
-      section,
-      title,
-      body,
-      imageFile,   // file object
-      imageUrl: url,   // text field
-      status: "Draft",
-    });
-    alert("Saved as draft");
-    onBack?.();
+  const handleSaveDraft = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("section", section);
+      formData.append("title", title);
+      formData.append("body", body);
+      formData.append("status", "Draft");
+      if (imageFile) formData.append("media", imageFile);
+      if (url) formData.append("imageUrl", url);
+
+      const res = await axios.post(
+        "http://localhost:8080/api/content/marketing",
+        formData,
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      onSaveDraft?.(res.data);
+      alert("Saved as draft");
+      onBack?.();
+    } catch (err) {
+      console.error("Save draft failed", err);
+      alert("Failed to save draft");
+    }
   };
 
-  const handlePublish = () => {
-    onPublish?.({
-      section,
-      title,
-      body,
-      imageFile,   // file object
-      imageUrl: url,   // text field
-      status: "Published",
-    });
-    alert("Saved & Published");
-    onBack?.();
+  const handlePublish = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("section", section);
+      formData.append("title", title);
+      formData.append("body", body);
+      formData.append("status", "Published");
+      if (imageFile) formData.append("media", imageFile);
+      if (url) formData.append("imageUrl", url);
+
+      const res = await axios.post(
+        "http://localhost:8080/api/content/marketing",
+        formData,
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      onPublish?.(res.data);
+      alert("Saved & Published");
+      onBack?.();
+    } catch (err) {
+      console.error("Publish failed", err);
+      alert("Failed to publish");
+    }
   };
 
   return (
@@ -72,7 +104,11 @@ export default function AddMarketingContent({ onBack, onSaveDraft, onPublish }) 
 
           <div className="mc-row">
             <label className="mc-label">Title:</label>
-            <input className="mc-input" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <input
+              className="mc-input"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
           </div>
 
           <div className="mc-row mc-row-top">
@@ -86,7 +122,6 @@ export default function AddMarketingContent({ onBack, onSaveDraft, onPublish }) 
 
           <div className="mc-row mc-row-image">
             <label className="mc-label">Image:</label>
-
             <div className="mc-image-controls">
               <label className="mc-upload-btn">
                 {imageFileName}
@@ -101,6 +136,17 @@ export default function AddMarketingContent({ onBack, onSaveDraft, onPublish }) 
               />
             </div>
           </div>
+
+          {/* Live Preview */}
+          {(imageFile || url) && (
+            <div className="mc-image-preview">
+              <img
+                src={imageFile ? URL.createObjectURL(imageFile) : url}
+                alt="Preview"
+                style={{ maxWidth: "100%", marginTop: "10px", borderRadius: "4px" }}
+              />
+            </div>
+          )}
         </div>
 
         <div className="mc-actions">
@@ -109,6 +155,23 @@ export default function AddMarketingContent({ onBack, onSaveDraft, onPublish }) 
           </button>
 
           <div className="mc-actions-right">
+            <button className="mc-btn mc-btn-secondary"
+              type="button"
+              onClick={() =>
+                setPreviewContent({
+                  section,
+                  title,
+                  body,
+                  imageFile,
+                  imageUrl: url,
+                  author: "Admin",
+                  status: "Draft",
+                  lastUpdated: new Date().toLocaleString(),
+                })
+              }
+            >
+              Preview
+            </button>
             <button className="mc-btn mc-btn-muted" type="button" onClick={handleSaveDraft}>
               Save as draft
             </button>

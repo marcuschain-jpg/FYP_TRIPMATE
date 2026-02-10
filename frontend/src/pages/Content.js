@@ -5,14 +5,9 @@ import axios from "axios";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-import {
-  mockContent as initialContent,
-  mockReviews as initialReviews,
-  mockMarketing as initialMarketing,
-} from "../data/mockContent";
-
 import AddMarketingContent from "./AddMarketingContent";
 import EditMarketingContent from "./EditMarketingContent";
+import ViewUserReview from "./ViewUserReviewPage";
 
 function parseDateTime(str) {
   // handles "YYYY-MM-DD HH:mm" and returns timestamp
@@ -46,28 +41,24 @@ function ConfirmModal({ title, message, onConfirm, onClose }) {
 }
 
 export default function Content() {
-  const [activeTab, setActiveTab] = useState("user-content"); // user-content | user-reviews | marketing
+  const [activeTab, setActiveTab] = useState("user-reviews"); // user-reviews | marketing
   const navigate = useNavigate(); //Navigate to Login Page
 
-  // make data stateful (so edits/adds reflect immediately)
-  // const [contentItems, setContentItems] = useState(initialContent);
-  // const [reviewItems, setReviewItems] = useState(initialReviews);
-  // const [marketingItems, setMarketingItems] = useState(initialMarketing);
-
   //Fetching Data From Database
-  const [contentItems, setContentItems] = useState([]);
   const [reviewItems, setReviewItems] = useState([]);
   const [marketingItems, setMarketingItems] = useState([]);
 
+  //Viewing Reviews
+  const [reviewMode, setReviewMode] = useState("list"); // list | view
+  const [currentReview, setCurrentReview] = useState(null);
+
   //Filtering System
-  const [contentFilter, setContentFilter] = useState("all"); // all | published | flagged
-  const [reviewFilter, setReviewFilter] = useState("all"); // all | published | flagged
   const [marketingFilter, setMarketingFilter] = useState("all"); // all | published | draft
 
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("new"); // new | old | reports/rating/section
 
-  // marketing sub-pages (like you did for FAQ)
+  // marketing sub-pages 
   const [marketingMode, setMarketingMode] = useState("list"); // list | add | edit
   const [editingMarketingId, setEditingMarketingId] = useState(null);
 
@@ -75,23 +66,15 @@ export default function Content() {
   const [modal, setModal] = useState(null);
 
   const searchPlaceholder =
-    activeTab === "marketing" ? "Search by title/section" : "Search by title/user";
+    activeTab === "marketing" ? "Search by title/section" : "Search by review/user";
 
 // Load Data From DB & Security Check
  useEffect(() => {
   const loadData = async () => {
     try {
-      if (activeTab === "user-content") {
-        const res = await axios.get(
-          "http://localhost:8080/api/content",
-          { withCredentials: true }
-        );
-        setContentItems(res.data);
-      }
-
       if (activeTab === "user-reviews") {
         const res = await axios.get(
-          "http://localhost:8080/api/content/reviews",
+          "http://localhost:8080/api/reviews",
           { withCredentials: true }
         );
         setReviewItems(res.data);
@@ -99,7 +82,7 @@ export default function Content() {
 
       if (activeTab === "marketing") {
         const res = await axios.get(
-          "http://localhost:8080/api/content/marketing",
+          "http://localhost:8080/api/marketing",
           { withCredentials: true }
         );
         setMarketingItems(res.data);
@@ -123,27 +106,14 @@ export default function Content() {
     str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
 
   // FILTERED (per tab)
-  const filteredContent = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    return contentItems.filter((item) => {
-      const matchesFilter =
-        contentFilter === "all" || item.status.toLowerCase() === contentFilter;
-      const matchesSearch =
-        !q || item.title.toLowerCase().includes(q) || item.user.toLowerCase().includes(q);
-      return matchesFilter && matchesSearch;
-    });
-  }, [contentItems, contentFilter, searchQuery]);
-
   const filteredReviews = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return reviewItems.filter((item) => {
-      const matchesFilter =
-        reviewFilter === "all" || item.status.toLowerCase() === reviewFilter;
-      const matchesSearch =
-        !q || item.review.toLowerCase().includes(q) || item.user.toLowerCase().includes(q);
-      return matchesFilter && matchesSearch;
-    });
-  }, [reviewItems, reviewFilter, searchQuery]);
+    return reviewItems.filter((item) =>
+      !q ||
+      item.review.toLowerCase().includes(q) ||
+      item.user.toLowerCase().includes(q)
+    );
+  }, [reviewItems, searchQuery]);
 
   const filteredMarketing = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -159,14 +129,6 @@ export default function Content() {
   }, [marketingItems, marketingFilter, searchQuery]);
 
   // SORTED (per tab) ✅ sort works for all three
-  const sortedContent = useMemo(() => {
-    const arr = [...filteredContent];
-    if (sortBy === "new") arr.sort((a, b) => parseDateTime(b.created) - parseDateTime(a.created));
-    else if (sortBy === "old") arr.sort((a, b) => parseDateTime(a.created) - parseDateTime(b.created));
-    else if (sortBy === "reports") arr.sort((a, b) => (b.reports || 0) - (a.reports || 0));
-    return arr;
-  }, [filteredContent, sortBy]);
-
   const sortedReviews = useMemo(() => {
     const arr = [...filteredReviews];
     const ratingToNum = (r) => {
@@ -189,13 +151,6 @@ export default function Content() {
 
   // sort options change based on tab
   const sortOptions = useMemo(() => {
-    if (activeTab === "user-content") {
-      return [
-        { value: "new", label: "New" },
-        { value: "old", label: "Old" },
-        { value: "reports", label: "Most Reports" },
-      ];
-    }
     if (activeTab === "user-reviews") {
       return [
         { value: "new", label: "New" },
@@ -213,29 +168,6 @@ export default function Content() {
   // actions
   // Delete Function
   
-  //--User Content--
-  const confirmDeleteContent = (content) => {
-    setModal({
-      title: "Delete Content",
-      message: "Delete this content? This action cannot be undone.",
-      action: async () => {
-        try {
-          await axios.delete(
-            `http://localhost:8080/api/content/${content.id}`,
-            { withCredentials: true }
-          );
-
-          setContentItems((prev) =>
-            prev.filter((c) => c.id !== content.id)
-          );
-        } catch (err) {
-          console.error("User Content Fail to Delete.", err);
-        } finally {
-          setModal(null);
-        }
-      },
-    });
-  };
   //--User Review--
   const confirmDeleteReview = (review) => {
     setModal({
@@ -244,7 +176,7 @@ export default function Content() {
       action: async () => {
         try {
           await axios.delete(
-            `http://localhost:8080/api/content/reviews/${review.id}`,
+            `http://localhost:8080/api/reviews/${review.id}`,
             { withCredentials: true }
           );
 
@@ -262,29 +194,35 @@ export default function Content() {
 
   //--Marketing Content--
   const confirmDeleteMarketing = (item) => {
-  setModal({
-    title: "Delete Marketing Content",
-    message: "Delete this content? This action cannot be undone.",
-    action: async () => {
-      try {
-        await axios.delete(
-          `http://localhost:8080/api/content/marketing/${item.id}`,
-          { withCredentials: true }
-        );
+    setModal({
+      title: "Delete Marketing Content",
+      message: "Delete this content? This action cannot be undone.",
+      action: async () => {
+        try {
+          await axios.delete(
+            `http://localhost:8080/api/marketing/${item.id}`,
+            { withCredentials: true }
+          );
 
-        setMarketingItems((prev) =>
-          prev.filter((m) => m.id !== item.id)
-        );
-      } catch (err) {
-        console.error("Marketing Content Fail to Delete.", err);
-      } finally {
-        setModal(null);
-      }
-    },
-  });
-};
+          setMarketingItems((prev) =>
+            prev.filter((m) => m.id !== item.id)
+          );
+        } catch (err) {
+          console.error("Marketing Content Fail to Delete.", err);
+        } finally {
+          setModal(null);
+        }
+      },
+    });
+  };
 
-  const handleView = (id) => alert(`Viewing item ${id}`);
+  const handleView = (review) => {
+    if (activeTab === "user-reviews") {
+      setCurrentReview(review); // store entire object
+      setReviewMode("view");
+    }
+  };
+
   // const handleDelete = async (id) => {
   //   if (!window.confirm("Are you sure you want to delete this item?")) return;
 
@@ -307,8 +245,6 @@ export default function Content() {
   //     console.error("Delete failed", err);
   //   }
   // };
-  
-  const handleFeature = (id) => alert(`Featured review ${id}`);
 
   // marketing add/edit handlers
   const openAddMarketing = () => {
@@ -327,31 +263,34 @@ export default function Content() {
         section: payload.section,
         title: payload.title,
         body: payload.body,
-        imageUrl: payload.imageUrl || "",
+        imageUrl: payload.imageUrl || "", // backend expects URL, local file handled separately
         status: payload.status || "Draft",
       };
 
-      // Update Existing Content
+      let res;
+
+      // UPDATE EXISTING
       if (payload.id) {
-        const res = await axios.put(
-          `http://localhost:8080/api/content/marketing/${payload.id}`,
+        res = await axios.put(
+          `http://localhost:8080/api/marketing/${payload.id}`,
           dataToSend,
           { withCredentials: true }
         );
 
+        // Replace the item in state with updated data
         setMarketingItems((prev) =>
           prev.map((m) => (m.id === payload.id ? res.data : m))
         );
       } 
-
-      // Create New Content
+      // CREATE NEW
       else {
-        const res = await axios.post(
-          "http://localhost:8080/api/content/marketing",
+        res = await axios.post(
+          "http://localhost:8080/api/marketing",
           dataToSend,
           { withCredentials: true }
         );
 
+        // Add new item at top of list
         setMarketingItems((prev) => [res.data, ...prev]);
       }
     } catch (err) {
@@ -364,6 +303,15 @@ export default function Content() {
 
   const deleteMarketing = (id) => setMarketingItems((prev) => prev.filter((x) => x.id !== id));
 
+  const reloadMarketing = async () => {
+    try {
+      const res = await axios.get("http://localhost:8080/api/marketing", { withCredentials: true });
+      setMarketingItems(res.data);
+    } catch (err) {
+      console.error("Failed to reload marketing list", err);
+    }
+  };
+
   // If we're on marketing add/edit "pages", show them (like your FAQ flow)
   if (activeTab === "marketing" && marketingMode === "add") {
     return (
@@ -375,15 +323,18 @@ export default function Content() {
 
         <AddMarketingContent
           onBack={() => setMarketingMode("list")}
-          onSaveDraft={(p) => {
-            saveDraftMarketing(p);
-            setMarketingMode("list");
-          }}
-          onPublish={(p) => {
-            publishMarketing(p);
-            setMarketingMode("list");
-          }}
-        />
+          onSaveDraft={async (p) => {
+          await saveDraftMarketing(p);
+          await reloadMarketing();
+          setMarketingMode("list");    
+        }}
+
+        onPublish={async (p) => {
+          await publishMarketing(p);  
+          await reloadMarketing();
+          setMarketingMode("list");
+        }}
+                />
       </div>
     );
   }
@@ -416,6 +367,19 @@ export default function Content() {
       </div>
     );
   }
+  
+  //To View Reviews
+  if (activeTab === "user-reviews" && reviewMode === "view") {
+    return (
+      <ViewUserReview
+        review={currentReview} // pass full review object
+        onBack={() => {
+          setReviewMode("list");
+          setCurrentReview(null);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="cm-page">
@@ -427,17 +391,6 @@ export default function Content() {
       <div className="cm-card">
         {/* Tabs */}
         <div className="cm-tabs">
-          <button
-            type="button"
-            className={`cm-tab ${activeTab === "user-content" ? "is-active" : ""}`}
-            onClick={() => {
-              setActiveTab("user-content");
-              setSortBy("new");
-            }}
-          >
-            User Content
-          </button>
-
           <button
             type="button"
             className={`cm-tab ${activeTab === "user-reviews" ? "is-active" : ""}`}
@@ -466,38 +419,6 @@ export default function Content() {
           {/* TOOLBAR */}
           <div className="cm-toolbar">
             <div className="cm-toolbar-left">
-              <span className="cm-label">Filters:</span>
-
-              {activeTab === "user-content" && (
-                <div className="cm-filter-tabs">
-                  {["all", "published", "flagged"].map((f) => (
-                    <button
-                      key={f}
-                      type="button"
-                      className={`cm-pill ${contentFilter === f ? "is-on" : ""}`}
-                      onClick={() => setContentFilter(f)}
-                    >
-                      {f === "all" ? "All" : f[0].toUpperCase() + f.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {activeTab === "user-reviews" && (
-                <div className="cm-filter-tabs">
-                  {["all", "published", "flagged"].map((f) => (
-                    <button
-                      key={f}
-                      type="button"
-                      className={`cm-pill ${reviewFilter === f ? "is-on" : ""}`}
-                      onClick={() => setReviewFilter(f)}
-                    >
-                      {f === "all" ? "All" : f[0].toUpperCase() + f.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              )}
-
               {activeTab === "marketing" && (
                 <div className="cm-filter-tabs">
                   {["all", "published", "draft"].map((f) => (
@@ -547,51 +468,6 @@ export default function Content() {
           </div>
 
           {/* TABLES */}
-          {activeTab === "user-content" && (
-            <div className="cm-table-wrap">
-              <table className="cm-table">
-                <thead>
-                  <tr>
-                    <th className="cm-check"></th>
-                    <th>ItineraryID</th>
-                    <th>Title</th>
-                    <th>User</th>
-                    <th>Reports</th>
-                    <th>Status</th>
-                    <th>Created</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedContent.map((item) => (
-                    <tr key={item.id}>
-                      <td className="cm-check">
-                        <input type="checkbox" />
-                      </td>
-                      <td>{item.id}</td>
-                      <td className="cm-ellipsis">{item.title}</td>
-                      <td>{item.user}</td>
-                      <td>{item.reports}</td>
-                      <td>{capitalize(item.status)}</td>
-                      <td>{item.created}</td>
-                      <td className="cm-actions">
-                        <button onClick={() => handleView(item.id)}>View</button>
-                        <button onClick={() => confirmDeleteContent(item)}>Delete</button>
-                      </td>
-                    </tr>
-                  ))}
-                  {sortedContent.length === 0 && (
-                    <tr>
-                      <td colSpan={8} className="cm-empty">
-                        No content found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-
           {activeTab === "user-reviews" && (
             <div className="cm-table-wrap">
               <table className="cm-table">
@@ -620,8 +496,7 @@ export default function Content() {
                       <td>{capitalize(item.status)}</td>
                       <td>{item.created}</td>
                       <td className="cm-actions">
-                        <button onClick={() => handleView(item.id)}>View</button>
-                        <button onClick={() => handleFeature(item.id)}>Feature</button>
+                        <button onClick={() => handleView(item)}>View</button>
                         <button onClick={() => confirmDeleteReview(item)}>Delete</button>
                       </td>
                     </tr>

@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Users.css";
-// import { mockUsers } from "../data/mockUsers";
 import axios from "axios";
 import { useEffect } from "react";
 
@@ -32,12 +31,6 @@ function Notification({ onClose }) {
       <h4>User details updated</h4>
       <p>Your changes have been successfully updated.</p>
       <div className="um-toast-actions">
-        <button className="btn btn-primary" type="button">
-          View Profile
-        </button>
-        <button className="btn" type="button">
-          Undo
-        </button>
         <button className="btn btn-link" onClick={onClose} type="button">
           Close
         </button>
@@ -45,17 +38,6 @@ function Notification({ onClose }) {
     </div>
   );
 }
-
-// function formatNowTimestamp() {
-//   const d = new Date();
-//   const pad = (n) => String(n).padStart(2, "0");
-//   const yyyy = d.getFullYear();
-//   const mm = pad(d.getMonth() + 1);
-//   const dd = pad(d.getDate());
-//   const hh = pad(d.getHours());
-//   const min = pad(d.getMinutes());
-//   return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
-// }
 
 export default function Users() {
   const navigate = useNavigate();
@@ -68,6 +50,46 @@ export default function Users() {
   //Create Real Time Activity Logs
   const [activityLog, setActivityLog] = useState([]);
 
+  //Ticket Summary
+  const [ticketCounts, setTicketCounts] = useState({
+    total: 0,
+    pending: 0
+  });
+
+  const fetchTicketCounts = async () => {
+    try {
+      const res = await axios.get("http://localhost:8080/api/support", {
+        withCredentials: true,
+      });
+
+      const tickets = res.data;
+
+      const newTicketsCount = tickets.filter(
+        t => t.status.toUpperCase() === "NEW"
+      ).length;
+
+      const pendingCount = tickets.filter(
+        t => t.status.toUpperCase() === "PENDING"
+      ).length;
+
+      setTicketCounts({
+        new: newTicketsCount,
+        pending: pendingCount
+      });
+    } catch (err) {
+      console.error("Failed to fetch ticket counts", err);
+    }
+  };
+
+  // Call on mount
+  useEffect(() => {
+    fetchTicketCounts(); // initial fetch
+    const interval = setInterval(fetchTicketCounts, 10000); // every 10 seconds
+
+    return () => clearInterval(interval); // cleanup on unmount
+  }, []);
+
+  //Add Changes
   const loadActivityLogs = () => {
     axios
       .get("http://localhost:8080/api/users/activity", {
@@ -116,46 +138,6 @@ export default function Users() {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [modal, setModal] = useState(null);
   const [showToast, setShowToast] = useState(false);
-
-  // Auto-generated Activity Log
-  // const [activityLog, setActivityLog] = useState(() => [
-  //   {
-  //     id: 1,
-  //     timestamp: "2025-11-05 16:22",
-  //     message: 'user "garcia@example.com" suspended',
-  //   },
-  //   {
-  //     id: 2,
-  //     timestamp: "2025-11-05 13:42",
-  //     message: 'user "young@example.com" suspended',
-  //   },
-  //   {
-  //     id: 3,
-  //     timestamp: "2025-11-05 12:26",
-  //     message: 'user "carter@example.com" registered',
-  //   },
-  //   {
-  //     id: 4,
-  //     timestamp: "2025-11-05 12:01",
-  //     message: 'user "hernandez@example.com" deleted',
-  //   },
-  //   {
-  //     id: 5,
-  //     timestamp: "2025-11-05 12:26",
-  //     message: 'user "clark@example.com" registered',
-  //   },
-  // ]);
-
-  // const addLog = (message) => {
-  //   setActivityLog((prev) => [
-  //     {
-  //       id: Date.now() + Math.random(),
-  //       timestamp: formatNowTimestamp(),
-  //       message,
-  //     },
-  //     ...prev,
-  //   ]);
-  // };
 
   const filteredUsers = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -279,11 +261,11 @@ export default function Users() {
         </div>
 
         <div className="tm-card um-tickets">
-          <h3>Recent tickets/reports</h3>
-          <p>3 new user reports pending review</p>
-          <p>1 data restore request awaiting approval</p>
+          <h3>Support Tickets / Reports</h3>
+          <p>{ticketCounts.new} New Tickets</p>
+          <p>{ticketCounts.pending} Tickets Pending for Review/Resolve</p>
         </div>
-      </section>
+        </section>
 
       <section className="tm-card">
         {/* Filter/Search row */}
@@ -314,14 +296,6 @@ export default function Users() {
                 aria-label="Search by email"
               />
             </div>
-
-            <button
-              className="btn btn-primary"
-              type="button"
-              onClick={() => navigate("/admin/users/new")}
-            >
-              Add User
-            </button>
           </div>
         </div>
 
@@ -375,14 +349,6 @@ export default function Users() {
                     </button>
                     <button type="button" onClick={() => confirmDelete(u)}>
                       Delete
-                    </button>
-
-                    {/*VIEW NOW OPENS USER PROFILE */}
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/admin/users/${u.id}`)}
-                    >
-                      View
                     </button>
                   </td>
                 </tr>
