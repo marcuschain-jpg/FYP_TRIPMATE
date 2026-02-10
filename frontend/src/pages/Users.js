@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Users.css";
-// import { mockUsers } from "../data/mockUsers";
 import axios from "axios";
 import { useEffect } from "react";
 
@@ -45,17 +44,6 @@ function Notification({ onClose }) {
     </div>
   );
 }
-
-// function formatNowTimestamp() {
-//   const d = new Date();
-//   const pad = (n) => String(n).padStart(2, "0");
-//   const yyyy = d.getFullYear();
-//   const mm = pad(d.getMonth() + 1);
-//   const dd = pad(d.getDate());
-//   const hh = pad(d.getHours());
-//   const min = pad(d.getMinutes());
-//   return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
-// }
 
 export default function Users() {
   const navigate = useNavigate();
@@ -116,46 +104,6 @@ export default function Users() {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [modal, setModal] = useState(null);
   const [showToast, setShowToast] = useState(false);
-
-  // Auto-generated Activity Log
-  // const [activityLog, setActivityLog] = useState(() => [
-  //   {
-  //     id: 1,
-  //     timestamp: "2025-11-05 16:22",
-  //     message: 'user "garcia@example.com" suspended',
-  //   },
-  //   {
-  //     id: 2,
-  //     timestamp: "2025-11-05 13:42",
-  //     message: 'user "young@example.com" suspended',
-  //   },
-  //   {
-  //     id: 3,
-  //     timestamp: "2025-11-05 12:26",
-  //     message: 'user "carter@example.com" registered',
-  //   },
-  //   {
-  //     id: 4,
-  //     timestamp: "2025-11-05 12:01",
-  //     message: 'user "hernandez@example.com" deleted',
-  //   },
-  //   {
-  //     id: 5,
-  //     timestamp: "2025-11-05 12:26",
-  //     message: 'user "clark@example.com" registered',
-  //   },
-  // ]);
-
-  // const addLog = (message) => {
-  //   setActivityLog((prev) => [
-  //     {
-  //       id: Date.now() + Math.random(),
-  //       timestamp: formatNowTimestamp(),
-  //       message,
-  //     },
-  //     ...prev,
-  //   ]);
-  // };
 
   const filteredUsers = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -314,14 +262,6 @@ export default function Users() {
                 aria-label="Search by email"
               />
             </div>
-
-            <button
-              className="btn btn-primary"
-              type="button"
-              onClick={() => navigate("/admin/users/new")}
-            >
-              Add User
-            </button>
           </div>
         </div>
 
@@ -375,14 +315,6 @@ export default function Users() {
                     </button>
                     <button type="button" onClick={() => confirmDelete(u)}>
                       Delete
-                    </button>
-
-                    {/*VIEW NOW OPENS USER PROFILE */}
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/admin/users/${u.id}`)}
-                    >
-                      View
                     </button>
                   </td>
                 </tr>
