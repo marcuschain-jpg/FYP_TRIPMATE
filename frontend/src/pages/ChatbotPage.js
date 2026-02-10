@@ -3,20 +3,17 @@ import "../styles/Chatbot.css";
 import axios from "axios";
 
 export default function ChatbotModal({ isOpen, onClose }) {
-  //In-memory chat sessions only
+  // Single conversation only
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  //Fetch Neccesary Data/Communicate with Backend
+  // Send message to backend
   const sendToBackend = async (text) => {
     try {
       const res = await axios.post(
         "http://localhost:8080/Chatbot/message",
-        { 
-          message: text,
-          history 
-        },
+        { message: text },
         { withCredentials: true }
       );
       return res.data;
@@ -25,79 +22,47 @@ export default function ChatbotModal({ isOpen, onClose }) {
     }
   };
 
-  //Create new chat 
-  const createNewChat = () => {
-    const newChat = {
-      title: "",
-      messages: [],
-    };
-
-    setChats((prev) => [...prev, newChat]);
-    setActiveChatIndex(null);
-  };
-
-  //Delete chat
-  const deleteChat = (index) => {
-    setChats((prev) => prev.filter((_, i) => i !== index));
-    setActiveChatIndex(null);
-  };
-
-  //Send message
+  // Send message
   const handleSend = async () => {
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() || isLoading) return;
 
     const userMessage = inputValue;
     setInputValue("");
     setIsLoading(true);
 
-    //Add user message to chat
-    setMessages((prev) => [...prev, { sender: "user", text: userMessage }]);
+    // Add user message
+    setMessages((prev) => [
+      ...prev,
+      { sender: "user", text: userMessage }
+    ]);
 
     try {
       const data = await sendToBackend(userMessage);
 
-      if (!data) {
-        throw new Error("No response from server");
-      }
+      if (!data) throw new Error("No response");
 
-      setChats(prev => {
-        const updated = [...prev];
-
-        updated[currentIndex] = {
-          ...updated[currentIndex],
-          messages: [
-            ...updated[currentIndex].messages,
-            data.isItinerary
-              ? {
-                  sender: "bot",
-                  text: "Itinerary generated. Click to view.",
-                  tripId: data.tripId,
-                  type: "itinerary"
-                }
-              : {
-                  sender: "bot",
-                  text: data.reply || "No response.",
-                  type: "text"
-                }
-          ]
-        };
-
-        return updated;
-      });
-
-    } catch (err) {
       setMessages((prev) => [
         ...prev,
         {
           sender: "bot",
-          text: "Server error. Try again.",
-        },
+          text: data.reply || "No response.",
+          isItinerary: data.isItinerary || false
+        }
+      ]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "bot",
+          text: "Server error. Please try again."
+        }
       ]);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Enter to send
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !isLoading) {
       e.preventDefault();
@@ -105,12 +70,11 @@ export default function ChatbotModal({ isOpen, onClose }) {
     }
   };
 
-  //Handle suggestion click
+  // Suggestion click
   const handleSuggestion = (suggestion) => {
     setInputValue(suggestion);
   };
 
-  //Suggestion prompts
   const suggestions = [
     "Plan a trip to Singapore",
     "I'm looking for food experiences",
@@ -127,7 +91,7 @@ export default function ChatbotModal({ isOpen, onClose }) {
         className="chatbot-modal-container"
         onClick={(e) => e.stopPropagation()}
       >
-        {/*Header*/}
+        {/* Header */}
         <div className="chatbot-modal-header">
           <h2 className="chatbot-modal-title">TripMate Chatbot</h2>
           <button
@@ -139,51 +103,47 @@ export default function ChatbotModal({ isOpen, onClose }) {
           </button>
         </div>
 
-        {/*Messages area*/}
+        {/* Messages */}
         <div className="chatbot-modal-messages">
           {messages.length === 0 && (
             <div className="chatbot-modal-welcome">
-              <h3 className="chatbot-modal-heading">How May I Assist You?</h3>
+              <h3 className="chatbot-modal-heading">
+                How May I Assist You?
+              </h3>
               <div className="chatbot-modal-suggestions">
-                {suggestions.map((suggestion, index) => (
+                {suggestions.map((s, i) => (
                   <button
-                    key={index}
+                    key={i}
                     className="chatbot-modal-suggestion-btn"
-                    onClick={() => handleSuggestion(suggestion)}
+                    onClick={() => handleSuggestion(s)}
                   >
-                    {suggestion}
+                    {s}
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-            {activeChat &&
-              activeChat.messages.map((msg, index) => (
-                <div
-                  key={index}
-                  className={`chatbot-bubble ${msg.sender}`}
-                  style={{
-                    cursor: msg.type === "itinerary" ? "pointer" : "default",
-                    textDecoration: msg.type === "itinerary" ? "underline" : "none"
-                  }}
-                  onClick={() => {
-                    if (msg.type === "itinerary") {
-                      navigate(`/Itinerary/${msg.tripId}/default`);
-                    }
-                  }}
-                >
-                  {msg.text}
-                </div>
-            ))}
-          </div>
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              className={`chatbot-bubble ${msg.sender}`}
+              style={{
+                whiteSpace: "pre-wrap",
+                fontFamily: msg.isItinerary ? "monospace" : "inherit"
+              }}
+            >
+              {msg.text}
+            </div>
+          ))}
+        </div>
 
-        {/*Input area*/}
+        {/* Input */}
         <div className="chatbot-modal-input-wrapper">
           <input
             type="text"
             className="chatbot-modal-input"
-            placeholder="Ask Anything"
+            placeholder="Ask anything about travel..."
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
