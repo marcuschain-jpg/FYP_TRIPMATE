@@ -29,6 +29,23 @@ const normalizeCategory = (raw) => {
   return "others";
 };
 
+//Summary Tickets (For Dashboard)
+router.get("/summary", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+      COUNT(*) FILTER (WHERE status = 'NEW') AS "newTickets"
+        COUNT(*) FILTER (WHERE status = 'PENDING') AS "pendingReports"
+      FROM support_ticket
+    `);
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("GET /support-tickets/summary error:", err);
+    res.status(500).json({ error: "Failed to fetch ticket summary" });
+  }
+});
+
 // GET Function
 router.get("/", async (req, res) => {
   try {
@@ -249,40 +266,5 @@ router.delete("/:ticketId", async (req, res) => {
     res.status(500).json({ error: "Failed to delete ticket" });
   }
 });
-
-//Upload Attachment Function
-router.post("/:ticketId/upload", InsertPhoto(), async (req, res) => {
-  const { ticketId } = req.params;
-
-  if (!req.files || req.files.length === 0) {
-    return res.status(400).json({ error: "No files uploaded" });
-  }
-
-  try {
-    // Upload files from local to S3
-    const uploadKeys = await ImportPhotoS3(`tickets/${ticketId}`, req.uploadSessionID);
-
-    // Generate signed URLs with type
-    const signedFiles = uploadKeys.map(f => {
-      const ext = f.split(".").pop().toLowerCase();
-      const type = ["mp4","mov","avi","mkv"].includes(ext) ? "video" : "image";
-      
-      const url = s3.getSignedUrl("getObject", {
-        Bucket: myBucket,
-        Key: f,
-        Expires: 30 * 60 // 30 mins
-      });
-
-      return { type, url, key: f };
-    });
-
-    res.json(signedFiles);
-
-  } catch (err) {
-    console.error("File upload failed:", err);
-    res.status(500).json({ error: "Failed to upload files" });
-  }
-});
-
 
 module.exports = router;

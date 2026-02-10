@@ -28,7 +28,6 @@ export default function Support() {
 
   const [statusFilters, setStatusFilters] = useState({
     new: false,
-    open: false,
     pending: false,
     resolved: false,
   });
@@ -445,7 +444,7 @@ export default function Support() {
               <div className="sc-left-block sc-filters">
                 <div className="sc-filter-group">
                   <div className="sc-filter-title">Status</div>
-                  {["new", "open", "pending", "resolved"].map((status) => (
+                  {["new", "pending", "resolved"].map((status) => (
                     <label className="sc-check" key={status}>
                       <input
                         type="checkbox"

@@ -50,6 +50,46 @@ export default function Users() {
   //Create Real Time Activity Logs
   const [activityLog, setActivityLog] = useState([]);
 
+  //Ticket Summary
+  const [ticketCounts, setTicketCounts] = useState({
+    total: 0,
+    pending: 0
+  });
+
+  const fetchTicketCounts = async () => {
+    try {
+      const res = await axios.get("http://localhost:8080/api/support", {
+        withCredentials: true,
+      });
+
+      const tickets = res.data;
+
+      const newTicketsCount = tickets.filter(
+        t => t.status.toUpperCase() === "NEW"
+      ).length;
+
+      const pendingCount = tickets.filter(
+        t => t.status.toUpperCase() === "PENDING"
+      ).length;
+
+      setTicketCounts({
+        new: newTicketsCount,
+        pending: pendingCount
+      });
+    } catch (err) {
+      console.error("Failed to fetch ticket counts", err);
+    }
+  };
+
+  // Call on mount
+  useEffect(() => {
+    fetchTicketCounts(); // initial fetch
+    const interval = setInterval(fetchTicketCounts, 10000); // every 10 seconds
+
+    return () => clearInterval(interval); // cleanup on unmount
+  }, []);
+
+  //Add Changes
   const loadActivityLogs = () => {
     axios
       .get("http://localhost:8080/api/users/activity", {
@@ -221,11 +261,11 @@ export default function Users() {
         </div>
 
         <div className="tm-card um-tickets">
-          <h3>Recent tickets/reports</h3>
-          <p>3 new user reports pending review</p>
-          <p>1 data restore request awaiting approval</p>
+          <h3>Support Tickets / Reports</h3>
+          <p>{ticketCounts.new} New Tickets</p>
+          <p>{ticketCounts.pending} Tickets Pending for Review/Resolve</p>
         </div>
-      </section>
+        </section>
 
       <section className="tm-card">
         {/* Filter/Search row */}
