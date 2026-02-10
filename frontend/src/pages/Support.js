@@ -2,12 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import "../styles/Support.css";
-import axios from "axios";
-
-// import {
-//   mockTickets as initialTickets,
-//   mockFAQs as initialFAQs,
-// } from "../data/mockSupport";
+import Axios from '../hooks/Axios'
 
 import AddFAQArticle from "./AddFAQArticle";
 import EditFAQArticle from "./EditFAQArticle";
@@ -86,8 +81,8 @@ export default function Support() {
   //API Calls
   const fetchTickets = async () => {
     try {
-      const res = await axios.get(
-        "http://localhost:8080/api/support",
+      const res = await Axios.get(
+        "/api/support",
         { withCredentials: true }
       );
 
@@ -112,8 +107,8 @@ export default function Support() {
   //Messages For Ticket
   const fetchMessages = async (ticketId) => {
     try {
-      const res = await axios.get(
-        `http://localhost:8080/api/support/${ticketId}/messages`,
+      const res = await Axios.get(
+        `/api/support/${ticketId}/messages`,
         { withCredentials: true }
       );
 
@@ -132,8 +127,8 @@ export default function Support() {
   //FAQs
   const fetchFaqs = async () => {
     try {
-      const res = await axios.get(
-        "http://localhost:8080/api/faq",
+      const res = await Axios.get(
+        "/api/faq",
         { withCredentials: true }
       );
 
@@ -236,8 +231,8 @@ export default function Support() {
   //Ticket Actions
   const sendTicketEmail = async (ticketId) => {
     try {
-      await axios.post(
-        `http://localhost:8080/api/support/${ticketId}/send-email`,
+      await Axios.post(
+        `/api/support/${ticketId}/send-email`,
         {}, // optional template info
         { withCredentials: true }
       );
@@ -257,15 +252,19 @@ export default function Support() {
       message: `Are you sure you want to mark ticket #${ticket.id} as resolved?`,
       onConfirm: async () => {
         try {
-          await axios.patch(`/api/support/tickets/${ticket.id}/resolve`, {}, {
-            withCredentials: true,
-          });
+          await Axios.patch(
+            `/api/support/${ticket.id}`,
+            { status: "RESOLVED" },
+            { withCredentials: true }
+          );
 
           setTickets(prev =>
             prev.map(t =>
               t.id === ticket.id ? { ...t, status: "RESOLVED" } : t
             )
           );
+
+          setModal(null); // ✅ IMPORTANT: close modal
         } catch (err) {
           console.error("Failed to resolve ticket", err);
         }
@@ -314,8 +313,9 @@ export default function Support() {
       message: `Are you sure you want to delete this FAQ? This action cannot be undone.`,
       onConfirm: async () => {
         try {
-          await axios.delete(`/api/faq/${faq.id}`, { withCredentials: true });
+          await Axios.delete(`/api/faq/${faq.id}`, { withCredentials: true });
           setFaqs((prev) => prev.filter((f) => f.id !== faq.id));
+          setModal(null);
         } catch (err) {
           console.error("Failed to delete FAQ", err);
         }
@@ -333,14 +333,14 @@ export default function Support() {
       };
 
       if (payload.id) {
-        await axios.patch(
-          `http://localhost:8080/api/faq/${payload.id}`,
+        await Axios.patch(
+          `api/faq/${payload.id}`,
           dbPayload,
           { withCredentials: true }
         );
       } else {
-        await axios.post(
-          "http://localhost:8080/api/faq",
+        await Axios.post(
+          "api/faq",
           dbPayload,
           { withCredentials: true }
         );

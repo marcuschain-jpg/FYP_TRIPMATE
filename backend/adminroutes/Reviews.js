@@ -1,8 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../helper/db");
-const PhotoImp = require("../middlewares/PhotoImp");
-const { ImportPhotoS3 } = require("../helper/S3FileSys");
 // --- Authenticate ---
 const RequireAuth = require("../middlewares/RequireAuths.js"); // Authenticate and authorize user
 
@@ -98,6 +96,27 @@ router.get("/:id", async (req, res) => {
   } catch (err) {
     console.error("GET review by id error:", err);
     res.status(500).json({ error: "Failed to fetch review" });
+  }
+});
+
+//Delete Function
+router.delete("/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `DELETE FROM review WHERE review_id = $1`,
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Review not found" });
+    }
+
+    res.json({ message: "Review deleted" });
+  } catch (err) {
+    console.error("Delete review error:", err);
+    res.status(500).json({ error: "Failed to delete review" });
   }
 });
 

@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Users.css";
-import axios from "axios";
+import Axios from '../hooks/Axios'
 import { useEffect } from "react";
 
 /* ---- CONFIRM MODAL ---- */
@@ -58,7 +58,7 @@ export default function Users() {
 
   const fetchTicketCounts = async () => {
     try {
-      const res = await axios.get("http://localhost:8080/api/support", {
+      const res = await Axios.get("api/support", {
         withCredentials: true,
       });
 
@@ -91,8 +91,8 @@ export default function Users() {
 
   //Add Changes
   const loadActivityLogs = () => {
-    axios
-      .get("http://localhost:8080/api/users/activity", {
+    Axios
+      .get("api/users/activity", {
         withCredentials: true,
       })
       .then((res) => setActivityLog(res.data))
@@ -105,8 +105,8 @@ export default function Users() {
 
   // Load Data from DB
   useEffect(() => {
-    axios
-      .get("http://localhost:8080/api/users", {
+    Axios
+      .get("api/users", {
         withCredentials: true,
       })
       .then((response) => {
@@ -186,8 +186,8 @@ export default function Users() {
         user.status === "Active" ? "suspend" : "activate"
       } ${user.name}?`,
       action: () => {
-        axios
-          .patch(`http://localhost:8080/api/users/${user.id}/suspend`, null, {
+        Axios
+          .patch(`api/users/${user.id}/suspend`, null, {
             withCredentials: true,
           })
           .then((res) => {
@@ -215,8 +215,8 @@ export default function Users() {
       title: "Delete User",
       message: `Delete ${user.name}? This action cannot be undone.`,
       action: () => {
-        axios
-          .delete(`http://localhost:8080/api/users/${user.id}`, {
+        Axios
+          .delete(`api/users/${user.id}`, {
             withCredentials: true,
           })
           .then(() => {
