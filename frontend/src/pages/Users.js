@@ -31,12 +31,6 @@ function Notification({ onClose }) {
       <h4>User details updated</h4>
       <p>Your changes have been successfully updated.</p>
       <div className="um-toast-actions">
-        <button className="btn btn-primary" type="button">
-          View Profile
-        </button>
-        <button className="btn" type="button">
-          Undo
-        </button>
         <button className="btn btn-link" onClick={onClose} type="button">
           Close
         </button>
