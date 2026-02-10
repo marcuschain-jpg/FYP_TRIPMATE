@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import "../styles/Content.css";
-import axios from "axios";
+import Axios from '../hooks/Axios'
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -28,7 +28,12 @@ function ConfirmModal({ title, message, onConfirm, onClose }) {
         <h3>{title}</h3>
         <p>{message}</p>
         <div className="um-modal-actions">
-          <button className="btn btn-danger" onClick={onConfirm}>
+          <button
+            className="btn btn-danger"
+            onClick={async () => {
+              if (onConfirm) await onConfirm();
+            }}
+          >
             Confirm
           </button>
           <button className="btn" onClick={onClose}>
@@ -73,16 +78,16 @@ export default function Content() {
   const loadData = async () => {
     try {
       if (activeTab === "user-reviews") {
-        const res = await axios.get(
-          "http://localhost:8080/api/reviews",
+        const res = await Axios.get(
+          "/api/reviews",
           { withCredentials: true }
         );
         setReviewItems(res.data);
       }
 
       if (activeTab === "marketing") {
-        const res = await axios.get(
-          "http://localhost:8080/api/marketing",
+        const res = await Axios.get(
+          "/api/marketing",
           { withCredentials: true }
         );
         setMarketingItems(res.data);
@@ -175,8 +180,8 @@ export default function Content() {
       message: "Delete this review? This action cannot be undone.",
       action: async () => {
         try {
-          await axios.delete(
-            `http://localhost:8080/api/reviews/${review.id}`,
+          await Axios.delete(
+            `/api/reviews/${review.id}`,
             { withCredentials: true }
           );
 
@@ -199,8 +204,8 @@ export default function Content() {
       message: "Delete this content? This action cannot be undone.",
       action: async () => {
         try {
-          await axios.delete(
-            `http://localhost:8080/api/marketing/${item.id}`,
+          await Axios.delete(
+            `/api/marketing/${item.id}`,
             { withCredentials: true }
           );
 
@@ -271,8 +276,8 @@ export default function Content() {
 
       // UPDATE EXISTING
       if (payload.id) {
-        res = await axios.put(
-          `http://localhost:8080/api/marketing/${payload.id}`,
+        res = await Axios.put(
+          `/api/marketing/${payload.id}`,
           dataToSend,
           { withCredentials: true }
         );
@@ -284,8 +289,8 @@ export default function Content() {
       } 
       // CREATE NEW
       else {
-        res = await axios.post(
-          "http://localhost:8080/api/marketing",
+        res = await Axios.post(
+          "/api/marketing",
           dataToSend,
           { withCredentials: true }
         );
@@ -305,7 +310,7 @@ export default function Content() {
 
   const reloadMarketing = async () => {
     try {
-      const res = await axios.get("http://localhost:8080/api/marketing", { withCredentials: true });
+      const res = await Axios.get("api/marketing", { withCredentials: true });
       setMarketingItems(res.data);
     } catch (err) {
       console.error("Failed to reload marketing list", err);
@@ -566,7 +571,7 @@ export default function Content() {
         <ConfirmModal
           title={modal.title}
           message={modal.message}
-          onConfirm={modal.action}
+          onConfirm={() => modal.action?.()}
           onClose={() => setModal(null)}
         />
       )}

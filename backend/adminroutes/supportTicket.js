@@ -34,7 +34,7 @@ router.get("/summary", async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
-      COUNT(*) FILTER (WHERE status = 'NEW') AS "newTickets"
+      COUNT(*) FILTER (WHERE status = 'NEW') AS "newTickets",
         COUNT(*) FILTER (WHERE status = 'PENDING') AS "pendingReports"
       FROM support_ticket
     `);
