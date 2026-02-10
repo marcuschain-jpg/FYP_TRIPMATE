@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "../styles/Chatbot.css";
-import axios from "axios";
+import Axios from '../hooks/Axios'
 
 export default function ChatbotModal({ isOpen, onClose }) {
   // Single conversation only
@@ -11,8 +11,8 @@ export default function ChatbotModal({ isOpen, onClose }) {
   // Send message to backend
   const sendToBackend = async (text) => {
     try {
-      const res = await axios.post(
-        "http://localhost:8080/Chatbot/message",
+      const res = await Axios.post(
+        "/Chatbot/message",
         { message: text },
         { withCredentials: true }
       );
@@ -127,7 +127,7 @@ export default function ChatbotModal({ isOpen, onClose }) {
           {messages.map((msg, index) => (
             <div
               key={index}
-              className={`chatbot-bubble ${msg.sender}`}
+              className={`chatbot-modal-bubble ${msg.sender}`}
               style={{
                 whiteSpace: "pre-wrap",
                 fontFamily: msg.isItinerary ? "monospace" : "inherit"
