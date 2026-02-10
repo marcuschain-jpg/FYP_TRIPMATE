@@ -837,7 +837,7 @@ router.get("/GetActivityToEdit", RequireAuth(["registered", "premium"]), async(r
   try{
     const data = await pool.query(
       `SELECT a.activity_name, a.activity_location, a.activity_address, a.activity_order, a.gmaps_placeid, a.longitude, a.latitude,
-	     ap.photo_id, ap.photo_url, ap.photo_title, i.latitude AS i_lat, i.longitude AS i_lng, a.activity_cost,
+	     ap.photo_id, ap.photo_url, ap.photo_title, i.latitude AS i_lat, i.longitude AS i_lng, a.activity_cost, i.type,
 	     TO_CHAR(a.activity_date, 'YYYY-MM-DD') AS activity_date,
        TO_CHAR(i.start_date, 'YYYY-MM-DD') AS iStart_date,
        TO_CHAR(i.end_date, 'YYYY-MM-DD') AS iEnd_date
@@ -860,12 +860,13 @@ router.get("/GetActivityToCreate", RequireAuth(["registered", "premium"]), async
 
   try{
     const data = await pool.query(
-      `SELECT longitude, latitude,
+      `SELECT longitude, latitude, type,
        TO_CHAR(start_date, 'YYYY-MM-DD') AS iStart_date,
        TO_CHAR(end_date, 'YYYY-MM-DD') AS iEnd_date
        FROM itinerary
        WHERE itinerary_id = $1 `, [i_id]
     )
+    console.log(data.rows);
     return res.send(data.rows);
   }
   catch(err) { return res.status(500).send({message:"Failed to retrieve coords."}) }
