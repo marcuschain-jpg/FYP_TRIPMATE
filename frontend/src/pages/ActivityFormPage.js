@@ -5,6 +5,7 @@ import useMapData from "../hooks/FetchMapData";
 import "../styles/Itinerary.css";
 import Axios from '../hooks/Axios';
 import { useTranslation } from "react-i18next";
+import ItineraryChat from "../components/ItineraryChat";
 
 function ActivityFormPage() {
   const { tripId, mode, index } = useParams();
@@ -52,6 +53,10 @@ function ActivityFormPage() {
 
   const [originalDate, setOriginalDate] = useState("");
 
+  // For Chat Modal
+  const[showChat, setShowChat] = useState(false);
+  const [tripType, setTripType] = useState("");
+
   const editing = mode === "edit";
 
   useEffect(() => {
@@ -87,6 +92,7 @@ function ActivityFormPage() {
         setItineraryLng(res.data[0].longitude);
         setItineraryLat(res.data[0].latitude);
         setMapCenterChange({lng:parseFloat(res.data[0].longitude), lat:parseFloat(res.data[0].latitude)});
+        setTripType(res.data[0].type)
         
         //Set trip date range - format as YYYY-MM-DD for input[type="date"]
         const startDate = String(res.data[0].istart_date).slice(0, 10);
@@ -132,6 +138,7 @@ function ActivityFormPage() {
     setLatitude(parseFloat(a[0].latitude));
     setItineraryLng(a[0].i_lng);
     setItineraryLat(a[0].i_lat);
+    setTripType(a[0].type);
     
     //Set trip date range when editing
     const startDate = String(a[0].istart_date).slice(0, 10);
@@ -518,6 +525,12 @@ function ActivityFormPage() {
           {mapData && itineraryLng && itineraryLat ? (<InitMaps DefaultMapData={{...mapData, center: {lat: itineraryLat, lng: itineraryLng}}} centerChange={mapCenterChange} activityCoords={activityCoords}/>) : (<p className="map-loading-text">Loading map...</p>)}
         </div>
       </div>
+
+      {(tripType === "Group") && 
+      (<button className="floating-chat-btn" onClick={() => setShowChat(true)} title="Chat">
+        {t("chat_btn")}
+      </button>)}
+      {showChat && ( <ItineraryChat onClose={() => {setShowChat(false);}} i_id={tripId}/>)}
     </div>
   );
 }

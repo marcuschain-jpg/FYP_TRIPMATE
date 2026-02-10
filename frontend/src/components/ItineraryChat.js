@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Chat.css";
-import axios from "axios";
+import Axios from "../hooks/Axios";
 import {socket} from "../hooks/Socket";
 import { useTranslation } from "react-i18next";
 
@@ -20,7 +20,7 @@ function ItineraryChat({ onClose, i_id }) {
     useEffect(() => {
       const getChatMsg = async() => {
         try{
-          const res = await axios.get("http://localhost:8080/GroupTrips/GetChatMsg", {params:{i_id: i_id}, withCredentials:true});
+          const res = await Axios.get("GroupTrips/GetChatMsg", {params:{i_id: i_id}, withCredentials:true});
           console.log(res.data)
           if(res.data[0].text !== null){
             setMessages(res.data.map(item => ({
@@ -95,7 +95,7 @@ function ItineraryChat({ onClose, i_id }) {
     const sendMessage = async() => {
       if (!chatInput.trim()) return;
       try{
-        const res = await axios.post("http://localhost:8080/GroupTrips/SendMessage", {content: chatInput, chatID:chatID}, {withCredentials:true});
+        const res = await Axios.post("GroupTrips/SendMessage", {content: chatInput, chatID:chatID}, {withCredentials:true});
         console.log("res!", res)
         setMessages(prev => {
           const exist = prev.some(m => m.id === res.data.id);
