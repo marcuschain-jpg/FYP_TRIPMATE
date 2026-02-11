@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ArrowLeft } from "lucide-react";
-import axios from "axios";
+import Axios from "../hooks/Axios";
 import "../styles/MarketingContentForm.css";
 
 export default function AddMarketingContent({ onBack, onSaveDraft, onPublish }) {
@@ -31,8 +31,8 @@ export default function AddMarketingContent({ onBack, onSaveDraft, onPublish }) 
       if (imageFile) formData.append("media", imageFile);
       if (url) formData.append("imageUrl", url);
 
-      const res = await axios.post(
-        "http://localhost:8080/api/content/marketing",
+      const res = await Axios.post(
+        "api/marketing",
         formData,
         {
           withCredentials: true,
@@ -59,8 +59,8 @@ export default function AddMarketingContent({ onBack, onSaveDraft, onPublish }) 
       if (imageFile) formData.append("media", imageFile);
       if (url) formData.append("imageUrl", url);
 
-      const res = await axios.post(
-        "http://localhost:8080/api/content/marketing",
+      const res = await Axios.post(
+        "api/marketing",
         formData,
         {
           withCredentials: true,

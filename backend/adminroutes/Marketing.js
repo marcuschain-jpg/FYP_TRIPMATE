@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../helper/db");
 const PhotoImp = require("../middlewares/PhotoImp");
-const { ImportPhotoS3 } = require("../helper/S3FileSys");
+const { ImportPhotoS3, DeletePhotoS3 } = require("../helper/S3FileSys");
 // --- Authenticate ---
 const RequireAuth = require("../middlewares/RequireAuths.js"); // Authenticate and authorize user
 
@@ -64,16 +64,25 @@ router.delete("/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    const result = await pool.query(
-      `DELETE FROM marketing_content WHERE content_id = $1`,
-      [id]
+    const data = await pool.query(
+      `SELECT c_img_url FROM marketing_content WHERE content_id = $1`, [id]
     );
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ message: "Marketing content not found" });
+    url = data.rows[0].c_img_url;
+    if(url) {
+      deleteFromS3 = await DeletePhotoS3(url);
     }
 
-    res.json({ message: "Marketing content deleted" });
+
+    if(DeletePhotoS3){
+      const result = await pool.query(
+        `DELETE FROM marketing_content WHERE content_id = $1`,
+        [id]
+       );
+       if (result.rowCount === 0) {
+        return res.status(404).json({ message: "Marketing content not found" });
+      }
+       res.json({ message: "Marketing content deleted" });
+    }
   } catch (err) {
     console.error("Delete marketing error:", err);
     res.status(500).json({ error: "Failed to delete marketing content" });
@@ -88,7 +97,7 @@ router.post("/", PhotoImp(), async (req, res) => {
   try {
     // Upload image to S3 if any
     if (req.uploadSessionID) {
-      const uploaded = await ImportPhotoS3("marketing", req.uploadSessionID);
+      const uploaded = await ImportPhotoS3("landing", req.uploadSessionID);
       if (Array.isArray(uploaded) && uploaded.length > 0) imageUrl = uploaded[0];
     }
 
