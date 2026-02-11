@@ -273,7 +273,8 @@ function MyTripsPage() {
                     name: newTripName,
                     destination: newDestination,
                     start: formatDateForInput(newStart),
-                    end: formatDateForInput(newEnd)
+                    end: formatDateForInput(newEnd),
+                    fullDest:newFullDest
                   }
                 : trip
             )
