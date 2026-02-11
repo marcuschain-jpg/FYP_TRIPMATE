@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../helper/db");
 const PhotoImp = require("../middlewares/PhotoImp");
-const { ImportPhotoS3, DeletePhotoS3 } = require("../helper/S3FileSys");
+const { ImportPhotoS3, DeletePhotoS3, ExtractPhotoS3 } = require("../helper/S3FileSys");
 // --- Authenticate ---
 const RequireAuth = require("../middlewares/RequireAuths.js"); // Authenticate and authorize user
 
@@ -21,7 +21,7 @@ router.get("/", async (req, res) => {
         c_section,
         c_title,
         c_content,
-        c_img_url,
+        c_img_url as photo_url,
         status,
         last_updated
       FROM marketing_content
@@ -38,13 +38,14 @@ router.get("/", async (req, res) => {
     else query += ` ORDER BY last_updated DESC`; // default = new
 
     const result = await pool.query(query, values);
+    const updatedResult = await ExtractPhotoS3(result.rows)
 
-    const marketing = result.rows.map((row) => ({
+    const marketing = updatedResult.map((row) => ({
       id: row.content_id,
       section: row.c_section,
       title: row.c_title,
       body: row.c_content,
-      imageUrl: row.c_img_url,
+      imageUrl: row.photo_url,
       author: "Admin",
       status: row.status,
       lastUpdated: row.last_updated
