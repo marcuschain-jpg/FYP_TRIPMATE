@@ -16,9 +16,7 @@ router.get("/", async (req, res) => {
         last_name,
         suspended,
         created_at,
-        last_login,
-        posts,
-        flags
+        last_login
       FROM users
       ORDER BY created_at DESC
     `);
