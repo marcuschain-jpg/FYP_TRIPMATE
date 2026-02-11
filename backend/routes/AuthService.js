@@ -170,6 +170,8 @@ router.patch("/ResetPassword", async(req,res) => {
     const {token, newPassword} = req.body;
     let userid = null;
     let password = null;
+    let passwordMatch = false;
+
 
     try{
         const data = await pool.query(`WITH getcredentials AS(
@@ -181,11 +183,15 @@ router.patch("/ResetPassword", async(req,res) => {
         );
         userid = data.rows[0].userid;
         password = data.rows[0].password;
+
+        // Match hashed password
+        passwordMatch = await bcrypt.compare(newPassword, password);
     }
     catch(err) {console.log(err); return res.status(500).send({message: "Failed get user credentials"});}
 
-    if(newPassword === password) return res.send({check: false});
+    if(passwordMatch) return res.send({check: false});
 
+    const hashedPassword = await bcrypt.hash(newPassword, 12); // salt round: 12
     try{
         const data = await pool.query(`WITH deleteinv AS(
          DELETE FROM email_validation
@@ -193,7 +199,7 @@ router.patch("/ResetPassword", async(req,res) => {
         )
          UPDATE users
          SET password = $2
-         WHERE userid = $3`, [token, newPassword, userid]
+         WHERE userid = $3`, [token, hashedPassword, userid]
         );
         res.send(true);
     }
