@@ -454,7 +454,6 @@ function ActivityFormPage() {
             value={cost}
             onChange={(e) => setCost(e.target.value)}
             min="0"
-            step="0.01"
           />
 
           {/*Preview of any existing media in activity form*/}

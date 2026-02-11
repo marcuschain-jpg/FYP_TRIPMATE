@@ -39,6 +39,7 @@ function ViewItineraryOnlyPage() {
   const [Loading, setLoading] = useState(true);
   const [activityCoords, setActivityCoords] = useState([]);
   const [mapConfig, setMapConfig] = useState(null);
+  const [lang, setLang] = useState("en");
 
   //Google maps refs
   const mapDivRef = useRef(null);
@@ -121,9 +122,7 @@ function ViewItineraryOnlyPage() {
 
         if (mapDivRef.current && !mapRef.current) {
           console.log("Creating map instance");
-          const center = (trip?.t_lat && trip?.t_lng) 
-            ? { lat: trip.t_lat, lng: trip.t_lng }
-            : mapConfig.center;
+          const center = mapConfig.center || { lat: 1.3521, lng: 103.8198 };
 
           mapRef.current = new window.google.maps.Map(mapDivRef.current, {
             center,
@@ -186,9 +185,7 @@ function ViewItineraryOnlyPage() {
           start: formatDateForDisplay(data?.[0]?.start_date),
           end: formatDateForDisplay(data?.[0]?.end_date),
           type: data?.[0]?.type,
-          numPpl: data?.[0]?.num_ppl,
-          t_lat: parseFloat(data[0].i_latitude),
-          t_lng: parseFloat(data[0].i_longitude)
+          numPpl: data?.[0]?.num_ppl
         };
         console.log("Trip object:", mapTrips);
         setTrip(mapTrips);
@@ -199,6 +196,7 @@ function ViewItineraryOnlyPage() {
           date: normDate(a.activity_date),
           address: a.activity_address,
           location: a.activity_location,
+          cost: parseFloat(a.activity_cost) || 0,
         }));
 
         const coordAct = data.map((a) => ({
@@ -233,6 +231,24 @@ function ViewItineraryOnlyPage() {
     () => activities.filter((a) => normDate(a.date) === normDate(selectedDate)),
     [activities, selectedDate]
   );
+
+  //Calculate costs
+  const selectedDateCost = useMemo(() => {
+    return filteredActivities.reduce((sum, activity) => sum + (activity.cost || 0), 0);
+  }, [filteredActivities]);
+
+  const totalTripCost = useMemo(() => {
+    return activities.reduce((sum, activity) => sum + (activity.cost || 0), 0);
+  }, [activities]);
+
+  const costsByDate = useMemo(() => {
+    const costs = {};
+    activities.forEach((activity) => {
+      const date = normDate(activity.date);
+      costs[date] = (costs[date] || 0) + (activity.cost || 0);
+    });
+    return costs;
+  }, [activities]);
 
   //Draw driving route and markers
   useEffect(() => {
@@ -273,9 +289,7 @@ function ViewItineraryOnlyPage() {
     });
 
     if (points.length === 0) {
-      const defaultCenter = (trip?.t_lat && trip?.t_lng) 
-        ? { lat: trip.t_lat, lng: trip.t_lng }
-        : mapConfig.center;
+      const defaultCenter = mapConfig?.center || { lat: 1.3521, lng: 103.8198 };
       mapRef.current.setCenter(defaultCenter);
       mapRef.current.setZoom(12);
       console.log("No activities - centered to default location");
@@ -338,17 +352,15 @@ function ViewItineraryOnlyPage() {
   const tripEnd = trip?.end || "";
 
   return (
-    <div className="itinerary-view">
-      <div className="itinerary-top-row">
-        <div>
-          <h1>{tripName}</h1>
-          <p className="date-text">
-            {tripStart} – {tripEnd}
-          </p>
-        </div>
+    <div className="view-only-container">
+      <div className="view-only-header">
+        <h1>{tripName}</h1>
+        <p className="trip-date">
+          {tripStart} – {tripEnd}
+        </p>
       </div>
 
-      <div className="view-layout">
+      <div className="view-only-layout">
         <div className="view-only-left">
           <h2>Activities</h2>
 
@@ -363,7 +375,7 @@ function ViewItineraryOnlyPage() {
                   .sort()
                   .map((d) => (
                     <option key={d} value={d}>
-                      {new Date(d).toLocaleDateString("en-GB", {
+                      {new Date(d).toLocaleDateString(lang, {
                         weekday: "short",
                         day: "numeric",
                         month: "long",
@@ -372,6 +384,57 @@ function ViewItineraryOnlyPage() {
                   ))}
               </select>
             </div>
+          )}
+
+          {/*cost summary cards*/}
+          {activities.length > 0 && (
+            <div className="cost-summary-cards">
+              <div className="cost-card selected-date">
+                <div className="cost-label">Today's Cost</div>
+                <div className="cost-amount">${selectedDateCost.toFixed(2)}</div>
+              </div>
+              <div className="cost-card total-trip">
+                <div className="cost-label">Total Trip Cost</div>
+                <div className="cost-amount">${totalTripCost.toFixed(2)}</div>
+              </div>
+            </div>
+          )}
+
+          {/*Daily cost breakdown table*/}
+          {activities.length > 0 && (
+            <>
+              <h2 style={{ marginTop: '28px', marginBottom: '14px', fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>Daily Breakdown</h2>
+              <div className="cost-breakdown-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Cost</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(costsByDate)
+                      .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+                      .map(([date, cost]) => (
+                        <tr key={date}>
+                          <td>
+                            {new Date(date).toLocaleDateString(lang, {
+                              weekday: "short",
+                              day: "numeric",
+                              month: "short",
+                            })}
+                          </td>
+                          <td className="cost-cell">${cost.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    <tr className="total-row">
+                      <td>Total</td>
+                      <td className="cost-cell">${totalTripCost.toFixed(2)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
 
           <div className="activities-section">
@@ -387,6 +450,11 @@ function ViewItineraryOnlyPage() {
                   </p>
                   <p>{act.location}</p>
                   {act.address && <p>{act.address}</p>}
+                  {act.cost > 0 && (
+                    <p className="activity-cost">
+                      <strong>Cost: ${act.cost.toFixed(2)}</strong>
+                    </p>
+                  )}
                 </div>
               ))}
           </div>
