@@ -326,6 +326,7 @@ function MyTripsPage() {
             type: "Private",
             collaborators: 1,
             maxCapacity: 5,
+            fullDest:newFullDest
           };
 
           setTrips((prev) => [...prev, newTrip]);
