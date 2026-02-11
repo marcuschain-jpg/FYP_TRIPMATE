@@ -17,8 +17,6 @@ router.get("/", async (req, res) => {
         suspended,
         created_at,
         last_login,
-        posts,
-        flags
       FROM users
       ORDER BY created_at DESC
     `);
@@ -34,8 +32,6 @@ router.get("/", async (req, res) => {
       lastLogin: u.last_login
         ? u.last_login.toISOString().split("T")[0]
         : "-",
-      posts: u.posts,
-      flags: u.flags,
     }));
 
     res.json(users);
