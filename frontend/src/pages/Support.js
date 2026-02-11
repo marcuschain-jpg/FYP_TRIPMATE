@@ -233,9 +233,16 @@ export default function Support() {
     try {
       await Axios.post(
         `/api/support/${ticketId}/send-email`,
-        {}, // optional template info
+        {},
         { withCredentials: true }
       );
+
+      setTickets(prev =>
+        prev.map(t =>
+          t.id === ticketId ? { ...t, status: "PENDING" } : t
+        )
+      );
+
       alert("Email sent to user!");
     } catch (err) {
       console.error("Failed to send email", err);
