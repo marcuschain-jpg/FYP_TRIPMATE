@@ -121,7 +121,9 @@ function ViewItineraryOnlyPage() {
 
         if (mapDivRef.current && !mapRef.current) {
           console.log("Creating map instance");
-          const center = mapConfig.center || { lat: 1.3521, lng: 103.8198 };
+          const center = (trip?.t_lat && trip?.t_lng) 
+            ? { lat: trip.t_lat, lng: trip.t_lng }
+            : mapConfig.center;
 
           mapRef.current = new window.google.maps.Map(mapDivRef.current, {
             center,
@@ -184,7 +186,9 @@ function ViewItineraryOnlyPage() {
           start: formatDateForDisplay(data?.[0]?.start_date),
           end: formatDateForDisplay(data?.[0]?.end_date),
           type: data?.[0]?.type,
-          numPpl: data?.[0]?.num_ppl
+          numPpl: data?.[0]?.num_ppl,
+          t_lat: parseFloat(data[0].i_latitude),
+          t_lng: parseFloat(data[0].i_longitude)
         };
         console.log("Trip object:", mapTrips);
         setTrip(mapTrips);
@@ -269,7 +273,9 @@ function ViewItineraryOnlyPage() {
     });
 
     if (points.length === 0) {
-      const defaultCenter = mapConfig?.center || { lat: 1.3521, lng: 103.8198 };
+      const defaultCenter = (trip?.t_lat && trip?.t_lng) 
+        ? { lat: trip.t_lat, lng: trip.t_lng }
+        : mapConfig.center;
       mapRef.current.setCenter(defaultCenter);
       mapRef.current.setZoom(12);
       console.log("No activities - centered to default location");
@@ -343,7 +349,7 @@ function ViewItineraryOnlyPage() {
       </div>
 
       <div className="view-layout">
-        <div className="left-side">
+        <div className="view-only-left">
           <h2>Activities</h2>
 
           {!Loading && activities.length > 0 && (
@@ -386,7 +392,7 @@ function ViewItineraryOnlyPage() {
           </div>
         </div>
 
-        <div className="right-side">
+        <div className="view-only-right">
           {!mapConfig ? (
             <p className="map-loading-text">Loading map…</p>
           ) : (
