@@ -98,17 +98,12 @@ function AppRoutes() {
         <Route
           element={
             <UserNavbar
-              outletContext={{
-                isFirstTimeUser,
-                completeProfileSetup,
-                clearUserData,
-                userProfile,
-              }}
+              
             />
           }
         >
           {/*Redirect first-time users to setup-profile, otherwise show HomePage*/}
-          <Route path="/home" element={isFirstTimeUser ? <Navigate to="/setup-profile" replace /> : <HomePage />} />
+          <Route path="/home" element={ <HomePage />} />
           <Route path="/mytrips" element={<MyTripsPage />} />
           
           {/*First time user setup*/}
