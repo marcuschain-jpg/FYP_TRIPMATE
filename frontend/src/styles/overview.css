@@ -217,3 +217,7 @@ body{
 .tm-placeholder-card h2{ margin: 0 0 6px 0; font-size: 16px; }
 .tm-placeholder-card p{ margin: 0; color: var(--tm-muted); font-size: 13px; }
 
+.tm-sidebar-footer > div:not(.tm-btn-logout) {
+  display: none;
+}
+
