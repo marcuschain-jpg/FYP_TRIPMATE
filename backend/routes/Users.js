@@ -6,6 +6,9 @@ const { ExtractPhotoS3, ImportPhotoS3, DeletePhotoS3 } = require("../helper/S3Fi
 const InsertPhoto = require("../middlewares/PhotoImp.js");
 const TranslateFunc = require("../helper/Translate.js");
 const bcrypt = require("bcrypt");
+const jwt = require('jsonwebtoken');
+const dotenv = require("dotenv");
+dotenv.config({ path: "keys.env" });
 
 router.get("/GetProfileDetails", RequireAuths(["registered", "premium"]), async(req,res) => {
   const userid = req.userid;
@@ -16,15 +19,15 @@ router.get("/GetProfileDetails", RequireAuths(["registered", "premium"]), async(
        FROM users
        WHERE userid = $1`, [userid]
     );
+    if(data.rows[0].avatar !== null) {
     const dataCleaned = data.rows.map(({avatar, ...rest}) => ({
       ...rest,
       photo_url: avatar
     }));
-    if(dataCleaned[0].photo_url !== null) {
       const updatedData = await ExtractPhotoS3(dataCleaned);
       return res.send(updatedData);
     }
-    else return res.send(dataCleaned);
+    else return res.send(data.rows);
   }
   catch(err) {console.log(err); res.status(500).send({message: "Failed to get profile details"});}
 });
@@ -149,6 +152,18 @@ router.patch("/UserChangeType", RequireAuths(["registered", "premium"]), async(r
       console.log(err);
       return res.send(500).send({ message: "Failed to downgrade user" });
     }
+
+    // reassign cookies
+    const jwtSecret = process.env.JWT_SECRET;
+    const token = jwt.sign({userid, realRole: newType}, jwtSecret);
+
+    res.cookie('token', token, {
+        maxAge: 60*60*24*10*1000, // 10 days in ms
+        path: "/",
+        secure: false, // change only when https
+        httpOnly: true,
+        sameSite: 'lax'
+    });
     return res.send(true);
   }
 
@@ -160,6 +175,17 @@ router.patch("/UserChangeType", RequireAuths(["registered", "premium"]), async(r
        SET type = $2
        WHERE userid = $1`, [userid, newType]
     );
+    // reassign cookies
+    const jwtSecret = process.env.JWT_SECRET;
+    const token = jwt.sign({userid, realRole: newType}, jwtSecret);
+
+    res.cookie('token', token, {
+        maxAge: 60*60*24*10*1000, // 10 days in ms
+        path: "/",
+        secure: false, // change only when https
+        httpOnly: true,
+        sameSite: 'lax'
+    });
     return res.send(true);
     }
     catch(err) {console.log(err); res.status(500).send({ message: "Failed to update account type" });}
@@ -181,7 +207,7 @@ router.patch("/UpdateUserProfile", RequireAuths(["registered", "premium"]), Inse
     const data = await pool.query(`
       SELECT avatar FROM users WHERE userid = $1
       `, [userid]);
-    if(data.rowCount > 0) oldPhotoURL = data.rows[0].avatar;
+    if(data.rows[0].avatar !== null) oldPhotoURL = data.rows[0].avatar;
     else oldPhotoURL = ""
     }
     catch(err) {oldPhotoURL="";}
@@ -228,8 +254,8 @@ router.patch("/UpdateUserProfile", RequireAuths(["registered", "premium"]), Inse
   catch(err) {
     await pool.query("ROLLBACK");
     await DeletePhotoS3(s3URL[0]);
-    console.log(err);
-    res.status(500).send({message: "Failed to update account type"});
+    console.log("general error!", err);
+    res.status(500).send({message: "Failed to update profile"});
   }
 
   //Delete old avatar from s3 and return true

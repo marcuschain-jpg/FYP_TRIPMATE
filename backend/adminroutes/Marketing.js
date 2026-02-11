@@ -107,19 +107,20 @@ router.post("/", PhotoImp(), async (req, res) => {
       `
       INSERT INTO marketing_content (c_section, c_title, c_content, c_img_url, status, last_updated)
       VALUES ($1, $2, $3, $4, $5, NOW())
-      RETURNING *
+      RETURNING *, c_img_url as photo_url
       `,
       [section, title, body, imageUrl, status || "Published"]
     );
 
     const row = result.rows[0];
+    const updatedResult = await ExtractPhotoS3(result.rows)
     res.status(201).json({
       message: "Marketing content created",
       id: row.content_id,
       section: row.c_section,
       title: row.c_title,
       body: row.c_content,
-      imageUrl: row.c_img_url,
+      imageUrl: updatedResult[0].photo_url,
       author: "Admin",
       status: row.status,
       lastUpdated: row.last_updated.toISOString().replace("T", " ").slice(0, 16),
@@ -139,7 +140,16 @@ router.put("/:id", PhotoImp(), async (req, res) => {
   try {
     // Upload image to S3 if any
     if (req.uploadSessionID) {
-      const uploaded = await ImportPhotoS3("marketing", req.uploadSessionID);
+      // Delete image from S3 then upload new photo
+      const data = await pool.query(
+        `SELECT c_img_url FROM marketing_content
+        WHERE content_id =$1`, [id]
+      )
+      url = data.rows[0].c_img_url;
+      if(url) {
+        deleteFromS3 = await DeletePhotoS3(url);
+      }
+      const uploaded = await ImportPhotoS3("landing", req.uploadSessionID);
       if (Array.isArray(uploaded) && uploaded.length > 0) imageUrl = uploaded[0];
     }
 
@@ -149,7 +159,7 @@ router.put("/:id", PhotoImp(), async (req, res) => {
       UPDATE marketing_content
       SET c_section=$1, c_title=$2, c_content=$3, c_img_url=COALESCE($4, c_img_url), status=$5, last_updated=NOW()
       WHERE content_id=$6
-      RETURNING *
+      RETURNING *, c_img_url as photo_url
       `,
       [section, title, body, imageUrl, status, id]
     );
@@ -158,12 +168,13 @@ router.put("/:id", PhotoImp(), async (req, res) => {
       return res.status(404).json({ message: "Marketing content not found" });
 
     const row = result.rows[0];
+    const updatedResult = await ExtractPhotoS3(result.rows)
     res.json({
       id: row.content_id,
       section: row.c_section,
       title: row.c_title,
       body: row.c_content,
-      imageUrl: row.c_img_url,
+      imageUrl: updatedResult[0].photo_url,
       author: "Admin",
       status: row.status,
       lastUpdated: row.last_updated.toISOString().replace("T", " ").slice(0, 16),

@@ -6,7 +6,7 @@ import Axios from '../hooks/Axios';
 import LoginBG from "../Assets/Login.jpg";
 import { useTranslation } from "react-i18next"; 
 
-export default function LoginPage({ setCurrentUserProfile, markAsFirstTimeUser }) {
+export default function LoginPage() {
   const navigate = useNavigate();
   const { errorMsg } = useParams();
   const [email, setEmail] = useState("");
@@ -56,9 +56,6 @@ export default function LoginPage({ setCurrentUserProfile, markAsFirstTimeUser }
         
         console.log("Login successful. isFirstLogin:", isFirstLogin);
         showToast(t("login_success"), "success");
-
-        //Mark if this is first-time user
-        markAsFirstTimeUser(isFirstLogin);
 
         //Redirect based on isFirstLogin flag
         if(role === "user") {

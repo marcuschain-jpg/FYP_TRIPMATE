@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useOutletContext, useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom"; 
 import "../styles/GroupTrip.css";
 import Axios from '../hooks/Axios';
 import { useTranslation } from "react-i18next";
@@ -9,21 +9,10 @@ function GroupTripsPage() {
   const { t } = useTranslation("grouptrips");
 
   //Shared state from Routes.js
-  const { myTrips, joinTrip, exitTrip } = useOutletContext();
   const navigate = useNavigate();
 
   const [groupTrips, setGroupTrips] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  //Sync join state
-  useEffect(() => {
-    setGroupTrips((prev) =>
-      prev.map((trip) => ({
-        ...trip,
-        joinedByYou: myTrips.some((t) => t.id === trip.id),
-      }))
-    );
-  }, [myTrips]);
 
   const [searchTerm, setSearchTerm] = useState("");
 

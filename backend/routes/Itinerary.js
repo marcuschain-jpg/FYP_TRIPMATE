@@ -598,7 +598,7 @@ router.get("/GetAllActivitiesViewOnly", async(req, res) => {
 
   try{
     const data = await pool.query(
-      `SELECT a.activity_id, a.activity_name, a.activity_address, i.itinerary_name, a.activity_location, a.longitude, a.latitude, i.type, i.num_ppl,
+      `SELECT a.activity_id, a.activity_name, a.activity_address, i.itinerary_name, a.activity_location, a.longitude, a.latitude, i.type, i.num_ppl, a.activity_cost,
        i.longitude as i_longitude, i.latitude as i_latitude,
        TO_CHAR(i.start_date, 'DD/MM/YYYY') AS start_date,
        TO_CHAR(i.end_date, 'DD/MM/YYYY') AS end_date,

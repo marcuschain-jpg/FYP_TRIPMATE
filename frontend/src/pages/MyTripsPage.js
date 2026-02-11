@@ -273,7 +273,8 @@ function MyTripsPage() {
                     name: newTripName,
                     destination: newDestination,
                     start: formatDateForInput(newStart),
-                    end: formatDateForInput(newEnd)
+                    end: formatDateForInput(newEnd),
+                    fullDest:newFullDest
                   }
                 : trip
             )
@@ -326,6 +327,7 @@ function MyTripsPage() {
             type: "Private",
             collaborators: 1,
             maxCapacity: 5,
+            fullDest:newFullDest
           };
 
           setTrips((prev) => [...prev, newTrip]);
