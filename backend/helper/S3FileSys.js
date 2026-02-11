@@ -73,13 +73,15 @@ async function ImportPhotoS3(loc, uploadSessionID){
 }
 
 async function DeletePhotoS3(file){
-    const deleteParams = {
+    try {const deleteParams = {
         Bucket: myBucket,
         Key: file
     }
     const output = await s3.deleteObject(deleteParams).promise();
 
     if(output) return true;
+    }
+    catch(err) {console.log("delete from s3 error: ", err)}
 }
 
 module.exports = {ExtractPhotoS3, ImportPhotoS3, DeletePhotoS3};

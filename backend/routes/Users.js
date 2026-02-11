@@ -181,7 +181,9 @@ router.patch("/UpdateUserProfile", RequireAuths(["registered", "premium"]), Inse
     const data = await pool.query(`
       SELECT avatar FROM users WHERE userid = $1
       `, [userid]);
-    if(data.rowCount > 0) oldPhotoURL = data.rows[0].avatar;
+    console.log(data.rows)
+    console.log(data.rowCount)
+    if(data.rows[0].avatar !== null) oldPhotoURL = data.rows[0].avatar;
     else oldPhotoURL = ""
     }
     catch(err) {oldPhotoURL="";}
@@ -228,8 +230,8 @@ router.patch("/UpdateUserProfile", RequireAuths(["registered", "premium"]), Inse
   catch(err) {
     await pool.query("ROLLBACK");
     await DeletePhotoS3(s3URL[0]);
-    console.log(err);
-    res.status(500).send({message: "Failed to update account type"});
+    console.log("general error!", err);
+    res.status(500).send({message: "Failed to update profile"});
   }
 
   //Delete old avatar from s3 and return true
