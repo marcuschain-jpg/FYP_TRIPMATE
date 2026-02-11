@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { ArrowLeft } from "lucide-react";
-import Axios from '../hooks/Axios'
+import Axios from "../hooks/Axios";
 import "../styles/MarketingContentForm.css";
 
 export default function EditMarketingContent({
@@ -51,7 +51,7 @@ export default function EditMarketingContent({
       if (url) formData.append("imageUrl", url);
 
       const res = await Axios.put(
-        `/api/marketing/${itemId}`,
+        `api/marketing/${itemId}`,
         formData,
         {
           withCredentials: true,
@@ -79,7 +79,7 @@ export default function EditMarketingContent({
       if (url) formData.append("imageUrl", url);
 
       const res = await Axios.put(
-        `/api/marketing/${itemId}`,
+        `api/marketing/${itemId}`,
         formData,
         {
           withCredentials: true,
@@ -99,7 +99,7 @@ export default function EditMarketingContent({
   const handleDeleteClick = async () => {
     if (!window.confirm("Delete this marketing content?")) return;
     try {
-      await Axios.delete(`/api/marketing/${itemId}`, {
+      await Axios.delete(`api/marketing/${itemId}`, {
         withCredentials: true,
       });
       onDelete?.(itemId);

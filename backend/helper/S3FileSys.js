@@ -58,11 +58,14 @@ async function ImportPhotoS3(loc, uploadSessionID){
             Key: FPS3,
             Body: fileStream
         }
-        const data = await s3.upload(uploadParams).promise();
-        fs.unlink((FP), (err) => {
-            if(err) console.log("failed to remove from storage", err)
-        });
-        return data.Key;
+        try{
+            const data = await s3.upload(uploadParams).promise();
+            await fs.promises.unlink((FP), (err) => {
+                if(err) console.log("failed to remove from storage", err)
+            });
+            return data.Key;
+        }
+        catch(err) {console.log('failed to upload to s3', err)}
     }));
     if(output) {
         return output;
