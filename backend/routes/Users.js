@@ -5,6 +5,7 @@ const RequireAuths = require('../middlewares/RequireAuths.js');
 const { ExtractPhotoS3, ImportPhotoS3, DeletePhotoS3 } = require("../helper/S3FileSys.js");
 const InsertPhoto = require("../middlewares/PhotoImp.js");
 const TranslateFunc = require("../helper/Translate.js");
+const bcrypt = require("bcrypt");
 
 router.get("/GetProfileDetails", RequireAuths(["registered", "premium"]), async(req,res) => {
   const userid = req.userid;
@@ -191,7 +192,8 @@ router.patch("/UpdateUserProfile", RequireAuths(["registered", "premium"]), Inse
     const data = await pool.query(`
       SELECT password FROM users WHERE userid = $1
       `, [userid]);
-    if(data.rows[0].password === password) return res.send({validateErr: true});
+    const passwordMatch = await bcrypt.compare(password, data.rows[0].password);
+    if(passwordMatch) {console.log("here!"); return res.send({validateErr: true});}
     }
     catch(err) {return res.status(500).send({message:"Failed to retrieve password for validation"})}
   }
@@ -208,10 +210,11 @@ router.patch("/UpdateUserProfile", RequireAuths(["registered", "premium"]), Inse
       );
     }
     if(password){
+      const hashedPassword = await bcrypt.hash(password, 12); // salt round: 12
       await pool.query(
         `UPDATE users
         SET password = $1
-        WHERE userid = $2`, [password, userid]
+        WHERE userid = $2`, [hashedPassword, userid]
       );
     }
     const data = await pool.query(

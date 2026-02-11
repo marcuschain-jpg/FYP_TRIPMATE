@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const dotenv = require("dotenv");
 dotenv.config({ path: "keys.env" });
 const SendEmail = require("../helper/SendEmail.js");
+const bcrypt = require("bcrypt");
 
 
 router.post('/Login', async (req, res) => {
@@ -14,7 +15,7 @@ router.post('/Login', async (req, res) => {
     try{    
         // Check if email exist or role is correct
         const userData = await pool.query(
-        `SELECT 1, userid, email, password, type, suspended
+        `SELECT 1, userid, email, password, type, suspended,first_time
          FROM users
          WHERE email = $1`, [email]
         );
@@ -32,18 +33,12 @@ router.post('/Login', async (req, res) => {
             if(userData.rows[0].suspended) return res.send({checkSuspended: true});
             else
             {
-                
-                // match email and password
-                const data = await pool.query(
-                    `SELECT 1, userid, email, password, type
-                     FROM users
-                     WHERE email = $1 AND password = $2`, [email, password]
-                );
-                if(data.rowCount === 0) // wrong pw
+                const passwordMatch = await bcrypt.compare(password, userData.rows[0].password)
+                if(!passwordMatch) // wrong pw
                 {
                     return res.send({checkPassword: false});
                 }
-                else if(data.rowCount === 1 && chkRole) // success
+                else if(passwordMatch && chkRole) // success
                 {
                     const userid = userData.rows[0].userid;
                     const jwtSecret = process.env.JWT_SECRET;
@@ -56,8 +51,13 @@ router.post('/Login', async (req, res) => {
                         httpOnly: true,
                         sameSite: 'lax'
                     });
-
-                    return res.send({check: true, token});
+                    const first_time =  userData.rows[0].first_time
+                    if(first_time){
+                        const data = await pool.query(
+                            `UPDATE users SET first_time = false WHERE email = $1`, [email]
+                        )
+                    }
+                    return res.send({check: true, token, first_time: first_time});
                 }
             }
         }
@@ -70,12 +70,14 @@ router.post('/Login', async (req, res) => {
 
 router.post('/CreateAccount', async(req, res) =>{
     const {email, password, firstname, lastname} = req.body;
-    //eventually to hash password
+    
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12); // salt round: 12
 
     try{
         data = await pool.query(
             `INSERT INTO users (email, password, first_name, last_name, type)
-             VALUES ($1, $2, $3, $4, 'registered');`, [email, password, firstname, lastname]
+             VALUES ($1, $2, $3, $4, 'registered');`, [email, hashedPassword, firstname, lastname]
         );
         //email already exist
         return res.send(true)
@@ -168,6 +170,8 @@ router.patch("/ResetPassword", async(req,res) => {
     const {token, newPassword} = req.body;
     let userid = null;
     let password = null;
+    let passwordMatch = false;
+
 
     try{
         const data = await pool.query(`WITH getcredentials AS(
@@ -179,11 +183,15 @@ router.patch("/ResetPassword", async(req,res) => {
         );
         userid = data.rows[0].userid;
         password = data.rows[0].password;
+
+        // Match hashed password
+        passwordMatch = await bcrypt.compare(newPassword, password);
     }
     catch(err) {console.log(err); return res.status(500).send({message: "Failed get user credentials"});}
 
-    if(newPassword === password) return res.send({check: false});
+    if(passwordMatch) return res.send({check: false});
 
+    const hashedPassword = await bcrypt.hash(newPassword, 12); // salt round: 12
     try{
         const data = await pool.query(`WITH deleteinv AS(
          DELETE FROM email_validation
@@ -191,7 +199,7 @@ router.patch("/ResetPassword", async(req,res) => {
         )
          UPDATE users
          SET password = $2
-         WHERE userid = $3`, [token, newPassword, userid]
+         WHERE userid = $3`, [token, hashedPassword, userid]
         );
         res.send(true);
     }

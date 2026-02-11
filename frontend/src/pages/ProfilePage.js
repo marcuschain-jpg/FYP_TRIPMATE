@@ -68,6 +68,7 @@ function ProfilePage() {
         ]);
 
         console.log("Trips from backend:", privateRes.data);
+        console.log("Trips from backend:", userRes.data);
 
         //Format all trips (both private and group)
         const allTrips = privateRes.data.map((trip) => ({
@@ -196,7 +197,7 @@ function ProfilePage() {
   const isCurrentMonth =
     today.getFullYear() === currentDate.getFullYear() &&
     today.getMonth() === currentDate.getMonth();
-  const isPremium = profile.accountType === "Premium";
+  const isPremium = profile.accountType === "premium";
 
   return (
     <div className="profile-page">
