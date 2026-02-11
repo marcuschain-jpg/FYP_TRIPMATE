@@ -40,7 +40,9 @@ async function ExtractPhotoS3(data){
 async function ImportPhotoS3(loc, uploadSessionID){
     const filePath = path.join(__dirname, "../uploads");
     const rawfiles = await fs.promises.readdir(filePath)
-    const files = rawfiles.filter(file => file.startsWith(`${uploadSessionID}`));
+    const files = rawfiles.filter(file => 
+        file.startsWith(`${uploadSessionID}`) && !file.includes("_original")
+    );
 
     if(files.length === 0){
         console.log("no files to be read")
@@ -49,7 +51,7 @@ async function ImportPhotoS3(loc, uploadSessionID){
     const output = await Promise.all(files
         .map(async (file) => {
         const FP = path.join(__dirname,"../uploads",file);
-        const FPS3 = path.join(loc, file);
+        const FPS3 = `${loc}/${file}`;
         const fileStream = fs.createReadStream(FP);
         const uploadParams = {
             Bucket: myBucket,

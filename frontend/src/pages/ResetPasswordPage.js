@@ -160,7 +160,7 @@ export default function ResetPasswordPage() {
     );
   }
 
-  if (!isValidating && !tokenValid) {
+  if (!isValidating && !tokenValid && token) {
     return (
       <div className="reset-container">
         <div className="reset-card">

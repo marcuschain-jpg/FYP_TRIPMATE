@@ -50,8 +50,9 @@ export default function LoginPage({ setCurrentUserProfile, markAsFirstTimeUser }
       }  
       else if(res.data.check === true) {
         const token = res.data.token;
+        console.log(res.data);
         //Check if user has completed profile setup from backend
-        const isFirstLogin = res.data.isFirstLogin || false;
+        const isFirstLogin = res.data.first_time || false;
         
         console.log("Login successful. isFirstLogin:", isFirstLogin);
         showToast(t("login_success"), "success");

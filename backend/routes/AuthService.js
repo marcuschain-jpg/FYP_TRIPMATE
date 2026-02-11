@@ -35,7 +35,7 @@ router.post('/Login', async (req, res) => {
                 
                 // match email and password
                 const data = await pool.query(
-                    `SELECT 1, userid, email, password, type
+                    `SELECT 1, userid, email, password, type, first_time
                      FROM users
                      WHERE email = $1 AND password = $2`, [email, password]
                 );
@@ -56,8 +56,13 @@ router.post('/Login', async (req, res) => {
                         httpOnly: true,
                         sameSite: 'lax'
                     });
-
-                    return res.send({check: true, token});
+                    const first_time =  data.rows[0].first_time
+                    if(first_time){
+                        const data2 = await pool.query(
+                            `UPDATE users SET first_time = false WHERE email = $1`, [email]
+                        )
+                    }
+                    return res.send({check: true, token, first_time: first_time});
                 }
             }
         }
