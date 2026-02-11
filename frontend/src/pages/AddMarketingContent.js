@@ -32,7 +32,7 @@ export default function AddMarketingContent({ onBack, onSaveDraft, onPublish }) 
       if (url) formData.append("imageUrl", url);
 
       const res = await Axios.post(
-        "/api/content/marketing",
+        "/api/marketing",
         formData,
         {
           withCredentials: true,
@@ -60,7 +60,7 @@ export default function AddMarketingContent({ onBack, onSaveDraft, onPublish }) 
       if (url) formData.append("imageUrl", url);
 
       const res = await Axios.post(
-        "/api/content/marketing",
+        "/api/marketing",
         formData,
         {
           withCredentials: true,
