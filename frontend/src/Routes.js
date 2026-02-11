@@ -43,35 +43,6 @@ import Support from "./pages/Support";
 
 
 function AppRoutes() {
-  //Track if user is a first-time user
-  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
-  
-  //Store current user profile data
-  const [userProfile, setUserProfile] = useState(null);
-
-  //Function to set user profile after login
-  const setCurrentUserProfile = (profile) => {
-    setUserProfile(profile);
-  };
-
-  //Function to mark first-time user
-  const markAsFirstTimeUser = (isFirst) => {
-    setIsFirstTimeUser(isFirst);
-  };
-
-  //Function to complete profile setup
-  const completeProfileSetup = () => {
-    setIsFirstTimeUser(false);
-  };
-
-  //Function to clear user data on logout
-  const clearUserData = () => {
-    setUserProfile(null);
-    setIsFirstTimeUser(false);
-  };
-
-  
-
   return (
     <BrowserRouter>
       <Routes>
@@ -82,8 +53,8 @@ function AppRoutes() {
         <Route element={<UnregisteredUserNavbar />}>
           <Route path="/" element={<Landing />} />
           <Route path="/register" element={<CreateAccountPage />} />
-          <Route path="/login" element={<LoginPage setCurrentUserProfile={setCurrentUserProfile} markAsFirstTimeUser={markAsFirstTimeUser} />} />
-          <Route path='/login/:errorMsg' element={<LoginPage setCurrentUserProfile={setCurrentUserProfile} markAsFirstTimeUser={markAsFirstTimeUser} />} />
+          <Route path="/login" element={<LoginPage/>} />
+          <Route path='/login/:errorMsg' element={<LoginPage/>} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/reviews" element={<ReviewsPage />} />
           {/* ================= RESET PASSWORD (TOP LEVEL - NO NAVBAR) ================= */}

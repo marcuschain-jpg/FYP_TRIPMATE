@@ -181,8 +181,6 @@ router.patch("/UpdateUserProfile", RequireAuths(["registered", "premium"]), Inse
     const data = await pool.query(`
       SELECT avatar FROM users WHERE userid = $1
       `, [userid]);
-    console.log(data.rows)
-    console.log(data.rowCount)
     if(data.rows[0].avatar !== null) oldPhotoURL = data.rows[0].avatar;
     else oldPhotoURL = ""
     }
