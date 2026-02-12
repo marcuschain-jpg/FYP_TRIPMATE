@@ -47,7 +47,7 @@ router.post('/Login', async (req, res) => {
                     res.cookie('token', token, {
                         maxAge: 60*60*24*10*1000, // 10 days in ms
                         path: "/",
-                        secure: req.secure || req.headers['x-forwarded-pronto'] === 'https',
+                        secure: req.secure || req.headers['x-forwarded-proto'] === 'https',
                         httpOnly: true,
                         sameSite: 'none'
                     });
