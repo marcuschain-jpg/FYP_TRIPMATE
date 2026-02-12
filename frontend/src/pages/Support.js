@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import "../styles/Support.css";
-import Axios from '../hooks/Axios'
+import Axios from '../hooks/Axios';
 
 import AddFAQArticle from "./AddFAQArticle";
 import EditFAQArticle from "./EditFAQArticle";

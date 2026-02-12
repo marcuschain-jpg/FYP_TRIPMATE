@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import axios from "axios";
+import Axios from '../hooks/Axios';
 
 /** ---------- Components ---------- **/
 
@@ -159,7 +159,7 @@ export default function Overview() {
   useEffect(() => {
     const fetchOverview = async () => {
       try {
-        const res = await axios.get("http://localhost:8080/api/overview", {
+        const res = await Axios.get("api/overview", {
           withCredentials: true,
         });
         setStats(res.data);

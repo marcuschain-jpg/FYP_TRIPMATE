@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Outlet, NavLink } from "react-router-dom";
 import "../styles/overview.css";
 import Logo from "../Assets/Logo.jpg"; 
-import axios from "axios"
+import Axios from '../hooks/Axios'
 
 function Item({ to, label, icon }) {
   return (
@@ -26,8 +26,8 @@ export default function AdminNavbar() {
 
   const handleLogout = async () => {
     try {
-      await axios.post(
-        "http://localhost:8080/AuthService/logout",
+      await Axios.post(
+        "AuthService/logout",
         {},
         { withCredentials: true }
       );

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "../styles/Chatbot.css";
-import Axios from '../hooks/Axios'
+import Axios from '../hooks/Axios';
 
 export default function ChatbotModal({ isOpen, onClose }) {
   // Single conversation only

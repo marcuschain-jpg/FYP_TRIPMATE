@@ -3,9 +3,9 @@ import { useState, useEffect } from "react";
 import Axios from '../hooks/Axios.js';
 import "../styles/Itinerary.css";
 import "../styles/Collab.css";
-import link from "../Assets/link.png"
-import whatsapp from "../Assets/Whatsapp.png"
-import telegram from "../Assets/Telegram.png"
+import link from "../Assets/link.png";
+import whatsapp from "../Assets/Whatsapp.png";
+import telegram from "../Assets/Telegram.png";
 import ItineraryChat from "../components/ItineraryChat";
 import { useTranslation } from "react-i18next";
 

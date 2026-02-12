@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Users.css";
-import Axios from '../hooks/Axios'
+import Axios from '../hooks/Axios';
 import { useEffect } from "react";
 
 /* ---- CONFIRM MODAL ---- */
