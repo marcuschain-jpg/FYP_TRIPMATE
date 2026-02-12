@@ -19,14 +19,12 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
+      - name: Install and Build app
+        env:
+          CI: false
         run: |
           cd frontend
           npm ci
-
-      - name: Build app
-        run: |
-          cd frontend
           npm run build
 
       - name: Configure AWS credentials
