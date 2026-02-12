@@ -7,7 +7,6 @@ const http = require("http");
 const path = require("path");
 const { Server } = require("socket.io"); // real time websocket
 const cookieParser = require("cookie-parser"); // store cookies on website
-const serverless = require("serverless-http");
 
 
 //Import routes
