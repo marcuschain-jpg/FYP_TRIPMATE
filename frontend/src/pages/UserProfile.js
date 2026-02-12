@@ -2,15 +2,12 @@ import React, { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, ChevronDown } from "lucide-react";
 import "../styles/UserProfile.css";
-import { mockUsers } from "../data/mockUsers";
 
 export default function UserProfile() {
   const navigate = useNavigate();
   const { id } = useParams(); 
 
-  const user = useMemo(() => mockUsers.find((u) => u.id === id), [id]);
-
-  const [status, setStatus] = useState(user?.status || "Active");
+  const [status, setStatus] = useState("Active");
   const [role, setRole] = useState("User");
 
   const userItineraries = useMemo(
