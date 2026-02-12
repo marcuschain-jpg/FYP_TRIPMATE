@@ -1,5 +1,5 @@
 // Access OpenAI API
-require("dotenv").config();
+require("dotenv").config({ path: "keys.env" });
 
 const express = require('express');
 const cors = require('cors');
@@ -30,7 +30,7 @@ const overviewRoute = require("./adminroutes/Overview.js");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {cors: {origin: "https://d1poq6hazwmmqe.cloudfront.net/"}})
+const io = new Server(server, {cors: {origin: "https://d1poq6hazwmmqe.cloudfront.net"}})
 
 // Middleware
 app.use( cors({ origin: "https://d1poq6hazwmmqe.cloudfront.net", credentials: true}));
