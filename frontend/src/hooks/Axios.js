@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const Axios = axios.create({
-    baseURL:"http://15.135.87.40:8080",
+    baseURL:"https://tripmatefyp2025.duckdns.org",
     withCredentials: false // by default, will manaully set true on diff calls
 });
 
