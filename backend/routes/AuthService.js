@@ -145,7 +145,7 @@ router.post("/SendResetEmail", async(req,res) => {
       text: `Reset your password with tripmate!`,
       html: `
       <p>Hi ${fullname}! Below is a link to reset your password for your account with TripMate!</p>
-      <p><a href=http://localhost:3000/reset-password/${inv_id}>Click me!</a></p>`
+      <p><a href=https://d1poq6hazwmmqe.cloudfront.net/reset-password/${inv_id}>Click me!</a></p>`
     };
     SendEmail(content).catch(err => console.log("Send email error", err));
     return res.send(true);

@@ -7,6 +7,9 @@ const http = require("http");
 const path = require("path");
 const { Server } = require("socket.io"); // real time websocket
 const cookieParser = require("cookie-parser"); // store cookies on website
+const serverless = require("serverless-http");
+
+
 //Import routes
 const landingRouter = require("./routes/Landing")
 const itineraryRouter = require("./routes/Itinerary");
@@ -27,10 +30,10 @@ const overviewRoute = require("./adminroutes/Overview.js");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {cors: {origin: "http://localhost:3000"}})
+const io = new Server(server, {cors: {origin: "https://d1poq6hazwmmqe.cloudfront.net/"}})
 
 // Middleware
-app.use( cors({ origin: "http://localhost:3000", credentials: true}));
+app.use( cors({ origin: "https://d1poq6hazwmmqe.cloudfront.net", credentials: true}));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -60,8 +63,6 @@ app.post("/GetRoleForUser", RequireAuths(["registered", "premium"]), (req, res) 
   return res.status(200).send({authenticated:true, role:req.role});
 });
 
-// Add access images with backend path
-app.use("/images", express.static(path.join(__dirname, "../storage")));
 
 // Realtime stuff for itinerary page
 app.set("io", io);
