@@ -45,7 +45,7 @@ jobs:
             --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
             --paths "/*"
       
-      #Print CloudFront URL-
+      #Print CloudFront URL
       - name: Deployment Complete
         run: |
           echo "Deployed to S3"
