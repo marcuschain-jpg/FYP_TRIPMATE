@@ -29,10 +29,10 @@ const overviewRoute = require("./adminroutes/Overview.js");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {cors: {origin: "https://www.tripmatefyp.uk"}})
+const io = new Server(server, {cors: {origin: "https://tripmatefyp.uk"}})
 
 // Middleware
-app.use( cors({ origin: "https://www.tripmatefyp.uk", credentials: true}));
+app.use( cors({ origin: "https://tripmatefyp.uk", credentials: true}));
 app.use(express.json());
 app.use(cookieParser());
 
