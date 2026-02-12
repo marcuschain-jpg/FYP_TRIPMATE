@@ -160,9 +160,9 @@ router.patch("/UserChangeType", RequireAuths(["registered", "premium"]), async(r
     res.cookie('token', token, {
         maxAge: 60*60*24*10*1000, // 10 days in ms
         path: "/",
-        secure: false, // change only when https
+        secure: true, // change only when https
         httpOnly: true,
-        sameSite: 'lax'
+        sameSite: 'none'
     });
     return res.send(true);
   }
@@ -182,9 +182,9 @@ router.patch("/UserChangeType", RequireAuths(["registered", "premium"]), async(r
     res.cookie('token', token, {
         maxAge: 60*60*24*10*1000, // 10 days in ms
         path: "/",
-        secure: false, // change only when https
+        secure: true, // change only when https
         httpOnly: true,
-        sameSite: 'lax'
+        sameSite: 'none'
     });
     return res.send(true);
     }
