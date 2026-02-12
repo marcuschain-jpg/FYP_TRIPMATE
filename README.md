@@ -1,4 +1,4 @@
-Last update: 4/2/2025
+Last update: 12/2/2025
 
 # FYP_TRIPMATE
 FYP Group: FYP-25-S4-27
@@ -34,7 +34,7 @@ your own node_modules
 
 3. Download/update keys.env folder from telegram and put in /backend so that API keys can be accessed
 
-=== Run Application ===
+=== Run Application in production ===
 
 1. Start Backend
     - cd backend
@@ -46,6 +46,26 @@ your own node_modules
 
 3. Open landing page in browser (if already not opened)
     - http://localhost:3000
+
+=== Run Application after production ===
+
+Frontend:
+1. The frontend build is deployed to AWS S3 and served through AWS CloudFront. Because it is a static site, it remains available even if backend services are temporarily unavailable.
+2. Link to marketing page and website: tripmatefyp.uk
+
+Backend Access:
+
+Can be accessed through windows powershell or macbooks terminal. Backend files are stored in EC2 of TripMate’s amazon account
+
+1. Make sure to store ec2-key-pem in an accessible folder like Downloads folder
+2. ssh -i "C:\path\to\ec2-key.pem" ec2-user@16.176.111.249 (ec2-public ip)
+3. Once in ec2-user interface cd FYP_TRIPMATE to access github repository there
+4. To access and start backend server, cd backend while in /FYP_TRIPMATE folder to access TripMate’s backend folder
+5. Pm2 list to see if server is running (status should be shown online)
+6. If the backend processes crash, the process manager, pm2, will automatically restart the backend processes on its own. It is verifiable by running step 2 again and seeing the status as online
+7. To manual restart type pm2 restart index.
+8. Refresh webpage again or relogin if needed
+
 
 ====================== File Structure  =================
 
@@ -60,7 +80,7 @@ Consist of frontend components(sub-html pages) of all functions
     - /src/components/.js files --- special div components (map, special text box..), functions here are reusable like lego blocks can put here put there
     - /src/Routes.js --- only pages are connected here for routing, nav bar
     - /src/styles/.css --- all css files
-    - /src/assets --- places to put images, videos..
+    - /src/Assets --- places to put images, videos..
     - /src/hooks --- function does not return JSX(web component like div...), usually no need touch
     - /src/index.js --- virtual dom, usually no need to touch
 
@@ -70,8 +90,8 @@ Consist of frontend components(sub-html pages) of all functions
       then link it to your page
 2. CSS link to pages only, components will inherit all css properties.
     - Create containers before u declare a component, so that when u can target css in that container.
-2. Route new .js files pages to Routes.js(nav bar) in main
-3. npm start
+3. Route new .js files pages to Routes.js(nav bar) in main
+4. npm start
 
 Backend:
 

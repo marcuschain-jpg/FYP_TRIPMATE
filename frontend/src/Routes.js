@@ -26,7 +26,6 @@ import GroupTripsPage from "./pages/GroupTripsPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ViewItineraryOnlyPage from "./pages/ViewItineraryOnlyPage";
 
-//import ItineraryFeedPage from "./pages/ItineraryFeedPage";
 import ProfilePage from "./pages/ProfilePage"; 
 import EditProfilePage from "./pages/EditProfilePage";
 import ReviewsPage from "./pages/ReviewsPage";

@@ -349,7 +349,7 @@ router.post("/AddCollaborator", RequireAuth(["premium"]), async(req,res) => {
       text: `Collaborate with ${host_name} on "${i_name}"! Accept your invitation!`,
       html: `
       <p>Collaborate with ${host_name} on "${i_name}" with TripMate! Accept your invitation to start planning together!</p>
-      <p><a href=https://www.tripmatefyp.uk/confirm/${inv_id}>Click me!</a></p>`
+      <p><a href=https://tripmatefyp.uk/confirm/${inv_id}>Click me!</a></p>`
     };
     SendEmail(content).catch(err => console.log("Error sending email", err));
     return res.send({check: true});
@@ -642,7 +642,7 @@ router.post("/ShareExt", RequireAuth(["registered", "premium"]), async(req,res) 
     catch(err) {console.log(err); return res.status(500).send({ message:"failed to create new external id to share" });}
   }
 
-  const link = `https://www.tripmatefyp.uk/itineraryviewonly/${extID}`;
+  const link = `https://tripmatefyp.uk/itineraryviewonly/${extID}`;
   const msg = `View my itinerary! Click here: ${link}`
   const encodedMsg = encodeurl(msg)
 
