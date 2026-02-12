@@ -47,9 +47,9 @@ router.post('/Login', async (req, res) => {
                     res.cookie('token', token, {
                         maxAge: 60*60*24*10*1000, // 10 days in ms
                         path: "/",
-                        secure: false, // change only when https
+                        secure: true, // change only when https
                         httpOnly: true,
-                        sameSite: 'lax'
+                        sameSite: 'none'
                     });
                     const first_time =  userData.rows[0].first_time
                     if(first_time){
