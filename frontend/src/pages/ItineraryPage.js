@@ -63,12 +63,11 @@ function ItineraryPage() {
         withCredentials: true,
       })
       .then((res) => {
-        console.log("✓ Maps config response:", res.data);
         if (res.data?.apiKey) {
           setMapConfig(res.data);
           console.log("✓ Map config set successfully with apiKey from backend");
         } else {
-          console.error("✗ No apiKey in response:", res.data);
+          console.error("✗ No apiKey in response");
         }
       })
       .catch((err) => {
