@@ -162,7 +162,8 @@ router.patch("/UserChangeType", RequireAuths(["registered", "premium"]), async(r
         path: "/",
         secure: true, // change only when https
         httpOnly: true,
-        sameSite: 'none'
+        sameSite: 'none',
+        domain: 'tripmatefyp.uk'
     });
     return res.send(true);
   }
@@ -184,7 +185,8 @@ router.patch("/UserChangeType", RequireAuths(["registered", "premium"]), async(r
         path: "/",
         secure: true, // change only when https
         httpOnly: true,
-        sameSite: 'none'
+        sameSite: 'none',
+        domain: 'tripmatefyp.uk'
     });
     return res.send(true);
     }

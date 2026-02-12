@@ -47,9 +47,10 @@ router.post('/Login', async (req, res) => {
                     res.cookie('token', token, {
                         maxAge: 60*60*24*10*1000, // 10 days in ms
                         path: "/",
-                        secure: req.secure || req.headers['x-forwarded-proto'] === 'https',
+                        secure: true,
                         httpOnly: true,
-                        sameSite: 'none'
+                        sameSite: 'none',
+                        domain: 'tripmatefyp.uk'
                     });
                     const first_time =  userData.rows[0].first_time
                     if(first_time){
@@ -145,7 +146,7 @@ router.post("/SendResetEmail", async(req,res) => {
       text: `Reset your password with tripmate!`,
       html: `
       <p>Hi ${fullname}! Below is a link to reset your password for your account with TripMate!</p>
-      <p><a href=https://d1poq6hazwmmqe.cloudfront.net/reset-password/${inv_id}>Click me!</a></p>`
+      <p><a href=https://www.tripmatefyp.uk/reset-password/${inv_id}>Click me!</a></p>`
     };
     SendEmail(content).catch(err => console.log("Send email error", err));
     return res.send(true);
