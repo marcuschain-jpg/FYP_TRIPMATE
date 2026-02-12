@@ -32,8 +32,6 @@ router.get("/", async (req, res) => {
       lastLogin: u.last_login
         ? u.last_login.toISOString().split("T")[0]
         : "-",
-      posts: u.posts,
-      flags: u.flags,
     }));
 
     res.json(users);
