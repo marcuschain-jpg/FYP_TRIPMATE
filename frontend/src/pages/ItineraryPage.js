@@ -56,6 +56,8 @@ function ItineraryPage() {
   const directionsRendererRef = useRef(null);
   const markersRef = useRef([]);
 
+  const [isMapReady, setIsMapReady] = useState(false);
+
   //Get google maps key from backend with proper auth
   useEffect(() => {
     Axios
@@ -92,33 +94,47 @@ function ItineraryPage() {
   }, [i18n])
 
   function loadGoogleMaps(apiKey) {
-    return new Promise((resolve, reject) => {
-      if (window.google && window.google.maps) return resolve();
+  return new Promise((resolve, reject) => {
+    if (window.google && window.google.maps) return resolve();
 
-      const existing = document.querySelector('script[data-google-maps="true"]');
-      if (existing) {
-        existing.addEventListener("load", () => resolve());
-        existing.addEventListener("error", reject);
-        return;
+    const existing = document.querySelector('script[data-google-maps="true"]');
+    if (existing) {
+      // If script exists, wait for google.maps to be available
+      if (window.google && window.google.maps) {
+        return resolve();
       }
+      const checkInterval = setInterval(() => {
+        if (window.google && window.google.maps) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 50);
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        reject(new Error('Google Maps timeout'));
+      }, 10000);
+      return;
+    }
 
-      const callbackName = 'initGoogleMaps';
-      window[callbackName] = () => {
-        resolve();
-        delete window[callbackName];
-      };
+    // Create callback
+    const callbackName = `initGoogleMaps_${Date.now()}`;
+    window[callbackName] = () => {
+      delete window[callbackName];
+      resolve();
+    };
 
-      const script = document.createElement("script");
-      script.dataset.googleMaps = "true";
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => resolve();
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
-  }
-
+    const script = document.createElement("script");
+    script.dataset.googleMaps = "true";
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=${callbackName}`;
+    script.async = true;
+    script.defer = true;
+    script.onerror = (error) => {
+      delete window[callbackName];
+      reject(error);
+    };
+    document.head.appendChild(script);
+  });
+}
   function clearDirections() {
     if (directionsRendererRef.current) {
       directionsRendererRef.current.setDirections({ routes: [] });
@@ -135,7 +151,6 @@ function ItineraryPage() {
   if (!mapConfig?.apiKey) return;
 
   let cancelled = false;
-  let initTimeout;
 
   (async () => {
     try {
@@ -144,12 +159,6 @@ function ItineraryPage() {
       
       if (cancelled) return;
 
-      // Add a small delay to ensure Google Maps is fully loaded
-      await new Promise(resolve => {
-        initTimeout = setTimeout(resolve, 100);
-      });
-
-      // Double-check that Google Maps is available
       if (!window.google || !window.google.maps) {
         console.error("Google Maps not available after loading");
         return;
@@ -172,7 +181,7 @@ function ItineraryPage() {
 
         // Wait for map to be fully initialized
         window.google.maps.event.addListenerOnce(mapRef.current, 'idle', () => {
-          console.log("Map is ready");
+          console.log("Map is ready - initializing directions");
           
           // Initialize directions objects after map is ready
           directionsServiceRef.current = new window.google.maps.DirectionsService();
@@ -188,6 +197,7 @@ function ItineraryPage() {
           });
 
           console.log("Map and directions initialized successfully");
+          setIsMapReady(true); // Signal that map is ready
         });
       }
     } catch (e) {
@@ -197,7 +207,6 @@ function ItineraryPage() {
 
   return () => {
     cancelled = true;
-    if (initTimeout) clearTimeout(initTimeout);
   };
 }, [mapConfig, trip?.t_lat, trip?.t_lng]);
 
@@ -437,6 +446,10 @@ function ItineraryPage() {
   useEffect(() => {
     if (!mapRef.current || !(window.google && window.google.maps)) return;
     if (!directionsServiceRef.current || !directionsRendererRef.current) return;
+    if (!isMapReady) {
+    console.log("Map not ready yet, skipping route draw");
+    return;
+  }
 
     console.log("Route effect triggered. selectedDate:", selectedDate);
     console.log("All activityCoords:", activityCoords);
@@ -533,7 +546,7 @@ function ItineraryPage() {
         }
       }
     );
-  }, [activityCoords, selectedDate, mapConfig, trip]);
+  }, [isMapReady, activityCoords, selectedDate, mapConfig, trip]);
 
   //Delete activity
   const handleDeleteActivity = async (index) => {
