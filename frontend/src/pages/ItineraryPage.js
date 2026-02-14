@@ -102,6 +102,12 @@ function ItineraryPage() {
         return;
       }
 
+      const callbackName = 'initGoogleMaps';
+      window[callbackName] = () => {
+        resolve();
+        delete window[callbackName];
+      };
+
       const script = document.createElement("script");
       script.dataset.googleMaps = "true";
       script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
