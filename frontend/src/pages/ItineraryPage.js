@@ -132,33 +132,49 @@ function ItineraryPage() {
 
   //Initialize maps 
   useEffect(() => {
-    if (!mapConfig?.apiKey) return;
+  if (!mapConfig?.apiKey) return;
 
-    let cancelled = false;
+  let cancelled = false;
+  let initTimeout;
 
-    (async () => {
-      try {
-        console.log("Loading Google Maps...");
-        await loadGoogleMaps(mapConfig.apiKey);
-        
-        if (cancelled) return;
+  (async () => {
+    try {
+      console.log("Loading Google Maps...");
+      await loadGoogleMaps(mapConfig.apiKey);
+      
+      if (cancelled) return;
 
-        if (mapDivRef.current && !mapRef.current) {
-          console.log("Creating map instance");
-          const center = (trip?.t_lat && trip?.t_lng) 
-            ? { lat: trip.t_lat, lng: trip.t_lng }
-            : mapConfig.center;
+      // Add a small delay to ensure Google Maps is fully loaded
+      await new Promise(resolve => {
+        initTimeout = setTimeout(resolve, 100);
+      });
 
-          mapRef.current = new window.google.maps.Map(mapDivRef.current, {
-            center,
-            zoom: 12,
-            styles: [],
-            mapTypeControl: true,
-            streetViewControl: false,
-            fullscreenControl: true,
-          });
+      // Double-check that Google Maps is available
+      if (!window.google || !window.google.maps) {
+        console.error("Google Maps not available after loading");
+        return;
+      }
 
-          //Initialize directions objects
+      if (mapDivRef.current && !mapRef.current) {
+        console.log("Creating map instance");
+        const center = (trip?.t_lat && trip?.t_lng) 
+          ? { lat: trip.t_lat, lng: trip.t_lng }
+          : mapConfig.center;
+
+        mapRef.current = new window.google.maps.Map(mapDivRef.current, {
+          center,
+          zoom: 12,
+          styles: [],
+          mapTypeControl: true,
+          streetViewControl: false,
+          fullscreenControl: true,
+        });
+
+        // Wait for map to be fully initialized
+        window.google.maps.event.addListenerOnce(mapRef.current, 'idle', () => {
+          console.log("Map is ready");
+          
+          // Initialize directions objects after map is ready
           directionsServiceRef.current = new window.google.maps.DirectionsService();
           directionsRendererRef.current = new window.google.maps.DirectionsRenderer({
             map: mapRef.current,
@@ -171,17 +187,19 @@ function ItineraryPage() {
             },
           });
 
-          console.log("Map created successfully");
-        }
-      } catch (e) {
-        console.error("Google Maps initialization failed:", e);
+          console.log("Map and directions initialized successfully");
+        });
       }
-    })();
+    } catch (e) {
+      console.error("Google Maps initialization failed:", e);
+    }
+  })();
 
-    return () => {
-      cancelled = true;
-    };
-  }, [mapConfig]);
+  return () => {
+    cancelled = true;
+    if (initTimeout) clearTimeout(initTimeout);
+  };
+}, [mapConfig, trip?.t_lat, trip?.t_lng]);
 
   //Load trips and activities
   useEffect(() => {
