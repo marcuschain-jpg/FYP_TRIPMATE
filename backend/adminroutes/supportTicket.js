@@ -217,7 +217,7 @@ router.post("/:ticketId/send-email", async (req, res) => {
         </p>
         <ul>
           <li>A screenshot or photo of the issue</li>
-          <li>A brief description of what happened</li>
+          <li>A detailed description of what happened</li>
           <li>Steps you took before the issue occurred (if applicable)</li>
         </ul>
 
