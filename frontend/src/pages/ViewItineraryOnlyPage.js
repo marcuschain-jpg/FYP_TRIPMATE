@@ -221,7 +221,9 @@ function ViewItineraryOnlyPage() {
           start: formatDateForDisplay(data?.[0]?.start_date),
           end: formatDateForDisplay(data?.[0]?.end_date),
           type: data?.[0]?.type,
-          numPpl: data?.[0]?.num_ppl
+          numPpl: data?.[0]?.num_ppl,
+          t_lat: data?.[0]?.i_latitude,
+          t_lng: data?.[0]?.i_longitude
         };
         console.log("Trip object:", mapTrips);
         setTrip(mapTrips);
