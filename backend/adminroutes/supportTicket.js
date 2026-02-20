@@ -212,7 +212,16 @@ router.post("/:ticketId/send-email", async (req, res) => {
           </tr>
         </table>
 
-        <p>Our support team will follow up with you shortly.</p>
+        <p>
+        To help us investigate your issue more efficiently, could you reply to this email with:
+        </p>
+        <ul>
+          <li>A screenshot or photo of the issue</li>
+          <li>A brief description of what happened</li>
+          <li>Steps you took before the issue occurred (if applicable)</li>
+        </ul>
+
+        <p>Once we receive this information, our team will continue the investigation.</p>
 
         <p>Best regards,<br/>
         <strong>TripMate Support Team</strong></p>
