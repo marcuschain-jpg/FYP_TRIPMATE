@@ -331,7 +331,9 @@ function ViewItineraryOnlyPage() {
     });
 
     if (points.length === 0) {
-      const defaultCenter = mapConfig?.center || { lat: 1.3521, lng: 103.8198 };
+      const defaultCenter = (trip?.t_lat && trip?.t_lng) 
+        ? { lat: trip.t_lat, lng: trip.t_lng }
+        : mapConfig.center;
       mapRef.current.setCenter(defaultCenter);
       mapRef.current.setZoom(12);
       console.log("No activities - centered to default location");
@@ -386,7 +388,7 @@ function ViewItineraryOnlyPage() {
         }
       }
     );
-  }, [setIsMapReady, activityCoords, selectedDate, mapConfig]);
+  }, [isMapReady, activityCoords, selectedDate, mapConfig]);
 
   //Render
   const tripName = trip?.name || "Trip";
