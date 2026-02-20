@@ -56,6 +56,8 @@ function ItineraryPage() {
   const directionsRendererRef = useRef(null);
   const markersRef = useRef([]);
 
+  const [isMapReady, setIsMapReady] = useState(false);
+
   //Get google maps key from backend with proper auth
   useEffect(() => {
     Axios
@@ -92,27 +94,47 @@ function ItineraryPage() {
   }, [i18n])
 
   function loadGoogleMaps(apiKey) {
-    return new Promise((resolve, reject) => {
-      if (window.google && window.google.maps) return resolve();
+  return new Promise((resolve, reject) => {
+    if (window.google && window.google.maps) return resolve();
 
-      const existing = document.querySelector('script[data-google-maps="true"]');
-      if (existing) {
-        existing.addEventListener("load", () => resolve());
-        existing.addEventListener("error", reject);
-        return;
+    const existing = document.querySelector('script[data-google-maps="true"]');
+    if (existing) {
+      // If script exists, wait for google.maps to be available
+      if (window.google && window.google.maps) {
+        return resolve();
       }
+      const checkInterval = setInterval(() => {
+        if (window.google && window.google.maps) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 50);
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        reject(new Error('Google Maps timeout'));
+      }, 10000);
+      return;
+    }
 
-      const script = document.createElement("script");
-      script.dataset.googleMaps = "true";
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => resolve();
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
-  }
+    // Create callback
+    const callbackName = `initGoogleMaps_${Date.now()}`;
+    window[callbackName] = () => {
+      delete window[callbackName];
+      resolve();
+    };
 
+    const script = document.createElement("script");
+    script.dataset.googleMaps = "true";
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=${callbackName}`;
+    script.async = true;
+    script.defer = true;
+    script.onerror = (error) => {
+      delete window[callbackName];
+      reject(error);
+    };
+    document.head.appendChild(script);
+  });
+}
   function clearDirections() {
     if (directionsRendererRef.current) {
       directionsRendererRef.current.setDirections({ routes: [] });
@@ -126,33 +148,42 @@ function ItineraryPage() {
 
   //Initialize maps 
   useEffect(() => {
-    if (!mapConfig?.apiKey) return;
+  if (!mapConfig?.apiKey) return;
 
-    let cancelled = false;
+  let cancelled = false;
 
-    (async () => {
-      try {
-        console.log("Loading Google Maps...");
-        await loadGoogleMaps(mapConfig.apiKey);
-        
-        if (cancelled) return;
+  (async () => {
+    try {
+      console.log("Loading Google Maps...");
+      await loadGoogleMaps(mapConfig.apiKey);
+      
+      if (cancelled) return;
 
-        if (mapDivRef.current && !mapRef.current) {
-          console.log("Creating map instance");
-          const center = (trip?.t_lat && trip?.t_lng) 
-            ? { lat: trip.t_lat, lng: trip.t_lng }
-            : mapConfig.center;
+      if (!window.google || !window.google.maps) {
+        console.error("Google Maps not available after loading");
+        return;
+      }
 
-          mapRef.current = new window.google.maps.Map(mapDivRef.current, {
-            center,
-            zoom: 12,
-            styles: [],
-            mapTypeControl: true,
-            streetViewControl: false,
-            fullscreenControl: true,
-          });
+      if (mapDivRef.current && !mapRef.current) {
+        console.log("Creating map instance");
+        const center = (trip?.t_lat && trip?.t_lng) 
+          ? { lat: trip.t_lat, lng: trip.t_lng }
+          : mapConfig.center;
 
-          //Initialize directions objects
+        mapRef.current = new window.google.maps.Map(mapDivRef.current, {
+          center,
+          zoom: 12,
+          styles: [],
+          mapTypeControl: true,
+          streetViewControl: false,
+          fullscreenControl: true,
+        });
+
+        // Wait for map to be fully initialized
+        window.google.maps.event.addListenerOnce(mapRef.current, 'idle', () => {
+          console.log("Map is ready - initializing directions");
+          
+          // Initialize directions objects after map is ready
           directionsServiceRef.current = new window.google.maps.DirectionsService();
           directionsRendererRef.current = new window.google.maps.DirectionsRenderer({
             map: mapRef.current,
@@ -165,17 +196,19 @@ function ItineraryPage() {
             },
           });
 
-          console.log("Map created successfully");
-        }
-      } catch (e) {
-        console.error("Google Maps initialization failed:", e);
+          console.log("Map and directions initialized successfully");
+          setIsMapReady(true); // Signal that map is ready
+        });
       }
-    })();
+    } catch (e) {
+      console.error("Google Maps initialization failed:", e);
+    }
+  })();
 
-    return () => {
-      cancelled = true;
-    };
-  }, [mapConfig]);
+  return () => {
+    cancelled = true;
+  };
+}, [mapConfig, trip?.t_lat, trip?.t_lng]);
 
   //Load trips and activities
   useEffect(() => {
@@ -413,6 +446,10 @@ function ItineraryPage() {
   useEffect(() => {
     if (!mapRef.current || !(window.google && window.google.maps)) return;
     if (!directionsServiceRef.current || !directionsRendererRef.current) return;
+    if (!isMapReady) {
+    console.log("Map not ready yet, skipping route draw");
+    return;
+  }
 
     console.log("Route effect triggered. selectedDate:", selectedDate);
     console.log("All activityCoords:", activityCoords);
@@ -509,7 +546,7 @@ function ItineraryPage() {
         }
       }
     );
-  }, [activityCoords, selectedDate, mapConfig, trip]);
+  }, [isMapReady, activityCoords, selectedDate, mapConfig, trip]);
 
   //Delete activity
   const handleDeleteActivity = async (index) => {

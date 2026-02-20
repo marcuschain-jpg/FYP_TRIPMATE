@@ -48,6 +48,8 @@ function ViewItineraryOnlyPage() {
   const directionsRendererRef = useRef(null);
   const markersRef = useRef([]);
 
+  const [isMapReady, setIsMapReady] = useState(false);
+
   //Get google maps key from backend
   useEffect(() => {
     Axios
@@ -55,12 +57,12 @@ function ViewItineraryOnlyPage() {
         withCredentials: true, 
       })
       .then((res) => {
-        console.log("✓ Maps config response:", res.data);
+        console.log("✓ Maps config response:");
         if (res.data?.apiKey) {
           setMapConfig(res.data);
           console.log("✓ Map config set successfully with apiKey from backend");
         } else {
-          console.error("✗ No apiKey in response:", res.data);
+          console.error("✗ No apiKey in response:");
         }
       })
       .catch((err) => {
@@ -75,26 +77,47 @@ function ViewItineraryOnlyPage() {
   }, []);
 
   function loadGoogleMaps(apiKey) {
-    return new Promise((resolve, reject) => {
-      if (window.google && window.google.maps) return resolve();
+  return new Promise((resolve, reject) => {
+    if (window.google && window.google.maps) return resolve();
 
-      const existing = document.querySelector('script[data-google-maps="true"]');
-      if (existing) {
-        existing.addEventListener("load", () => resolve());
-        existing.addEventListener("error", reject);
-        return;
+    const existing = document.querySelector('script[data-google-maps="true"]');
+    if (existing) {
+      // If script exists, wait for google.maps to be available
+      if (window.google && window.google.maps) {
+        return resolve();
       }
+      const checkInterval = setInterval(() => {
+        if (window.google && window.google.maps) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 50);
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        reject(new Error('Google Maps timeout'));
+      }, 10000);
+      return;
+    }
 
-      const script = document.createElement("script");
-      script.dataset.googleMaps = "true";
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => resolve();
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
-  }
+    // Create callback
+    const callbackName = `initGoogleMaps_${Date.now()}`;
+    window[callbackName] = () => {
+      delete window[callbackName];
+      resolve();
+    };
+
+    const script = document.createElement("script");
+    script.dataset.googleMaps = "true";
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=${callbackName}`;
+    script.async = true;
+    script.defer = true;
+    script.onerror = (error) => {
+      delete window[callbackName];
+      reject(error);
+    };
+    document.head.appendChild(script);
+  });
+}
 
   function clearDirections() {
     if (directionsRendererRef.current) {
@@ -108,55 +131,68 @@ function ViewItineraryOnlyPage() {
   }
 
   //Initialize maps 
-  useEffect(() => {
-    if (!mapConfig?.apiKey) return;
-
-    let cancelled = false;
-
-    (async () => {
-      try {
-        console.log("Loading Google Maps...");
-        await loadGoogleMaps(mapConfig.apiKey);
-        
-        if (cancelled) return;
-
-        if (mapDivRef.current && !mapRef.current) {
-          console.log("Creating map instance");
-          const center = mapConfig.center || { lat: 1.3521, lng: 103.8198 };
-
-          mapRef.current = new window.google.maps.Map(mapDivRef.current, {
-            center,
-            zoom: 12,
-            styles: [],
-            mapTypeControl: true,
-            streetViewControl: false,
-            fullscreenControl: true,
-          });
-
-          //Initialize directions objects
-          directionsServiceRef.current = new window.google.maps.DirectionsService();
-          directionsRendererRef.current = new window.google.maps.DirectionsRenderer({
-            map: mapRef.current,
-            suppressMarkers: true,
-            preserveViewport: false,
-            polylineOptions: {
-              strokeColor: "#393F86", 
-              strokeOpacity: 0.9,
-              strokeWeight: 6,
-            },
-          });
-
-          console.log("Map created successfully");
-        }
-      } catch (e) {
-        console.error("Google Maps initialization failed:", e);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [mapConfig]);
+ useEffect(() => {
+   if (!mapConfig?.apiKey) return;
+ 
+   let cancelled = false;
+ 
+   (async () => {
+     try {
+       console.log("Loading Google Maps...");
+       await loadGoogleMaps(mapConfig.apiKey);
+       
+       if (cancelled) return;
+ 
+       if (!window.google || !window.google.maps) {
+         console.error("Google Maps not available after loading");
+         return;
+       }
+ 
+       if (mapDivRef.current && !mapRef.current) {
+         console.log("Creating map instance");
+         const center = (trip?.t_lat && trip?.t_lng) 
+           ? { lat: trip.t_lat, lng: trip.t_lng }
+           : mapConfig.center;
+ 
+         mapRef.current = new window.google.maps.Map(mapDivRef.current, {
+           center,
+           zoom: 12,
+           styles: [],
+           mapTypeControl: true,
+           streetViewControl: false,
+           fullscreenControl: true,
+         });
+ 
+         // Wait for map to be fully initialized
+         window.google.maps.event.addListenerOnce(mapRef.current, 'idle', () => {
+           console.log("Map is ready - initializing directions");
+           
+           // Initialize directions objects after map is ready
+           directionsServiceRef.current = new window.google.maps.DirectionsService();
+           directionsRendererRef.current = new window.google.maps.DirectionsRenderer({
+             map: mapRef.current,
+             suppressMarkers: true,
+             preserveViewport: false,
+             polylineOptions: {
+               strokeColor: "#393F86", 
+               strokeOpacity: 0.9,
+               strokeWeight: 6,
+             },
+           });
+ 
+           console.log("Map and directions initialized successfully");
+           setIsMapReady(true); // Signal that map is ready
+         });
+       }
+     } catch (e) {
+       console.error("Google Maps initialization failed:", e);
+     }
+   })();
+ 
+   return () => {
+     cancelled = true;
+   };
+ }, [mapConfig, trip?.t_lat, trip?.t_lng]);
 
   //Load activities
   useEffect(() => {
@@ -185,7 +221,9 @@ function ViewItineraryOnlyPage() {
           start: formatDateForDisplay(data?.[0]?.start_date),
           end: formatDateForDisplay(data?.[0]?.end_date),
           type: data?.[0]?.type,
-          numPpl: data?.[0]?.num_ppl
+          numPpl: data?.[0]?.num_ppl,
+          t_lat: parseFloat(data?.[0]?.i_latitude),
+          t_lng: parseFloat(data?.[0]?.i_longitude)
         };
         console.log("Trip object:", mapTrips);
         setTrip(mapTrips);
@@ -255,6 +293,10 @@ function ViewItineraryOnlyPage() {
     if (!mapRef.current || !(window.google && window.google.maps)) return;
     if (!selectedDate) return;
     if (!directionsServiceRef.current || !directionsRendererRef.current) return;
+    if (!isMapReady) {
+      console.log("Map not ready yet, skipping route draw");
+      return;
+    }
 
     console.log("Route effect triggered. selectedDate:", selectedDate);
     console.log("All activityCoords:", activityCoords);
@@ -289,7 +331,9 @@ function ViewItineraryOnlyPage() {
     });
 
     if (points.length === 0) {
-      const defaultCenter = mapConfig?.center || { lat: 1.3521, lng: 103.8198 };
+      const defaultCenter = (trip?.t_lat && trip?.t_lng) 
+        ? { lat: trip.t_lat, lng: trip.t_lng }
+        : mapConfig.center;
       mapRef.current.setCenter(defaultCenter);
       mapRef.current.setZoom(12);
       console.log("No activities - centered to default location");
@@ -344,7 +388,7 @@ function ViewItineraryOnlyPage() {
         }
       }
     );
-  }, [activityCoords, selectedDate, mapConfig]);
+  }, [isMapReady, activityCoords, selectedDate, mapConfig]);
 
   //Render
   const tripName = trip?.name || "Trip";
