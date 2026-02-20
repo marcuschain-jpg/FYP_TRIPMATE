@@ -317,7 +317,6 @@ export default function Users() {
                 <th>Email</th>
                 <th>Status</th>
                 <th>Date Joined</th>
-                <th>Last Login</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -338,7 +337,6 @@ export default function Users() {
                   <td>{u.email}</td>
                   <td>{capitalize(u.status)}</td>
                   <td>{u.dateJoined}</td>
-                  <td>{u.lastLogin}</td>
                   <td className="um-actions">
                     <button type="button" onClick={() => confirmSuspend(u)}>
                       {u.status === "Active" ? "Suspend" : "Activate"}

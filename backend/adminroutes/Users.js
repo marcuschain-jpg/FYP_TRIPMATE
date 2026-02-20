@@ -15,8 +15,7 @@ router.get("/", async (req, res) => {
         first_name,
         last_name,
         suspended,
-        created_at,
-        last_login
+        created_at
       FROM users
       ORDER BY created_at DESC
     `);
@@ -28,9 +27,6 @@ router.get("/", async (req, res) => {
       status: u.suspended ? "Suspended" : "Active",
       dateJoined: u.created_at
         ? u.created_at.toISOString().split("T")[0]
-        : "-",
-      lastLogin: u.last_login
-        ? u.last_login.toISOString().split("T")[0]
         : "-",
     }));
 
